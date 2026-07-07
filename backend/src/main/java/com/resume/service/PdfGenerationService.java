@@ -15,9 +15,9 @@ public class PdfGenerationService {
     private final Browser browser;
     private final boolean available;
 
-    public PdfGenerationService(Browser browser) {
-        this.browser = browser;
-        this.available = browser != null;
+    public PdfGenerationService(java.util.Optional<Browser> browser) {
+        this.browser = browser.orElse(null);
+        this.available = this.browser != null;
     }
 
     public byte[] generatePdf(String htmlContent) {

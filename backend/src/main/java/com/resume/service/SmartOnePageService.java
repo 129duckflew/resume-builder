@@ -26,9 +26,9 @@ public class SmartOnePageService {
     private final Browser browser;
     private final boolean available;
 
-    public SmartOnePageService(Browser browser) {
-        this.browser = browser;
-        this.available = browser != null;
+    public SmartOnePageService(java.util.Optional<Browser> browser) {
+        this.browser = browser.orElse(null);
+        this.available = this.browser != null;
     }
 
     public static class AdjustmentResult {
