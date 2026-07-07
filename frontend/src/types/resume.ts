@@ -1,0 +1,28 @@
+export interface Resume {
+  id: string
+  title: string
+  content: string
+  themeId: string
+  fontSize: number | null
+  lineHeight: number | null
+  sectionSpacing: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Theme {
+  id: string
+  name: string
+  description: string
+  builtIn: boolean
+}
+
+export interface Section {
+  id: string
+  type: 'heading'
+  level: number
+  title: string
+  content: string
+  startLine: number
+  endLine: number
+}

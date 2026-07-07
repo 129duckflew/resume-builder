@@ -1,0 +1,124 @@
+/* ===================================================
+   Classic Theme — Traditional Corporate & Academic Style
+   Serif / Monochrome / Uppercase headings / Justified
+   =================================================== */
+
+@page {
+    size: A4;
+    margin: 20mm 25mm;
+    background-color: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Times New Roman', Times, serif;
+    color: #000000;
+    font-size: 11pt;
+    line-height: 1.4;
+    background: #ffffff;
+}
+
+.resume-page {
+    width: 100%;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 20mm 25mm;
+}
+
+/* ----- Header ----- */
+header, .resume-header {
+    text-align: center;
+    margin-bottom: 18px;
+}
+
+h1 {
+    font-size: 20pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+}
+
+.contact-info, .resume-contact {
+    font-size: 10.5pt;
+    margin-bottom: 3px;
+}
+
+/* ----- Sections ----- */
+.section, .resume-section {
+    margin-bottom: 16px;
+}
+
+h2 {
+    font-size: 12pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    border-bottom: 1px solid #000000;
+    padding-bottom: 2px;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+
+/* ----- Items (Experience / Education) ----- */
+.item-title, .resume-item-title {
+    font-weight: bold;
+}
+
+.item-date, .resume-item-date {
+    float: right;
+}
+
+.item-subtitle, .resume-item-subtitle {
+    font-style: italic;
+    margin-bottom: 5px;
+}
+
+.clear, .clearfix {
+    clear: both;
+}
+
+/* ----- Lists ----- */
+ul {
+    list-style-type: disc;
+    margin-left: 18px;
+    margin-bottom: 8px;
+}
+
+li {
+    margin-bottom: 4px;
+    text-align: justify;
+}
+
+.project-block, .resume-project {
+    margin-bottom: 12px;
+}
+
+.bold-text, .resume-bold {
+    font-weight: bold;
+}
+
+/* ----- Links ----- */
+a {
+    color: #000000;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* ----- Print media query ----- */
+@media print {
+    body {
+        background: #ffffff;
+    }
+    .resume-page {
+        padding: 0;
+        max-width: none;
+    }
+}

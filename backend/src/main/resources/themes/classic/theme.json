@@ -1,0 +1,7 @@
+{
+  "id": "classic",
+  "name": "Classic",
+  "description": "Traditional corporate style with serif fonts, monochrome palette, uppercase headings",
+  "builtIn": true,
+  "sortOrder": 1
+}
