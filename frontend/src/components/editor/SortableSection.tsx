@@ -6,9 +6,10 @@ import type { Section } from '@/types/resume'
 interface Props {
   section: Section
   index: number
+  onClick?: (startLine: number) => void
 }
 
-export default function SortableSection({ section, index }: Props) {
+export default function SortableSection({ section, index, onClick }: Props) {
   const {
     attributes,
     listeners,
@@ -32,6 +33,7 @@ export default function SortableSection({ section, index }: Props) {
         ${isDragging ? 'bg-blue-50 border border-blue-200' : 'hover:bg-white'}`}
     >
       <button
+        aria-label="drag-handle"
         className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
         {...attributes}
         {...listeners}
@@ -39,7 +41,11 @@ export default function SortableSection({ section, index }: Props) {
         <GripVertical className="h-4 w-4" />
       </button>
       <span
-        className={`truncate flex-1 ${
+        role="button"
+        tabIndex={0}
+        onClick={() => onClick?.(section.startLine)}
+        onKeyDown={(e) => { if (e.key === 'Enter') onClick?.(section.startLine) }}
+        className={`truncate flex-1 cursor-pointer hover:text-blue-600 transition-colors ${
           section.level === 1
             ? 'font-semibold'
             : section.level === 2
