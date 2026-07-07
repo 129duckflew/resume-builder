@@ -1,0 +1,121 @@
+/* ===================================================
+   Minimal Theme — Ultra-Minimalist / Maximum Whitespace
+   =================================================== */
+
+@page {
+    size: A4;
+    margin: 22mm 28mm;
+    background-color: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    color: #222222;
+    font-size: 10pt;
+    line-height: 1.6;
+    background: #ffffff;
+}
+
+.resume-page {
+    width: 100%;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 22mm 28mm;
+}
+
+/* ----- Header ----- */
+.resume-header {
+    text-align: left;
+    margin-bottom: 24px;
+}
+
+h1 {
+    font-size: 18pt;
+    font-weight: 300;
+    color: #000000;
+    margin-bottom: 4px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+.contact-info, .resume-contact {
+    font-size: 9.5pt;
+    color: #666666;
+    margin-bottom: 2px;
+}
+
+/* ----- Sections ----- */
+.resume-section {
+    margin-bottom: 20px;
+}
+
+h2 {
+    font-size: 9pt;
+    font-weight: 400;
+    color: #999999;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* ----- Items ----- */
+.resume-item-title {
+    font-weight: 500;
+    color: #000000;
+}
+
+.resume-item-date {
+    float: right;
+    color: #999999;
+    font-size: 9pt;
+}
+
+.resume-item-subtitle {
+    color: #666666;
+    font-size: 9.5pt;
+    margin-bottom: 4px;
+}
+
+.clearfix {
+    clear: both;
+}
+
+/* ----- Lists ----- */
+ul {
+    list-style-type: none;
+    margin-left: 0;
+    margin-bottom: 8px;
+}
+
+li {
+    margin-bottom: 3px;
+    color: #444444;
+}
+
+.project-block, .resume-project {
+    margin-bottom: 12px;
+}
+
+/* ----- Links ----- */
+a {
+    color: #222222;
+    text-decoration: none;
+    border-bottom: 0.5px solid #cccccc;
+}
+
+a:hover {
+    border-bottom-color: #222222;
+}
+
+@media print {
+    body { background: #ffffff; }
+    .resume-page { padding: 0; max-width: none; }
+}

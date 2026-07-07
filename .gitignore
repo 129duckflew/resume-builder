@@ -1,0 +1,19 @@
+# Backend
+backend/target/
+*.class
+*.jar
+*.log
+.idea/
+*.iml
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# IDE
+.vscode/
+.DS_Store
+
+# Env
+.env
