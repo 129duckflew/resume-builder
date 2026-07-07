@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import MDEditor from '@uiw/react-md-editor'
 import { Save } from 'lucide-react'
+import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { useResumeStore } from '@/stores/resumeStore'
 import { useHistoryStore } from '@/stores/historyStore'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
@@ -141,42 +142,58 @@ export default function EditorPage() {
       </div>
 
       {/* Main editing area */}
-      <div className="flex flex-1 overflow-hidden">
+      <PanelGroup direction="horizontal" className="flex-1 overflow-hidden" data-testid="panel-group">
         {/* Sections sidebar */}
-        <div className="w-56 border-r bg-gray-50 p-3 overflow-y-auto">
-          <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-            Sections
-          </h3>
-          <SectionDragList markdown={currentResume.content} />
-        </div>
+        <Panel defaultSize={15} minSize={10} maxSize={25} data-panel>
+          <div className="h-full border-r bg-gray-50 p-3 overflow-y-auto">
+            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+              Sections
+            </h3>
+            <SectionDragList markdown={currentResume.content} />
+          </div>
+        </Panel>
+
+        <PanelResizeHandle
+          data-resize-handle
+          className="w-1.5 bg-transparent hover:bg-blue-400/30 transition-colors cursor-col-resize shrink-0"
+        />
 
         {/* Markdown editor */}
-        <div className="flex-1 border-r overflow-y-auto" data-color-mode="light">
-          <MDEditor
-            value={currentResume.content}
-            onChange={(val) => debouncedSave(val || '')}
-            height="100%"
-            preview="edit"
-            hideToolbar={false}
-          />
-        </div>
+        <Panel defaultSize={50} minSize={20} data-panel>
+          <div className="h-full border-r overflow-y-auto" data-color-mode="light">
+            <MDEditor
+              value={currentResume.content}
+              onChange={(val) => debouncedSave(val || '')}
+              height="100%"
+              preview="edit"
+              hideToolbar={false}
+            />
+          </div>
+        </Panel>
+
+        <PanelResizeHandle
+          data-resize-handle
+          className="w-1.5 bg-transparent hover:bg-blue-400/30 transition-colors cursor-col-resize shrink-0"
+        />
 
         {/* Live A4 preview */}
-        <div className="w-[500px] bg-gray-100 overflow-y-auto flex justify-center p-4">
-          <div className="shadow-lg bg-white w-[210mm] min-h-[297mm]">
-            {displayHtml ? (
-              <div
-                className="resume-page"
-                dangerouslySetInnerHTML={{ __html: displayHtml }}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-8">
-                Start typing markdown to see preview
-              </div>
-            )}
+        <Panel defaultSize={35} minSize={15} data-panel>
+          <div className="h-full bg-gray-100 overflow-y-auto flex justify-center p-4">
+            <div className="shadow-lg bg-white w-[210mm] min-h-[297mm] self-start">
+              {displayHtml ? (
+                <div
+                  className="resume-page"
+                  dangerouslySetInnerHTML={{ __html: displayHtml }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-8">
+                  Start typing markdown to see preview
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </div>
+        </Panel>
+      </PanelGroup>
 
       {/* Draft recovery dialog */}
       <Dialog open={showDraftDialog} onOpenChange={setShowDraftDialog}>
