@@ -64,7 +64,7 @@ public class SmartOnePageService {
             if (result.lineHeight < MIN_LINE_HEIGHT) result.lineHeight = MIN_LINE_HEIGHT;
             if (result.sectionMargin < MIN_SECTION_MARGIN) result.sectionMargin = MIN_SECTION_MARGIN;
 
-            if (result.fontSize <= MIN_FONT_SIZE && lineCount > 80) {
+            if (reduction >= 0.3f && lineCount > 80) {
                 result.fitsOnOnePage = false;
                 result.warning = "Content too long for one page. Please consider trimming.";
             }

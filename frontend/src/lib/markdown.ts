@@ -1,6 +1,6 @@
 import type { Section } from '@/types/resume'
 
-const HEADING_RE = /^(#{1,6})\s+(.+)$/gm
+const HEADING_RE = /^(#{1,6})\s+(.+)$/
 
 export function parseSections(markdown: string): Section[] {
   const sections: Section[] = []
@@ -40,20 +40,44 @@ export function reorderSections(
   toIndex: number,
 ): string {
   const lines = markdown.split('\n')
-  const ordered = [...sections]
-  const [moved] = ordered.splice(fromIndex, 1)
-  ordered.splice(toIndex, 0, moved)
 
-  const result: string[] = []
-  let insertBefore = ordered[0]?.startLine ?? 0
+  // Split document into alternating non-section / section blocks
+  const blocks: { lines: string[]; isSection: boolean }[] = []
+  let prevEnd = 0
 
-  for (const section of ordered) {
-    for (let i = insertBefore; i <= section.endLine; i++) {
-      if (i < lines.length) {
-        result.push(lines[i])
-      }
+  for (const section of sections) {
+    if (section.startLine > prevEnd) {
+      blocks.push({
+        lines: lines.slice(prevEnd, section.startLine),
+        isSection: false,
+      })
     }
-    insertBefore = section.endLine + 1
+    blocks.push({
+      lines: lines.slice(section.startLine, section.endLine + 1),
+      isSection: true,
+    })
+    prevEnd = section.endLine + 1
+  }
+
+  if (prevEnd < lines.length) {
+    blocks.push({ lines: lines.slice(prevEnd), isSection: false })
+  }
+
+  // Reorder only section blocks
+  const sectionBlocks = blocks.filter((b) => b.isSection)
+  const [moved] = sectionBlocks.splice(fromIndex, 1)
+  sectionBlocks.splice(toIndex, 0, moved)
+
+  // Reassemble
+  let si = 0
+  const result: string[] = []
+  for (const block of blocks) {
+    if (block.isSection) {
+      result.push(...sectionBlocks[si].lines)
+      si++
+    } else {
+      result.push(...block.lines)
+    }
   }
 
   return result.join('\n')
