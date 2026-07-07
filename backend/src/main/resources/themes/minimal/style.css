@@ -24,9 +24,8 @@ body {
 
 .resume-page {
     width: 100%;
-    max-width: 210mm;
     margin: 0 auto;
-    padding: 22mm 28mm;
+    padding: 14mm 20mm;
 }
 
 /* ----- Header ----- */

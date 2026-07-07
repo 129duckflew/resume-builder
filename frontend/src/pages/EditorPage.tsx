@@ -179,7 +179,7 @@ export default function EditorPage() {
 
         {/* Live A4 preview */}
         <Panel defaultSize={35} minSize={15} data-panel>
-          <div className="h-full bg-gray-100 overflow-y-auto flex justify-center p-4">
+          <div className="h-full bg-gray-100 overflow-y-auto flex justify-center p-2">
             <div className="shadow-lg bg-white w-[210mm] min-h-[297mm] self-start">
               {displayHtml ? (
                 <div
