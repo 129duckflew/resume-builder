@@ -22,9 +22,10 @@ import SortableSection from './SortableSection'
 
 interface Props {
   markdown: string
+  onSectionClick?: (lineNumber: number) => void
 }
 
-export default function SectionDragList({ markdown }: Props) {
+export default function SectionDragList({ markdown, onSectionClick }: Props) {
   const [sections, setSections] = useState(() => parseSections(markdown))
   const updateResume = useResumeStore((s) => s.updateResume)
   const currentResume = useResumeStore((s) => s.currentResume)
@@ -94,7 +95,7 @@ export default function SectionDragList({ markdown }: Props) {
       >
         <div className="space-y-1">
           {sections.map((section, i) => (
-            <SortableSection key={section.id} section={section} index={i} />
+            <SortableSection key={section.id} section={section} index={i} onClick={onSectionClick} />
           ))}
         </div>
       </SortableContext>

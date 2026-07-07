@@ -101,6 +101,12 @@ export default function EditorPage() {
 
   useKeyboardShortcuts({ onSave: save })
 
+  const scrollEditorToLine = useCallback((line: number) => {
+    const el = document.querySelector('.w-md-editor-text')
+    if (!el) return
+    el.scrollTop = line * 22
+  }, [])
+
   const restoreDraft = () => {
     if (draftContent && id) {
       setContent(draftContent)
@@ -150,7 +156,7 @@ export default function EditorPage() {
             <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
               Sections
             </h3>
-            <SectionDragList markdown={currentResume.content} />
+            <SectionDragList markdown={currentResume.content} onSectionClick={scrollEditorToLine} />
           </div>
         </Panel>
 
