@@ -5,6 +5,8 @@ import com.resume.service.SmartOnePageService.AdjustmentResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class SmartOnePageServiceTest {
@@ -13,8 +15,8 @@ class SmartOnePageServiceTest {
 
     @BeforeEach
     void setUp() {
-        // browser = null → falls back to estimation
-        service = new SmartOnePageService(null);
+        // empty browser → falls back to estimation
+        service = new SmartOnePageService(Optional.empty());
     }
 
     @Test
