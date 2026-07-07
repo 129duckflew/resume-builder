@@ -132,6 +132,23 @@ class ResumeControllerTest {
     }
 
     @Test
+    void update_withPartialData_returns200() throws Exception {
+        var resume = new Resume();
+        resume.setId("1");
+        resume.setTitle("Original");
+        resume.setContent("# Hello");
+        resume.setThemeId("classic");
+
+        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+
+        // Only send themeId — no title or content
+        mockMvc.perform(put("/api/resumes/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"themeId\":\"modern\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void delete_returns204() throws Exception {
         mockMvc.perform(delete("/api/resumes/1"))
                 .andExpect(status().isNoContent());
