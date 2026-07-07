@@ -1,0 +1,158 @@
+/* ===================================================
+   Elegant Theme — Refined Business / Serif Print
+   =================================================== */
+
+@page {
+    size: A4;
+    margin: 18mm 22mm;
+    background-color: #faf9f6;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Georgia', 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    color: #2d2a24;
+    font-size: 10.5pt;
+    line-height: 1.55;
+    background: #faf9f6;
+}
+
+.resume-page {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* ----- Header ----- */
+h1 {
+    font-size: 22pt;
+    font-weight: 400;
+    color: #1b4332;
+    margin-bottom: 2px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 0.5px solid #cbb99b;
+    padding-bottom: 8px;
+}
+
+.contact-info, .resume-contact {
+    font-size: 9.5pt;
+    color: #6b6858;
+    margin-bottom: 3px;
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+}
+
+.resume-contact a {
+    color: #1b4332;
+    text-decoration: none;
+    border-bottom: 0.5px solid #cbb99b;
+}
+
+/* ----- Sections ----- */
+.resume-section {
+    margin-bottom: 12px;
+}
+
+h2 {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #1b4332;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin: 12px 0 6px;
+    padding-bottom: 2px;
+    border-bottom: 0.5px solid #cbb99b;
+}
+
+h3 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: #2d2a24;
+    font-style: italic;
+    margin-bottom: 2px;
+}
+
+p {
+    color: #3d3a33;
+    font-size: 10pt;
+    margin-bottom: 5px;
+    text-align: justify;
+}
+
+/* ----- Items ----- */
+.resume-item-title {
+    font-weight: 600;
+    color: #1b4332;
+}
+
+.resume-item-date {
+    float: right;
+    color: #8b8878;
+    font-size: 9pt;
+    font-style: italic;
+}
+
+.resume-item-subtitle {
+    color: #6b6858;
+    font-size: 9.5pt;
+    font-style: italic;
+    margin-bottom: 3px;
+}
+
+.clearfix {
+    clear: both;
+}
+
+/* ----- Lists ----- */
+ul {
+    list-style-type: none;
+    margin-left: 0;
+    margin-bottom: 6px;
+}
+
+li {
+    margin-bottom: 3px;
+    padding-left: 18px;
+    position: relative;
+    color: #3d3a33;
+    font-size: 10pt;
+    text-align: justify;
+}
+
+li::before {
+    content: "—";
+    position: absolute;
+    left: 0;
+    color: #cbb99b;
+}
+
+strong {
+    color: #1b4332;
+    font-weight: 600;
+}
+
+em {
+    color: #6b6858;
+}
+
+/* ----- Links ----- */
+a {
+    color: #1b4332;
+    text-decoration: none;
+    border-bottom: 0.5px solid transparent;
+    transition: border-color 0.2s;
+}
+
+a:hover {
+    border-bottom-color: #1b4332;
+}
+
+@media print {
+    body { background: #ffffff; }
+}

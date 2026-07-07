@@ -12,6 +12,7 @@ import org.springframework.core.io.ResourceLoader;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -70,27 +71,28 @@ class ThemeServiceTest {
 
     @Test
     void initBuiltInThemes_overwritesExistingThemes() {
-        when(repository.findById("classic")).thenReturn(Optional.of(new Theme()));
-        when(repository.findById("modern")).thenReturn(Optional.of(new Theme()));
-        when(repository.findById("minimal")).thenReturn(Optional.of(new Theme()));
+        for (String id : List.of("classic", "modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact")) {
+            when(repository.findById(id)).thenReturn(Optional.of(new Theme()));
+        }
         when(resourceLoader.getResource(anyString()))
                 .thenReturn(new ByteArrayResource("css".getBytes()));
 
         service.initBuiltInThemes();
 
-        verify(repository, times(3)).save(any());
+        verify(repository, times(7)).save(any());
     }
 
     @Test
     void initBuiltInThemes_createsMissingTheme_withResourceFallback() {
         when(repository.findById("classic")).thenReturn(Optional.empty());
-        when(repository.findById("modern")).thenReturn(Optional.of(new Theme()));
-        when(repository.findById("minimal")).thenReturn(Optional.of(new Theme()));
+        for (String id : List.of("modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact")) {
+            when(repository.findById(id)).thenReturn(Optional.of(new Theme()));
+        }
         when(resourceLoader.getResource(anyString()))
                 .thenReturn(new ByteArrayResource("body { color: black; }".getBytes()));
 
         service.initBuiltInThemes();
 
-        verify(repository, times(3)).save(any());
+        verify(repository, times(7)).save(any());
     }
 }
