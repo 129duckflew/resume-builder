@@ -4,53 +4,71 @@
 
 ```
 resume-builder/
-├── backend/          # Spring Boot 3.2 + Java 17
+├── backend/                          # Spring Boot 3.2 + Java 17
 │   ├── pom.xml
 │   ├── Dockerfile
 │   └── src/main/java/com/resume/
 │       ├── ResumeApplication.java
-│       ├── config/CorsConfig.java
+│       ├── config/
+│       │   ├── CorsConfig.java
+│       │   └── PlaywrightConfig.java
 │       ├── controller/
 │       │   ├── ResumeController.java    # CRUD + preview + export
 │       │   └── ThemeController.java     # theme list + CSS
 │       ├── entity/
-│       │   ├── Resume.java              # id, title, content(md), themeId, fontSize, lineHeight...
+│       │   ├── Resume.java
 │       │   └── Theme.java
 │       ├── repository/
 │       ├── service/
-│       │   ├── ResumeService.java       # CRUD + default markdown template
+│       │   ├── ResumeService.java
 │       │   ├── MarkdownService.java     # commonmark: md → HTML
 │       │   ├── ExportService.java       # HTML generation
-│       │   ├── SmartOnePageService.java # 智能一页算法（Playwright 注入式）
-│       │   └── ThemeService.java        # 启动时自动加载 3 个内置主题
+│       │   ├── SmartOnePageService.java # Playwright A4 auto-fit
+│       │   ├── PdfGenerationService.java# Playwright PDF generation
+│       │   └── ThemeService.java        # 启动时加载 7 个内置主题
 │       └── dto/
-├── frontend/         # React 18 + Vite + TypeScript
+├── frontend/                         # React 18 + Vite + TypeScript
 │   ├── package.json
-│   ├── vite.config.ts + vitest config
+│   ├── vite.config.ts
+│   ├── vitest.config.ts
 │   ├── tailwind.config.ts
 │   ├── nginx.conf
 │   ├── Dockerfile
 │   └── src/
 │       ├── pages/
-│       │   ├── HomePage.tsx         # 简历列表（grid 卡片）
-│       │   ├── EditorPage.tsx       # 核心编辑器（三段式布局）
-│       │   └── PreviewPage.tsx      # 全屏 A4 iframe 预览
+│       │   ├── HomePage.tsx
+│       │   ├── EditorPage.tsx         # 三段式可拖拽布局
+│       │   └── PreviewPage.tsx
 │       ├── components/
 │       │   ├── Layout.tsx
-│       │   ├── ui/button.tsx        # shadcn/ui 按钮
+│       │   ├── ui/
+│       │   │   ├── button.tsx
+│       │   │   ├── dialog.tsx
+│       │   │   ├── dropdown-menu.tsx
+│       │   │   ├── toast.tsx
+│       │   │   └── toaster.tsx
 │       │   └── editor/
-│       │       ├── SectionDragList.tsx   # @dnd-kit 章节拖拽
+│       │       ├── SectionDragList.tsx
 │       │       ├── SortableSection.tsx
-│       │       ├── ThemeSelector.tsx
-│       │       └── ExportPanel.tsx
-│       ├── stores/resumeStore.ts    # zustand
+│       │       ├── ThemeSelector.tsx    # 下拉菜单选择
+│       │       └── ExportPanel.tsx      # PDF/HTML + Smart One-Page 开关
+│       ├── stores/
+│       │   ├── resumeStore.ts          # zustand
+│       │   └── historyStore.ts         # undo/redo
+│       ├── hooks/
+│       │   ├── useKeyboardShortcuts.ts
+│       │   ├── useDraftBackup.ts
+│       │   └── use-toast.ts
 │       └── lib/
-│           ├── api.ts               # axios 封装
-│           ├── markdown.ts          # 章节解析/重组
-│           └── utils.ts             # cn() helper
-├── docker-compose.yml   # PostgreSQL 16 + Backend + Frontend
+│           ├── api.ts
+│           ├── markdown.ts
+│           └── utils.ts
+├── docker-compose.yml
 ├── .env.example
-└── .gitignore
+├── .gitignore
+├── AGENTS.md                          # TDD 规范
+├── progress.md                        # 本文件
+└── README.md
 ```
 
 ## 技术栈
@@ -61,45 +79,56 @@ resume-builder/
 | **ORM** | Spring Data JPA + Hibernate | PostgreSQL 持久化 |
 | **DB** | PostgreSQL 16 | 存储简历和主题 |
 | **Markdown** | commonmark (org.commonmark) | md → HTML |
-| **PDF 导出** | Playwright for Java (待集成) | 无头浏览器渲染 PDF |
+| **PDF 导出** | Playwright for Java | 无头 Chromium 渲染 PDF |
 | **前端框架** | React 18 + TypeScript | UI |
 | **构建** | Vite | 开发/构建 |
 | **组件库** | shadcn/ui + Tailwind CSS | 界面组件 |
-| **编辑器** | @uiw/react-md-editor | Markdown 编辑 |
+| **编辑器** | @uiw/react-md-editor | CodeMirror 6 Markdown 编辑 |
 | **拖拽** | @dnd-kit/core + @dnd-kit/sortable | 章节拖拽排序 |
+| **下拉菜单** | @radix-ui/react-dropdown-menu | 主题选择器 |
 | **状态管理** | zustand | 全局状态 |
 | **路由** | react-router-dom v6 | 前端路由 |
 | **HTTP** | axios | API 请求 |
 | **部署** | Docker Compose | 一键启动 |
 
-## 内置主题
+## 内置主题（7 个）
 
-| 主题 | ID | 风格 | 状态 |
+| 主题 | ID | 风格 | 配色 |
 |---|---|---|---|
-| **Classic** (默认) | `classic` | Times New Roman 衬线 / 纯黑白 / 大写强调 / 两端对齐 | ✅ |
-| **Modern** | `modern` | Inter 无衬线 / 蓝色 #2563eb 强调 / 圆点列表 | ✅ |
-| **Minimal** | `minimal` | system-ui 无衬线 / 灰色 #999 / 超大留白 | ✅ |
+| **Classic** (默认) | `classic` | 传统商务 / Times New Roman 衬线 / 大写强调 | 纯黑白 |
+| **Modern** | `modern` | 科技公司 / Inter 无衬线 / 圆点列表 | 蓝 `#2563eb` |
+| **Minimal** | `minimal` | 极简学术 / system-ui / 超大留白 | 灰 `#999` |
+| **Sidebar** | `sidebar` | 双栏侧边栏 / 彩色侧栏 + 主内容 | 深蓝 `#1a365d` |
+| **Stack Overflow** | `stackoverflow` | 开发者社区 / 标签式技能 / 卡片背景 | 橙 `#f48024` |
+| **Elegant** | `elegant` | 轻奢商务 / Georgia 衬线 / 暖白底 | 墨绿 `#1b4332` |
+| **Compact** | `compact` | 紧凑密集 / 9.5pt 最小间距 | 纯黑 `#555` |
 
 ## TDD 规范
 
 参见项目根目录的 `AGENTS.md` — 规定了 Red-Green-Refactor 流程、分层测试策略、命名约定等。
 
-## 测试覆盖
+## 测试覆盖（98 测试）
 
 | 模块 | 文件 | 用例 | 覆盖内容 |
 |---|---|---|---|
 | **Backend** — MarkdownServiceTest | `service/` | 8 | heading/bold/list/link/paragraph/null/blank 转换 |
-| **Backend** — SmartOnePageServiceTest | `service/` | 6 | 短内容默认 / 长内容压缩 / 超长警告 / 已有配置继承 / 下限保护 |
-| **Backend** — ResumeServiceTest | `service/` | 8 | findAll/findById/create/update/delete CRUD 全路径 |
-| **Backend** — ThemeServiceTest | `service/` | 5 | 列表 / 查找 / 启动加载 / 跳过已存在 / 资源回退 |
-| **Backend** — ResumeControllerTest | `controller/` | 9 | 所有 HTTP 端点 + 400/404 + export header |
+| **Backend** — SmartOnePageServiceTest | `service/` | 8 | 短内容 / 长内容压缩 / 超长警告 / 继承 / 下限保护 |
+| **Backend** — ResumeServiceTest | `service/` | 9 | findAll/findById/create/update/delete + 部分更新 |
+| **Backend** — ThemeServiceTest | `service/` | 5 | 列表 / 查找 / 启动时覆盖 / 资源回退 |
+| **Backend** — ThemeCssCompletenessTest | `service/` | 1 | 验证所有 7 个主题包含必需的选择器 |
+| **Backend** — PdfGenerationServiceTest | `service/` | 4 | 不可用时 fallback / Mock 浏览器 |
+| **Backend** — ResumeControllerTest | `controller/` | 14 | HTTP 端点 / 400/404/503 / export header / 部分更新 |
 | **Backend** — ThemeControllerTest | `controller/` | 5 | 列表 / 查找 / CSS 内容 / 404 |
 | **Frontend** — markdown.test.ts | `lib/` | 7 | 章节解析 / 行范围 / 拖拽重排 |
 | **Frontend** — resumeStore.test.ts | `stores/` | 4 | 初始状态 / setContent / setTitle / null safety |
-| **Frontend** — Layout.test.tsx | `components/` | 2 | 标题渲染 / 按钮存在 |
 | **Frontend** — historyStore.test.ts | `stores/` | 9 | push/undo/redo/canUndo/canRedo/reset |
 | **Frontend** — useKeyboardShortcuts.test.ts | `hooks/` | 3 | Cmd+S / Cmd+Z / Cmd+Shift+Z |
-| **合计** | **11 文件** | **76** | **全部通过** |
+| **Frontend** — Layout.test.tsx | `components/` | 2 | 标题渲染 / 按钮存在 |
+| **Frontend** — ExportPanel.test.tsx | `components/` | 6 | 按钮渲染 / Smart One-Page 开关 / API 参数传递 |
+| **Frontend** — SortableSection.test.tsx | `components/` | 3 | 渲染 / 点击调用 onClick / 拖拽手柄不触发 |
+| **Frontend** — ThemeSelector.test.tsx | `components/` | 4 | trigger 文本 / palette 图标 / 展开后 7 项 / 点击切换 |
+| **Frontend** — EditorPage.test.tsx | `pages/` | 5 | PanelGroup / resize handles / 预览 API 调用 / 主题切换刷新 |
+| **合计** | **17 文件** | **98** | **全部通过** |
 
 ---
 
@@ -117,32 +146,32 @@ resume-builder/
 - [x] Theme 实体 + 启动时加载内置主题
 - [x] Markdown → HTML 转换（commonmark）
 - [x] HTML 导出（ExportService）
-- [x] 智能一页算法服务（占位，待 Playwright 注入）
-- [x] 验证注解 + 异常处理
+- [x] Playwright 集成 + PDF 生成
+- [x] 验证注解 + 部分更新支持
 
 ### ✅ Phase 3 — 前端基础页面（已完成）
 - [x] HomePage：简历列表（grid 卡片 + 新建/编辑/删除）
-- [x] EditorPage：三段式布局（章节侧栏 + Markdown 编辑器 + A4 预览）
+- [x] EditorPage：三段式可拖拽布局（PanelGroup）
 - [x] PreviewPage：全屏 A4 iframe 渲染预览
-- [x] 自动保存（debounce 500ms）
+- [x] 自动保存（debounce 800ms）
 - [x] 章节拖拽排序（@dnd-kit）
+- [x] 章节点击定位到编辑器
 
 ### ✅ Phase 4 — 主题系统（已完成）
-- [x] 3 个内置 CSS 主题（Classic / Modern / Minimal）
-- [x] 前端 ThemeSelector 切换
-- [x] 预览区 iframe 动态注入主题 CSS
+- [x] 7 个内置 CSS 主题（Classic / Modern / Minimal / Sidebar / Stack Overflow / Elegant / Compact）
+- [x] 前端 DropdownMenu 主题选择器
+- [x] 预览区动态注入主题 CSS + 主题切换即时刷新
 - [x] 主题 API（GET /api/themes, GET /api/themes/{id}/css）
+- [x] ThemeCssCompletenessTest 验证所有主题覆盖必需选择器
 
 ### ✅ Phase 5 — 导出与智能一页（已完成）
 - [x] ExportService HTML 生成
-- [x] 前端 ExportPanel（PDF / HTML 按钮 + loading + 错误 Dialog）
+- [x] 前端 ExportPanel（PDF / HTML / Smart One-Page 开关 / loading / 错误 Dialog）
 - [x] SmartOnePageService Playwright 集成（scrollHeight 测量 + 逐步压缩）
 - [x] PlaywrightConfig 单例管理（含 Chromium 不可用 fallback）
 - [x] PdfGenerationService Playwright PDF 生成
-- [x] PDF 导出端点实际生成文件 + 503/400/500 错误处理
-- [x] injectCssVariables CSS 变量注入用于智能压缩
-- [x] 前端导出错误提示（内容过长 Dialog 引导精简）
-- [x] 测试：PdfGenerationServiceTest (4) + SmartOnePageServiceTest (8 + 2 inject)
+- [x] PDF 导出端点 + 503/400/500 错误处理
+- [x] injectCssVariables CSS 变量注入
 
 ### ✅ Phase 6 — UX 打磨（已完成）
 - [x] 键盘快捷键（Cmd+S 保存 / Cmd+Z 撤销 / Cmd+Shift+Z 重做）
@@ -152,6 +181,11 @@ resume-builder/
 - [x] 空状态引导（新建引导 + 三步指引卡片）
 - [x] EditorPage 后端精确预览（debounce 800ms，fallback 客户端渲染）
 
+### ✅ 文档（已完成）
+- [x] README.md 完整项目说明
+- [x] AGENTS.md TDD 开发规范
+- [x] progress.md 开发进度跟踪
+
 ---
 
 ## 启动方式
@@ -160,12 +194,12 @@ resume-builder/
 # 开发模式
 docker compose up -d postgres                          # 启动数据库
 cd backend && mvn spring-boot:run                      # 后端 :8080
-cd frontend && npm run dev                             # 前端 :3000
+cd frontend && npm install && npm run dev              # 前端 :3000
 
 # 生产模式
 docker compose up --build                              # 全部容器
 
 # 测试
-cd backend && mvn test                                 # 后端 50 用例
-cd frontend && npm test                                # 前端 26 用例
+cd backend && mvn test                                 # 后端 54 用例
+cd frontend && npm test                                # 前端 44 用例
 ```
