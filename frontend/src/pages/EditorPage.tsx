@@ -80,8 +80,9 @@ export default function EditorPage() {
     [id, currentResume, updateResume],
   )
 
-  // Debounced backend preview
+  // Debounced backend preview — re-fetches on content or theme change
   useEffect(() => {
+    setPreviewHtml('')
     if (!id || !currentResume?.content) return
     if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
     previewTimerRef.current = setTimeout(async () => {
@@ -96,7 +97,7 @@ export default function EditorPage() {
     return () => {
       if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
     }
-  }, [id, currentResume?.content])
+  }, [id, currentResume?.content, currentResume?.themeId])
 
   useKeyboardShortcuts({ onSave: save })
 
