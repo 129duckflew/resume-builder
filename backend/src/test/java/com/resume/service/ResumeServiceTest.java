@@ -136,6 +136,30 @@ class ResumeServiceTest {
     }
 
     @Test
+    void update_withPartialFields_onlyUpdatesNonNullFields() {
+        var existing = new Resume();
+        existing.setId("1");
+        existing.setTitle("Old Title");
+        existing.setContent("Old Content");
+        existing.setThemeId("classic");
+
+        ResumeDTO dto = new ResumeDTO();
+        dto.setThemeId("modern");
+        // title and content are intentionally null
+
+        when(repository.findById("1")).thenReturn(Optional.of(existing));
+        when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        Resume result = service.update("1", dto);
+
+        // Fields not sent should retain original values
+        assertEquals("Old Title", result.getTitle());
+        assertEquals("Old Content", result.getContent());
+        // Only themeId should be updated
+        assertEquals("modern", result.getThemeId());
+    }
+
+    @Test
     void delete_callsRepository() {
         service.delete("1");
         verify(repository).deleteById("1");

@@ -50,7 +50,7 @@ public class ResumeController {
     }
 
     @PutMapping("/{id}")
-    public Resume update(@PathVariable String id, @Valid @RequestBody ResumeDTO dto) {
+    public Resume update(@PathVariable String id, @RequestBody ResumeDTO dto) {
         return resumeService.update(id, dto);
     }
 

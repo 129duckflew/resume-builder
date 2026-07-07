@@ -75,12 +75,12 @@ Write a brief 2-3 sentence professional summary that highlights your key qualifi
     public Resume update(String id, ResumeDTO dto) {
         Resume resume = resumeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Resume not found: " + id));
-        resume.setTitle(dto.getTitle());
-        resume.setContent(dto.getContent());
-        resume.setThemeId(dto.getThemeId());
-        resume.setFontSize(dto.getFontSize());
-        resume.setLineHeight(dto.getLineHeight());
-        resume.setSectionSpacing(dto.getSectionSpacing());
+        if (dto.getTitle() != null) resume.setTitle(dto.getTitle());
+        if (dto.getContent() != null) resume.setContent(dto.getContent());
+        if (dto.getThemeId() != null) resume.setThemeId(dto.getThemeId());
+        if (dto.getFontSize() != null) resume.setFontSize(dto.getFontSize());
+        if (dto.getLineHeight() != null) resume.setLineHeight(dto.getLineHeight());
+        if (dto.getSectionSpacing() != null) resume.setSectionSpacing(dto.getSectionSpacing());
         return resumeRepository.save(resume);
     }
 
