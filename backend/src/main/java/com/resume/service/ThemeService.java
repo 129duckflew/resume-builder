@@ -34,6 +34,10 @@ public class ThemeService {
         loadOrRefreshBuiltIn("classic", "Classic", "Traditional corporate style with serif fonts, monochrome");
         loadOrRefreshBuiltIn("modern", "Modern", "Clean sans-serif style for tech companies");
         loadOrRefreshBuiltIn("minimal", "Minimal", "Ultra-minimalist style for academic/research");
+        loadOrRefreshBuiltIn("sidebar", "Sidebar", "Two-column layout with colored sidebar for contact and skills");
+        loadOrRefreshBuiltIn("stackoverflow", "Stack Overflow", "Developer-friendly style with tag-like skills");
+        loadOrRefreshBuiltIn("elegant", "Elegant", "Refined business style with warm tones and serif typography");
+        loadOrRefreshBuiltIn("compact", "Compact", "Dense layout for experienced professionals");
     }
 
     private void loadOrRefreshBuiltIn(String id, String name, String description) {

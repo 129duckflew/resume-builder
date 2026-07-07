@@ -1,0 +1,178 @@
+/* ===================================================
+   Stack Overflow Theme — Developer Community Style
+   =================================================== */
+
+@page {
+    size: A4;
+    margin: 15mm 18mm;
+    background-color: #ffffff;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    color: #2f3337;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    background: #ffffff;
+}
+
+.resume-page {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* ----- Header ----- */
+h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    color: #2f3337;
+    margin-bottom: 2px;
+}
+
+.contact-info, .resume-contact {
+    font-size: 9.5pt;
+    color: #6a737c;
+    margin-bottom: 2px;
+}
+
+.resume-contact a {
+    color: #0077cc;
+}
+
+/* ----- Summary / intro ----- */
+h1 + p {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #f9f9f9;
+    border-left: 3px solid #f48024;
+    border-radius: 3px;
+    color: #3c4146;
+    font-size: 10pt;
+}
+
+/* ----- Sections ----- */
+.resume-section {
+    margin-bottom: 10px;
+}
+
+h2 {
+    font-size: 11pt;
+    font-weight: 600;
+    color: #f48024;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid #e4e6e8;
+    padding-bottom: 3px;
+    margin: 10px 0 6px;
+}
+
+h3 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: #2f3337;
+    margin-bottom: 2px;
+}
+
+p {
+    color: #3c4146;
+    font-size: 10pt;
+    margin-bottom: 4px;
+    text-align: justify;
+}
+
+/* ----- Items ----- */
+.resume-item-title {
+    font-weight: 600;
+    color: #2f3337;
+}
+
+.resume-item-date {
+    float: right;
+    color: #6a737c;
+    font-size: 9pt;
+}
+
+.resume-item-subtitle {
+    color: #6a737c;
+    font-size: 9.5pt;
+    font-style: italic;
+    margin-bottom: 3px;
+}
+
+.clearfix {
+    clear: both;
+}
+
+/* ----- Lists (as bullet points) ----- */
+ul {
+    list-style-type: none;
+    margin-left: 0;
+    margin-bottom: 4px;
+}
+
+li {
+    margin-bottom: 2px;
+    padding-left: 14px;
+    position: relative;
+    color: #3c4146;
+    font-size: 10pt;
+}
+
+li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #f48024;
+    font-weight: bold;
+}
+
+/* ----- Tag-like skills ----- */
+.skills-tags, .resume-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.skills-tags li, .resume-skills li {
+    background: #e4e6e8;
+    color: #2f3337;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 9pt;
+    list-style: none;
+    margin-bottom: 0;
+}
+
+.skills-tags li::before, .resume-skills li::before {
+    content: none;
+}
+
+strong {
+    color: #2f3337;
+}
+
+em {
+    color: #6a737c;
+}
+
+/* ----- Links ----- */
+a {
+    color: #0077cc;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #f48024;
+}
+
+@media print {
+    body { background: #ffffff; }
+}

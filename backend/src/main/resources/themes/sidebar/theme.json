@@ -1,0 +1,7 @@
+{
+  "id": "sidebar",
+  "name": "Sidebar",
+  "description": "Two-column layout with a colored sidebar for contact and skills",
+  "builtIn": true,
+  "sortOrder": 4
+}

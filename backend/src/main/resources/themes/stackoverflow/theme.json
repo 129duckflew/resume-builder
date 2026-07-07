@@ -1,0 +1,7 @@
+{
+  "id": "stackoverflow",
+  "name": "Stack Overflow",
+  "description": "Developer-friendly style inspired by Stack Overflow, with tag-like skills",
+  "builtIn": true,
+  "sortOrder": 5
+}

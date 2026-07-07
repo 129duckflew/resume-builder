@@ -63,6 +63,25 @@ h2 {
     letter-spacing: 0.5px;
 }
 
+h3 {
+    font-size: 11pt;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+p {
+    margin-bottom: 6px;
+    text-align: justify;
+}
+
+strong {
+    font-weight: bold;
+}
+
+em {
+    font-style: italic;
+}
+
 /* ----- Items (Experience / Education) ----- */
 .item-title, .resume-item-title {
     font-weight: bold;
