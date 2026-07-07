@@ -80,6 +80,10 @@ resume-builder/
 | **Modern** | `modern` | Inter 无衬线 / 蓝色 #2563eb 强调 / 圆点列表 | ✅ |
 | **Minimal** | `minimal` | system-ui 无衬线 / 灰色 #999 / 超大留白 | ✅ |
 
+## TDD 规范
+
+参见项目根目录的 `AGENTS.md` — 规定了 Red-Green-Refactor 流程、分层测试策略、命名约定等。
+
 ## 测试覆盖
 
 | 模块 | 文件 | 用例 | 覆盖内容 |
@@ -93,7 +97,9 @@ resume-builder/
 | **Frontend** — markdown.test.ts | `lib/` | 7 | 章节解析 / 行范围 / 拖拽重排 |
 | **Frontend** — resumeStore.test.ts | `stores/` | 4 | 初始状态 / setContent / setTitle / null safety |
 | **Frontend** — Layout.test.tsx | `components/` | 2 | 标题渲染 / 按钮存在 |
-| **合计** | **9 文件** | **54** | **全部通过** |
+| **Frontend** — historyStore.test.ts | `stores/` | 9 | push/undo/redo/canUndo/canRedo/reset |
+| **Frontend** — useKeyboardShortcuts.test.ts | `hooks/` | 3 | Cmd+S / Cmd+Z / Cmd+Shift+Z |
+| **合计** | **11 文件** | **76** | **全部通过** |
 
 ---
 
@@ -127,20 +133,24 @@ resume-builder/
 - [x] 预览区 iframe 动态注入主题 CSS
 - [x] 主题 API（GET /api/themes, GET /api/themes/{id}/css）
 
-### 🔲 Phase 5 — 导出与智能一页（部分完成）
+### ✅ Phase 5 — 导出与智能一页（已完成）
 - [x] ExportService HTML 生成
-- [x] 前端 ExportPanel（PDF / HTML 按钮）
-- [x] SmartOnePageService 算法骨架
-- [ ] **Playwright for Java 集成** — 精确渲染检测 + PDF 生成
-- [ ] PDF 导出端点实际生成文件
-- [ ] 前端导出错误提示（内容过长时引导用户精简）
+- [x] 前端 ExportPanel（PDF / HTML 按钮 + loading + 错误 Dialog）
+- [x] SmartOnePageService Playwright 集成（scrollHeight 测量 + 逐步压缩）
+- [x] PlaywrightConfig 单例管理（含 Chromium 不可用 fallback）
+- [x] PdfGenerationService Playwright PDF 生成
+- [x] PDF 导出端点实际生成文件 + 503/400/500 错误处理
+- [x] injectCssVariables CSS 变量注入用于智能压缩
+- [x] 前端导出错误提示（内容过长 Dialog 引导精简）
+- [x] 测试：PdfGenerationServiceTest (4) + SmartOnePageServiceTest (8 + 2 inject)
 
-### 🔲 Phase 6 — 打磨 UX
-- [ ] 键盘快捷键（Cmd+S 保存 / Tab 缩进）
-- [ ] localStorage 草稿备份
-- [ ] 版本历史 / 撤销重做
-- [ ] 更友好的空状态引导
-- [ ] EditorPage 远程预览（调用后端 API 获得精确渲染）
+### ✅ Phase 6 — UX 打磨（已完成）
+- [x] 键盘快捷键（Cmd+S 保存 / Cmd+Z 撤销 / Cmd+Shift+Z 重做）
+- [x] localStorage 草稿备份 + 自动恢复 Dialog
+- [x] Undo/Redo 历史栈（50 步上限）
+- [x] Toast 通知组件（保存成功 / 导出成功/失败）
+- [x] 空状态引导（新建引导 + 三步指引卡片）
+- [x] EditorPage 后端精确预览（debounce 800ms，fallback 客户端渲染）
 
 ---
 
@@ -156,6 +166,6 @@ cd frontend && npm run dev                             # 前端 :3000
 docker compose up --build                              # 全部容器
 
 # 测试
-cd backend && mvn test                                 # 后端 41 用例
-cd frontend && npm test                                # 前端 13 用例
+cd backend && mvn test                                 # 后端 50 用例
+cd frontend && npm test                                # 前端 26 用例
 ```
