@@ -20,6 +20,8 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -245,5 +247,23 @@ class ResumeControllerTest {
                 .andExpect(header().string("Content-Disposition",
                         "attachment; filename=\"resume.pdf\""))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PDF));
+    }
+
+    @Test
+    void exportPdf_withSmartOnePageFalse_skipsSmartLogic() throws Exception {
+        var resume = new Resume();
+        resume.setId("1");
+        resume.setContent("# Hello");
+
+        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
+        when(pdfGenerationService.isAvailable()).thenReturn(true);
+        when(pdfGenerationService.generatePdf(anyString()))
+                .thenReturn("PDF DATA".getBytes());
+
+        mockMvc.perform(post("/api/resumes/1/export/pdf?smartOnePage=false"))
+                .andExpect(status().isOk());
+
+        verify(smartOnePageService, never()).calculateOptimalSettings(any(), anyString());
     }
 }

@@ -15,6 +15,7 @@ import { useResumeStore } from '@/stores/resumeStore'
 export default function ExportPanel() {
   const [exporting, setExporting] = useState<'pdf' | 'html' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [smartOnePage, setSmartOnePage] = useState(true)
   const currentResume = useResumeStore((s) => s.currentResume)
 
   if (!currentResume) return null
@@ -24,7 +25,7 @@ export default function ExportPanel() {
     setError(null)
     try {
       if (type === 'pdf') {
-        await resumeApi.exportPdf(currentResume.id)
+        await resumeApi.exportPdf(currentResume.id, smartOnePage)
       } else {
         await resumeApi.exportHtml(currentResume.id)
       }
@@ -54,6 +55,15 @@ export default function ExportPanel() {
   return (
     <>
       <div className="flex items-center gap-2">
+        <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors">
+          <input
+            type="checkbox"
+            checked={smartOnePage}
+            onChange={(e) => setSmartOnePage(e.target.checked)}
+            className="accent-primary rounded"
+          />
+          Smart One-Page
+        </label>
         <Button
           variant="outline"
           size="sm"
