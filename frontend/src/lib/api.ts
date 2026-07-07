@@ -33,8 +33,8 @@ export const resumeApi = {
         URL.revokeObjectURL(url)
       }),
 
-  exportPdf: (id: string) =>
-    http.post(`/resumes/${id}/export/pdf?smartOnePage=true`, null,
+  exportPdf: (id: string, smart: boolean = true) =>
+    http.post(`/resumes/${id}/export/pdf?smartOnePage=${smart}`, null,
       { responseType: 'blob' })
       .then(r => {
         const url = URL.createObjectURL(new Blob([r.data], { type: 'application/pdf' }))
