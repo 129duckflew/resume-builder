@@ -31,15 +31,13 @@ public class ThemeService {
 
     @PostConstruct
     public void initBuiltInThemes() {
-        loadThemeIfAbsent("classic", "Classic", "Traditional corporate style with serif fonts, monochrome");
-        loadThemeIfAbsent("modern", "Modern", "Clean sans-serif style for tech companies");
-        loadThemeIfAbsent("minimal", "Minimal", "Ultra-minimalist style for academic/research");
+        loadOrRefreshBuiltIn("classic", "Classic", "Traditional corporate style with serif fonts, monochrome");
+        loadOrRefreshBuiltIn("modern", "Modern", "Clean sans-serif style for tech companies");
+        loadOrRefreshBuiltIn("minimal", "Minimal", "Ultra-minimalist style for academic/research");
     }
 
-    private void loadThemeIfAbsent(String id, String name, String description) {
-        if (themeRepository.findById(id).isPresent()) return;
-
-        Theme theme = new Theme();
+    private void loadOrRefreshBuiltIn(String id, String name, String description) {
+        Theme theme = themeRepository.findById(id).orElse(new Theme());
         theme.setId(id);
         theme.setName(name);
         theme.setDescription(description);

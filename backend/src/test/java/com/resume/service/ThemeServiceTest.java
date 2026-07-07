@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -68,14 +69,16 @@ class ThemeServiceTest {
     }
 
     @Test
-    void initBuiltInThemes_skipsExistingThemes() {
+    void initBuiltInThemes_overwritesExistingThemes() {
         when(repository.findById("classic")).thenReturn(Optional.of(new Theme()));
         when(repository.findById("modern")).thenReturn(Optional.of(new Theme()));
         when(repository.findById("minimal")).thenReturn(Optional.of(new Theme()));
+        when(resourceLoader.getResource(anyString()))
+                .thenReturn(new ByteArrayResource("css".getBytes()));
 
         service.initBuiltInThemes();
 
-        verify(repository, never()).save(any());
+        verify(repository, times(3)).save(any());
     }
 
     @Test
@@ -83,12 +86,11 @@ class ThemeServiceTest {
         when(repository.findById("classic")).thenReturn(Optional.empty());
         when(repository.findById("modern")).thenReturn(Optional.of(new Theme()));
         when(repository.findById("minimal")).thenReturn(Optional.of(new Theme()));
-
-        when(resourceLoader.getResource("classpath:themes/classic/style.css"))
+        when(resourceLoader.getResource(anyString()))
                 .thenReturn(new ByteArrayResource("body { color: black; }".getBytes()));
 
         service.initBuiltInThemes();
 
-        verify(repository, times(1)).save(any());
+        verify(repository, times(3)).save(any());
     }
 }
