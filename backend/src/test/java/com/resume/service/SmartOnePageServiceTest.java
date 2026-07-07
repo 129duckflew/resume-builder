@@ -13,13 +13,14 @@ class SmartOnePageServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SmartOnePageService();
+        // browser = null → falls back to estimation
+        service = new SmartOnePageService(null);
     }
 
     @Test
     void calculateOptimalSettings_withShortContent_returnsDefaultSettings() {
         Resume resume = new Resume();
-        resume.setContent("short content");
+        resume.setContent("short");
         resume.setThemeId("classic");
 
         AdjustmentResult result = service.calculateOptimalSettings(resume, "<p>short</p>");
@@ -33,9 +34,9 @@ class SmartOnePageServiceTest {
     @Test
     void calculateOptimalSettings_withLongContent_reducesFontSize() {
         Resume resume = new Resume();
-        String longContent = "# A\n".repeat(70);
-        resume.setContent(longContent);
-        resume.setThemeId("classic");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 70; i++) sb.append("# A\n");
+        resume.setContent(sb.toString());
 
         AdjustmentResult result = service.calculateOptimalSettings(
                 resume, "<p>" + "x".repeat(80 * 70) + "</p>");
@@ -47,9 +48,9 @@ class SmartOnePageServiceTest {
     @Test
     void calculateOptimalSettings_withVeryLongContent_setsFitsOnOnePageFalse() {
         Resume resume = new Resume();
-        String veryLongContent = "# A\n".repeat(100);
-        resume.setContent(veryLongContent);
-        resume.setThemeId("classic");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 100; i++) sb.append("# A\n");
+        resume.setContent(sb.toString());
 
         AdjustmentResult result = service.calculateOptimalSettings(
                 resume, "<p>" + "x".repeat(80 * 100) + "</p>");
@@ -63,7 +64,6 @@ class SmartOnePageServiceTest {
     void calculateOptimalSettings_usesExistingResumeSettings() {
         Resume resume = new Resume();
         resume.setContent("some content");
-        resume.setThemeId("classic");
         resume.setFontSize(10f);
         resume.setLineHeight(1.3f);
 
@@ -74,14 +74,42 @@ class SmartOnePageServiceTest {
     }
 
     @Test
+    void injectCssVariables_injectsBeforeHeadEnd() {
+        String html = "<html><head><style>body{}</style></head><body>x</body></html>";
+        AdjustmentResult result = new AdjustmentResult();
+        result.fontSize = 10f;
+        result.lineHeight = 1.3f;
+        result.sectionMargin = 12f;
+
+        String injected = SmartOnePageService.injectCssVariables(html, result);
+
+        assertTrue(injected.contains("--resume-font-size: 10.0pt"));
+        assertTrue(injected.contains("--resume-line-height: 1.30"));
+        assertTrue(injected.contains("--resume-section-margin: 12px"));
+        assertTrue(injected.indexOf("--resume-font-size") < injected.indexOf("</head>"));
+    }
+
+    @Test
+    void injectCssVariables_withoutHeadTag_prepends() {
+        String html = "<body>x</body>";
+        AdjustmentResult result = new AdjustmentResult();
+        result.fontSize = 11f;
+
+        String injected = SmartOnePageService.injectCssVariables(html, result);
+
+        assertTrue(injected.startsWith("<style>"));
+        assertTrue(injected.contains("--resume-font-size"));
+    }
+
+    @Test
     void calculateOptimalSettings_fontSizeDoesNotGoBelowMinimum() {
         Resume resume = new Resume();
-        String extremelyLong = "# X\n".repeat(200);
-        resume.setContent(extremelyLong);
-        resume.setThemeId("classic");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 200; i++) sb.append("# X\n");
+        resume.setContent(sb.toString());
 
-        AdjustmentResult result = service.calculateOptimalSettings(resume,
-                "<p>" + "x".repeat(80 * 200) + "</p>");
+        AdjustmentResult result = service.calculateOptimalSettings(
+                resume, "<p>" + "x".repeat(80 * 200) + "</p>");
 
         assertTrue(result.fontSize >= 8f);
     }
@@ -89,12 +117,12 @@ class SmartOnePageServiceTest {
     @Test
     void calculateOptimalSettings_lineHeightDoesNotGoBelowMinimum() {
         Resume resume = new Resume();
-        String extremelyLong = "# X\n".repeat(200);
-        resume.setContent(extremelyLong);
-        resume.setThemeId("classic");
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 200; i++) sb.append("# X\n");
+        resume.setContent(sb.toString());
 
-        AdjustmentResult result = service.calculateOptimalSettings(resume,
-                "<p>" + "x".repeat(80 * 200) + "</p>");
+        AdjustmentResult result = service.calculateOptimalSettings(
+                resume, "<p>" + "x".repeat(80 * 200) + "</p>");
 
         assertTrue(result.lineHeight >= 1.2f);
     }

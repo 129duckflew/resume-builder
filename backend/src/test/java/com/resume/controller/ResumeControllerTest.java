@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.resume.dto.ResumeDTO;
 import com.resume.entity.Resume;
 import com.resume.service.ExportService;
+import com.resume.service.PdfGenerationService;
 import com.resume.service.ResumeService;
 import com.resume.service.SmartOnePageService;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -39,6 +41,9 @@ class ResumeControllerTest {
 
     @MockBean
     private SmartOnePageService smartOnePageService;
+
+    @MockBean
+    private PdfGenerationService pdfGenerationService;
 
     @Test
     void list_returnsResumes() throws Exception {
@@ -160,5 +165,68 @@ class ResumeControllerTest {
                 .andExpect(header().string("Content-Disposition",
                         "attachment; filename=\"resume.html\""))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_HTML));
+    }
+
+    @Test
+    void exportPdf_whenSmartOnePageFails_returns400() throws Exception {
+        var resume = new Resume();
+        resume.setId("1");
+        resume.setContent("# Long");
+
+        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(exportService.generateHtml(resume)).thenReturn("<h1>Long</h1>");
+
+        var adjustment = new SmartOnePageService.AdjustmentResult();
+        adjustment.fitsOnOnePage = false;
+        adjustment.warning = "Too long";
+        when(smartOnePageService.calculateOptimalSettings(any(), anyString()))
+                .thenReturn(adjustment);
+
+        mockMvc.perform(post("/api/resumes/1/export/pdf?smartOnePage=true"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Too long"));
+    }
+
+    @Test
+    void exportPdf_whenPdfServiceUnavailable_returns503() throws Exception {
+        var resume = new Resume();
+        resume.setId("1");
+        resume.setContent("# Hello");
+
+        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
+
+        var adjustment = new SmartOnePageService.AdjustmentResult();
+        adjustment.fitsOnOnePage = true;
+        when(smartOnePageService.calculateOptimalSettings(any(), anyString()))
+                .thenReturn(adjustment);
+        when(pdfGenerationService.isAvailable()).thenReturn(false);
+
+        mockMvc.perform(post("/api/resumes/1/export/pdf"))
+                .andExpect(status().isServiceUnavailable());
+    }
+
+    @Test
+    void exportPdf_returnsPdfAttachment() throws Exception {
+        var resume = new Resume();
+        resume.setId("1");
+        resume.setContent("# Hello");
+
+        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
+
+        var adjustment = new SmartOnePageService.AdjustmentResult();
+        adjustment.fitsOnOnePage = true;
+        when(smartOnePageService.calculateOptimalSettings(any(), anyString()))
+                .thenReturn(adjustment);
+        when(pdfGenerationService.isAvailable()).thenReturn(true);
+        when(pdfGenerationService.generatePdf(anyString()))
+                .thenReturn("PDF DATA".getBytes());
+
+        mockMvc.perform(post("/api/resumes/1/export/pdf"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition",
+                        "attachment; filename=\"resume.pdf\""))
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PDF));
     }
 }

@@ -1,6 +1,7 @@
 import { Outlet, Link } from 'react-router-dom'
-import { FileText, Plus, Download } from 'lucide-react'
+import { FileText, Plus } from 'lucide-react'
 import { Button } from './ui/button'
+import { Toaster } from './ui/toaster'
 import { useResumeStore } from '@/stores/resumeStore'
 
 export default function Layout() {
@@ -18,6 +19,7 @@ export default function Layout() {
       <main className="flex-1">
         <Outlet />
       </main>
+      <Toaster />
     </div>
   )
 }

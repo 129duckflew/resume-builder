@@ -3,6 +3,7 @@ package com.resume.controller;
 import com.resume.dto.ResumeDTO;
 import com.resume.entity.Resume;
 import com.resume.service.ExportService;
+import com.resume.service.PdfGenerationService;
 import com.resume.service.ResumeService;
 import com.resume.service.SmartOnePageService;
 import jakarta.validation.Valid;
@@ -20,12 +21,15 @@ public class ResumeController {
     private final ResumeService resumeService;
     private final ExportService exportService;
     private final SmartOnePageService smartOnePageService;
+    private final PdfGenerationService pdfGenerationService;
 
     public ResumeController(ResumeService resumeService, ExportService exportService,
-                            SmartOnePageService smartOnePageService) {
+                            SmartOnePageService smartOnePageService,
+                            PdfGenerationService pdfGenerationService) {
         this.resumeService = resumeService;
         this.exportService = exportService;
         this.smartOnePageService = smartOnePageService;
+        this.pdfGenerationService = pdfGenerationService;
     }
 
     @GetMapping
@@ -77,8 +81,8 @@ public class ResumeController {
     }
 
     @PostMapping("/{id}/export/pdf")
-    public ResponseEntity<byte[]> exportPdf(@PathVariable String id,
-                                            @RequestParam(defaultValue = "true") boolean smartOnePage) {
+    public ResponseEntity<?> exportPdf(@PathVariable String id,
+                                       @RequestParam(defaultValue = "true") boolean smartOnePage) {
         Resume resume = resumeService.findById(id)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         String html = exportService.generateHtml(resume);
@@ -88,18 +92,28 @@ public class ResumeController {
                     smartOnePageService.calculateOptimalSettings(resume, html);
             if (!adjustment.fitsOnOnePage) {
                 return ResponseEntity.badRequest().body(
-                        adjustment.warning.getBytes()
-                );
+                        java.util.Map.of("error", adjustment.warning));
             }
+            html = SmartOnePageService.injectCssVariables(html, adjustment);
         }
 
-        // Placeholder for Playwright-based PDF generation
-        byte[] pdfBytes = new byte[0];
+        if (!pdfGenerationService.isAvailable()) {
+            return ResponseEntity.status(503)
+                    .body(java.util.Map.of("error",
+                            "PDF generation is not available. Playwright/Chromium not installed."));
+        }
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"resume.pdf\"")
-                .contentType(MediaType.APPLICATION_PDF)
-                .body(pdfBytes);
+        try {
+            byte[] pdfBytes = pdfGenerationService.generatePdf(html);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"resume.pdf\"")
+                    .contentType(MediaType.APPLICATION_PDF)
+                    .contentLength(pdfBytes.length)
+                    .body(pdfBytes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(java.util.Map.of("error", "PDF generation failed: " + e.getMessage()));
+        }
     }
 }
