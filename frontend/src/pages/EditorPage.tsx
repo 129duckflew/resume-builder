@@ -1,31 +1,111 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import MDEditor from '@uiw/react-md-editor'
+import { Save } from 'lucide-react'
 import { useResumeStore } from '@/stores/resumeStore'
+import { useHistoryStore } from '@/stores/historyStore'
+import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
+import { useDraftBackup } from '@/hooks/useDraftBackup'
+import { resumeApi } from '@/lib/api'
+import { toast } from '@/hooks/use-toast'
 import SectionDragList from '@/components/editor/SectionDragList'
 import ThemeSelector from '@/components/editor/ThemeSelector'
 import ExportPanel from '@/components/editor/ExportPanel'
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
 
 export default function EditorPage() {
   const { id } = useParams<{ id: string }>()
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
+  const previewTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const { currentResume, currentThemeCss, loading, fetchResume, updateResume, setContent } =
     useResumeStore()
+  const pushState = useHistoryStore((s) => s.pushState)
+  const reset = useHistoryStore((s) => s.reset)
+  const { getDraft, clearDraft } = useDraftBackup()
+  const [previewHtml, setPreviewHtml] = useState('')
+  const [showDraftDialog, setShowDraftDialog] = useState(false)
+  const [draftContent, setDraftContent] = useState<string | null>(null)
 
   useEffect(() => {
-    if (id) fetchResume(id)
+    if (!id) return
+    fetchResume(id).then(() => {
+      const draft = getDraft(id)
+      if (draft) {
+        setDraftContent(draft)
+        setShowDraftDialog(true)
+      }
+    })
   }, [id, fetchResume])
+
+  useEffect(() => {
+    if (currentResume) {
+      reset(currentResume.content)
+    }
+  }, [currentResume?.id])
+
+  const save = useCallback(() => {
+    if (!id || !currentResume) return
+    updateResume(id, { content: currentResume.content, title: currentResume.title })
+    clearDraft(id)
+    toast({ title: 'Saved', variant: 'success' })
+  }, [id, currentResume, updateResume, clearDraft])
 
   const debouncedSave = useCallback(
     (content: string) => {
       setContent(content)
+      pushState(content)
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = setTimeout(() => {
         if (id) updateResume(id, { content })
-      }, 500)
+      }, 800)
     },
-    [id, setContent, updateResume],
+    [id, setContent, updateResume, pushState],
   )
+
+  const updateTitle = useCallback(
+    (title: string) => {
+      if (!id || !currentResume) return
+      useResumeStore.setState({ currentResume: { ...currentResume, title } })
+      if (timerRef.current) clearTimeout(timerRef.current)
+      timerRef.current = setTimeout(() => updateResume(id, { title }), 800)
+    },
+    [id, currentResume, updateResume],
+  )
+
+  // Debounced backend preview
+  useEffect(() => {
+    if (!id || !currentResume?.content) return
+    if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
+    previewTimerRef.current = setTimeout(async () => {
+      try {
+        const html = await resumeApi.preview(id)
+        setPreviewHtml(html)
+      } catch {
+        // fallback to client-side preview
+        setPreviewHtml('')
+      }
+    }, 800)
+    return () => {
+      if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
+    }
+  }, [id, currentResume?.content])
+
+  useKeyboardShortcuts({ onSave: save })
+
+  const restoreDraft = () => {
+    if (draftContent && id) {
+      setContent(draftContent)
+      updateResume(id, { content: draftContent })
+    }
+    setShowDraftDialog(false)
+  }
 
   if (loading || !currentResume) {
     return (
@@ -35,9 +115,11 @@ export default function EditorPage() {
     )
   }
 
-  const previewHtml = currentResume.content
+  const clientPreview = currentResume.content
     ? `<style>${currentThemeCss}</style><div class="resume-page">${renderMarkdown(currentResume.content)}</div>`
     : ''
+
+  const displayHtml = previewHtml || clientPreview
 
   return (
     <div className="h-[calc(100vh-57px)] flex flex-col">
@@ -46,19 +128,14 @@ export default function EditorPage() {
         <input
           type="text"
           value={currentResume.title}
-          onChange={(e) => {
-            const val = e.target.value
-            useResumeStore.setState({
-              currentResume: { ...currentResume, title: val },
-            })
-            if (timerRef.current) clearTimeout(timerRef.current)
-            timerRef.current = setTimeout(() => {
-              if (id) updateResume(id, { title: val })
-            }, 500)
-          }}
+          onChange={(e) => updateTitle(e.target.value)}
           className="flex-1 text-lg font-semibold border-none outline-none bg-transparent"
           placeholder="Resume Title"
         />
+        <Button variant="ghost" size="sm" onClick={save} title="Save (Cmd+S)">
+          <Save className="h-4 w-4 mr-1" />
+          Save
+        </Button>
         <ThemeSelector />
         <ExportPanel />
       </div>
@@ -87,10 +164,10 @@ export default function EditorPage() {
         {/* Live A4 preview */}
         <div className="w-[500px] bg-gray-100 overflow-y-auto flex justify-center p-4">
           <div className="shadow-lg bg-white w-[210mm] min-h-[297mm]">
-            {previewHtml ? (
+            {displayHtml ? (
               <div
                 className="resume-page"
-                dangerouslySetInnerHTML={{ __html: previewHtml }}
+                dangerouslySetInnerHTML={{ __html: displayHtml }}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-8">
@@ -100,13 +177,32 @@ export default function EditorPage() {
           </div>
         </div>
       </div>
+
+      {/* Draft recovery dialog */}
+      <Dialog open={showDraftDialog} onOpenChange={setShowDraftDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unsaved Draft Found</DialogTitle>
+            <DialogDescription className="pt-2">
+              We found a local draft that may contain unsaved changes.
+              Would you like to restore it?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowDraftDialog(false)}>
+              Discard Draft
+            </Button>
+            <Button onClick={restoreDraft}>
+              Restore Draft
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
 
 function renderMarkdown(md: string): string {
-  // Simple markdown to HTML rendering
-  // In production, use the backend API for this
   let html = md
     .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')

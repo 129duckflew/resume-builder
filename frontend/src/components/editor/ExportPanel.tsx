@@ -1,56 +1,105 @@
 import { useState } from 'react'
-import { Download, FileText, FileDown } from 'lucide-react'
+import { FileText, FileDown, Loader2, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { toast } from '@/hooks/use-toast'
 import { resumeApi } from '@/lib/api'
 import { useResumeStore } from '@/stores/resumeStore'
 
 export default function ExportPanel() {
-  const [exporting, setExporting] = useState(false)
+  const [exporting, setExporting] = useState<'pdf' | 'html' | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const currentResume = useResumeStore((s) => s.currentResume)
 
   if (!currentResume) return null
 
   const doExport = async (type: 'pdf' | 'html') => {
-    setExporting(true)
+    setExporting(type)
+    setError(null)
     try {
       if (type === 'pdf') {
         await resumeApi.exportPdf(currentResume.id)
       } else {
         await resumeApi.exportHtml(currentResume.id)
       }
+      toast({
+        title: 'Export successful',
+        description: `Resume exported as ${type.toUpperCase()}`,
+        variant: 'success',
+      })
     } catch (err: any) {
-      if (err.response?.data) {
-        alert(typeof err.response.data === 'string'
-          ? err.response.data
-          : 'Export failed - content may be too long for one page')
+      const msg =
+        err.response?.data?.error ||
+        (typeof err.response?.data === 'string' ? err.response.data : null)
+      if (msg) {
+        setError(msg)
       } else {
-        alert('Export failed')
+        toast({
+          title: 'Export failed',
+          description: err.message || 'Unknown error',
+          variant: 'destructive',
+        })
       }
     } finally {
-      setExporting(false)
+      setExporting(null)
     }
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => doExport('pdf')}
-        disabled={exporting}
-      >
-        <FileDown className="h-4 w-4 mr-1" />
-        {exporting ? 'Exporting...' : 'PDF'}
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => doExport('html')}
-        disabled={exporting}
-      >
-        <FileText className="h-4 w-4 mr-1" />
-        HTML
-      </Button>
-    </div>
+    <>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => doExport('pdf')}
+          disabled={exporting !== null}
+        >
+          {exporting === 'pdf' ? (
+            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+          ) : (
+            <FileDown className="h-4 w-4 mr-1" />
+          )}
+          {exporting === 'pdf' ? 'Exporting...' : 'PDF'}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => doExport('html')}
+          disabled={exporting !== null}
+        >
+          {exporting === 'html' ? (
+            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+          ) : (
+            <FileText className="h-4 w-4 mr-1" />
+          )}
+          {exporting === 'html' ? 'Exporting...' : 'HTML'}
+        </Button>
+      </div>
+
+      <Dialog open={!!error} onOpenChange={(open) => !open && setError(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Export Warning
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              {error}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end">
+            <Button variant="outline" onClick={() => setError(null)}>
+              Got it
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

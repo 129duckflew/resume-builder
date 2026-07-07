@@ -4,9 +4,14 @@ import { BrowserRouter } from 'react-router-dom'
 import Layout from '@/components/Layout'
 
 vi.mock('@/stores/resumeStore', () => ({
-  useResumeStore: vi.fn(() => ({
-    createResume: vi.fn().mockResolvedValue({ id: '1' }),
-  })),
+  useResumeStore: vi.fn((selector?: any) => {
+    const state = { createResume: vi.fn().mockResolvedValue({ id: '1' }) }
+    return selector ? selector(state) : state
+  }),
+}))
+
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({ toasts: [], toast: vi.fn(), dismiss: vi.fn() }),
 }))
 
 describe('Layout', () => {
