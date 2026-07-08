@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type { DesensitizeRule } from '@/types/desensitize'
-import type { Resume } from '@/types/resume'
+import type { Resume, ResumeStyle } from '@/types/resume'
 import type { SectionTemplate } from '@/types/sectionTemplate'
 
 export const http = axios.create({
@@ -90,6 +90,15 @@ export const sectionTemplateApi = {
 
   delete: (id: number) =>
     http.delete(`/section-templates/${id}`),
+}
+
+export const styleApi = {
+  getStyle: (resumeId: string, themeId: string) =>
+    http.get<ResumeStyle>(`/resumes/${resumeId}/styles`, { params: { themeId } })
+      .then(r => r.status === 204 ? null : r.data),
+
+  saveStyle: (resumeId: string, themeId: string, style: Partial<ResumeStyle>) =>
+    http.put<ResumeStyle>(`/resumes/${resumeId}/styles`, style, { params: { themeId } }).then(r => r.data),
 }
 
 export const jsonResumeApi = {

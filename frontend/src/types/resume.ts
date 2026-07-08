@@ -26,3 +26,12 @@ export interface Section {
   startLine: number
   endLine: number
 }
+
+export interface ResumeStyle {
+  id: number | null
+  resumeId: string
+  themeId: string
+  fontSize: number | null
+  lineHeight: number | null
+  sectionSpacing: string | null
+}
