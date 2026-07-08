@@ -30,6 +30,71 @@
         "edit": "deny",
         "bash": "deny"
       }
+    },
+    "api-designer": {
+      "mode": "subagent",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow"
+      }
+    },
+    "code-reviewer": {
+      "mode": "subagent",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow"
+      }
+    },
+    "test-runner": {
+      "mode": "subagent",
+      "permission": {
+        "edit": "deny",
+        "bash": {
+          "cd * && mvn test *": "allow",
+          "cd * && npm test *": "allow",
+          "mvn test": "allow",
+          "npm test": "allow"
+        },
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow"
+      }
+    },
+    "docker-ops": {
+      "mode": "subagent",
+      "permission": {
+        "edit": "deny",
+        "bash": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow"
+      }
+    },
+    "doc-recorder": {
+      "mode": "subagent",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow"
+      }
+    },
+    "explore": {
+      "mode": "primary",
+      "permission": {
+        "edit": "deny",
+        "bash": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow"
+      }
     }
   }
 }
