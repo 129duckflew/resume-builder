@@ -106,10 +106,20 @@ export default function EditorPage() {
   useKeyboardShortcuts({ onSave: save })
 
   const scrollEditorToLine = useCallback((line: number) => {
-    const el = document.querySelector('.w-md-editor-text')
-    if (!el) return
-    el.scrollTop = line * 22
-  }, [])
+    const textarea = document.querySelector<HTMLTextAreaElement>(
+      'textarea.w-md-editor-text-input',
+    )
+    if (!textarea) return
+    const lines = (currentResume?.content ?? '').split('\n')
+    let offset = 0
+    for (let i = 0; i < line && i < lines.length; i++) {
+      offset += lines[i].length + 1
+    }
+    textarea.focus()
+    textarea.setSelectionRange(offset, offset)
+    const area = textarea.closest('.w-md-editor-area') as HTMLElement | null
+    if (area) area.scrollTop = line * 18
+  }, [currentResume?.content])
 
   const restoreDraft = () => {
     if (draftContent && id) {

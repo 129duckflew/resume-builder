@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 
 vi.mock('react-router-dom', async () => {
@@ -156,5 +157,47 @@ describe('EditorPage preview refresh on theme change', () => {
     await vi.waitFor(() => {
       expect(mockPreview).toHaveBeenCalledTimes(2)
     })
+  })
+})
+
+describe('EditorPage section click locates editor', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    storeState = { ...initialStore, currentResume: { ...initialStore.currentResume } }
+  })
+
+  it('focuses textarea and places caret at the clicked section line', async () => {
+    const user = userEvent.setup()
+    render(<EditorPageApp />)
+
+    // content = "# Hello\n## Section\ncontent"
+    // section "Section" has startLine=1 → char offset = "# Hello\n".length = 8
+    await user.click(screen.getByRole('button', { name: 'Section' }))
+
+    const textarea = document.querySelector(
+      'textarea.w-md-editor-text-input',
+    ) as HTMLTextAreaElement
+    expect(textarea).toBeTruthy()
+    expect(document.activeElement).toBe(textarea)
+    expect(textarea.selectionStart).toBe(8)
+    expect(textarea.selectionEnd).toBe(8)
+  })
+
+  it('sets scrollTop on the editor scroll container for the clicked line', async () => {
+    const user = userEvent.setup()
+    render(<EditorPageApp />)
+
+    const area = document.querySelector('.w-md-editor-area') as HTMLElement
+    expect(area).toBeTruthy()
+    const spy = vi.spyOn(area, 'scrollTop', 'set')
+
+    // section "Hello" has startLine=0 → scrollTop = 0 * 18 = 0 (set still called)
+    await user.click(screen.getByRole('button', { name: 'Hello' }))
+    expect(spy).toHaveBeenCalled()
+
+    // section "Section" has startLine=1 → scrollTop = 1 * 18 = 18
+    spy.mockClear()
+    await user.click(screen.getByRole('button', { name: 'Section' }))
+    expect(spy).toHaveBeenCalledWith(18)
   })
 })
