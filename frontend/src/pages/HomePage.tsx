@@ -1,15 +1,33 @@
-import { useRef } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Edit3, Trash2, Eye, FileText, Plus, Sparkles, Upload } from 'lucide-react'
 import { useResumeStore } from '@/stores/resumeStore'
 import { jsonResumeApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialogAction } from '@/components/ui/confirm-dialog'
 import { toast } from '@/hooks/use-toast'
 
 export default function HomePage() {
   const navigate = useNavigate()
   const { resumes, loading, fetchResumes, deleteResume, createResume } = useResumeStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const deleteButtonRef = useRef<HTMLButtonElement | null>(null)
+
+  const handleDelete = useCallback(async () => {
+    if (!deleteTarget) return
+    setDeleteLoading(true)
+    try {
+      await deleteResume(deleteTarget)
+      setDeleteTarget(null)
+      toast({ title: 'Resume deleted', variant: 'success' })
+    } catch {
+      toast({ title: 'Delete failed', description: 'Could not delete resume. Please try again.', variant: 'destructive' })
+    } finally {
+      setDeleteLoading(false)
+    }
+  }, [deleteTarget, deleteResume])
 
   const handleCreate = async () => {
     const title = `Resume ${new Date().toLocaleDateString()}`
@@ -42,6 +60,7 @@ export default function HomePage() {
   }
 
   return (
+    <>
     <div className="max-w-5xl mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold">My Resumes</h1>
@@ -131,10 +150,9 @@ export default function HomePage() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => {
-                      if (confirm('Delete this resume?')) {
-                        deleteResume(resume.id)
-                      }
+                    onClick={(e) => {
+                      deleteButtonRef.current = e.currentTarget
+                      setDeleteTarget(resume.id)
                     }}
                     title="Delete"
                   >
@@ -151,5 +169,23 @@ export default function HomePage() {
         </div>
       )}
     </div>
+      <ConfirmDialogAction
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+        }}
+        title="Delete Resume"
+        description={`Are you sure you want to delete "${resumes.find(r => r.id === deleteTarget)?.title || 'this resume'}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="destructive"
+        loading={deleteLoading}
+        onConfirm={handleDelete}
+        onCloseAutoFocus={(e) => {
+          e.preventDefault()
+          deleteButtonRef.current?.focus()
+        }}
+      />
+    </>
   )
 }
