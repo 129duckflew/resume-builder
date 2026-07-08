@@ -31,6 +31,10 @@ public class ResumeService {
         return resumeRepository.findByIdAndUserId(id, userId);
     }
 
+    public Optional<Resume> findById(String id) {
+        return resumeRepository.findById(id);
+    }
+
     public Resume create(ResumeDTO dto, Long userId) {
         Resume resume = new Resume();
         resume.setUserId(userId);
