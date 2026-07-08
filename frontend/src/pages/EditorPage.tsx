@@ -34,6 +34,7 @@ export default function EditorPage() {
   const [showDraftDialog, setShowDraftDialog] = useState(false)
   const [draftContent, setDraftContent] = useState<string | null>(null)
   const [smartOnePage, setSmartOnePage] = useState(true)
+  const [desensitize, setDesensitize] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -86,13 +87,13 @@ export default function EditorPage() {
     [id, currentResume, updateResume],
   )
 
-  // Debounced backend preview — re-fetches on content, theme, or smart one-page toggle
+  // Debounced backend preview — re-fetches on content, theme, smart one-page, or desensitize toggle
   useEffect(() => {
     if (!id || !currentResume?.content) return
     if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
     previewTimerRef.current = setTimeout(async () => {
       try {
-        const html = await resumeApi.preview(id, smartOnePage)
+        const html = await resumeApi.preview(id, smartOnePage, desensitize)
         setPreviewHtml(html)
       } catch {
         // fallback to client-side preview
@@ -101,7 +102,7 @@ export default function EditorPage() {
     return () => {
       if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
     }
-  }, [id, currentResume?.content, currentResume?.themeId, smartOnePage])
+  }, [id, currentResume?.content, currentResume?.themeId, smartOnePage, desensitize])
 
   useKeyboardShortcuts({ onSave: save })
 
@@ -137,8 +138,12 @@ export default function EditorPage() {
     )
   }
 
+  const previewContent = desensitize
+    ? applyDesensitize(currentResume.content)
+    : currentResume.content
+
   const clientPreview = currentResume.content
-    ? `<style>${currentThemeCss}</style><div class="resume-page">${renderMarkdown(currentResume.content)}</div>`
+    ? `<style>${currentThemeCss}</style><div class="resume-page">${renderMarkdown(previewContent)}</div>`
     : ''
 
   const displayHtml = previewHtml || clientPreview
@@ -159,7 +164,7 @@ export default function EditorPage() {
           Save
         </Button>
         <ThemeSelector />
-        <ExportPanel smartOnePage={smartOnePage} onSmartOnePageChange={setSmartOnePage} />
+        <ExportPanel smartOnePage={smartOnePage} onSmartOnePageChange={setSmartOnePage} desensitize={desensitize} onDesensitizeChange={setDesensitize} />
       </div>
 
       {/* Main editing area */}
@@ -238,6 +243,19 @@ export default function EditorPage() {
       </Dialog>
     </div>
   )
+}
+
+const DESENSITIZE_RULES: { pattern: RegExp; replacement: string }[] = [
+  { pattern: /(1[3-9]\d)\d{4}(\d{4})/g, replacement: '$1****$2' },
+  { pattern: /(\w)[^@\s]*@/g, replacement: '$1***@' },
+]
+
+function applyDesensitize(content: string): string {
+  let result = content
+  for (const rule of DESENSITIZE_RULES) {
+    result = result.replace(rule.pattern, rule.replacement)
+  }
+  return result
 }
 
 function renderMarkdown(md: string): string {
