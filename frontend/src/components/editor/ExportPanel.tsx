@@ -13,13 +13,14 @@ import { resumeApi } from '@/lib/api'
 import { useResumeStore } from '@/stores/resumeStore'
 import DesensitizeSettings from './DesensitizeSettings'
 
-export default function ExportPanel({ smartOnePage, onSmartOnePageChange }: {
+export default function ExportPanel({ smartOnePage, onSmartOnePageChange, desensitize, onDesensitizeChange }: {
   smartOnePage: boolean
   onSmartOnePageChange: (v: boolean) => void
+  desensitize: boolean
+  onDesensitizeChange: (v: boolean) => void
 }) {
   const [exporting, setExporting] = useState<'pdf' | 'html' | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [desensitize, setDesensitize] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const currentResume = useResumeStore((s) => s.currentResume)
 
@@ -73,7 +74,7 @@ export default function ExportPanel({ smartOnePage, onSmartOnePageChange }: {
           <input
             type="checkbox"
             checked={desensitize}
-            onChange={(e) => setDesensitize(e.target.checked)}
+            onChange={(e) => onDesensitizeChange(e.target.checked)}
             className="accent-primary rounded"
           />
           <Shield className="h-3 w-3" />

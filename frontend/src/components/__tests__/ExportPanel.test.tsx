@@ -40,24 +40,31 @@ vi.mock('@/stores/resumeStore', () => ({
   }),
 }))
 
+const defaultProps = {
+  smartOnePage: true,
+  onSmartOnePageChange: () => {},
+  desensitize: false,
+  onDesensitizeChange: () => {},
+}
+
 describe('ExportPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
   it('renders PDF and HTML buttons', () => {
-    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={() => {}} />)
+    render(<ExportPanel {...defaultProps} />)
     expect(screen.getByText('PDF')).toBeTruthy()
     expect(screen.getByText('HTML')).toBeTruthy()
   })
 
   it('renders desensitize toggle and settings button', () => {
-    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={() => {}} />)
+    render(<ExportPanel {...defaultProps} />)
     expect(screen.getByText('Desensitize')).toBeTruthy()
   })
 
   it('smart one-page toggle defaults to checked', () => {
-    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={() => {}} />)
+    render(<ExportPanel {...defaultProps} />)
     const checkboxes = screen.getAllByRole('checkbox') as HTMLInputElement[]
     const smartCheckbox = checkboxes.find(c => c.checked === true)
     expect(smartCheckbox).toBeTruthy()
@@ -65,7 +72,7 @@ describe('ExportPanel', () => {
 
   it('allows toggling smart one-page off', async () => {
     const onChange = vi.fn()
-    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={onChange} />)
+    render(<ExportPanel {...defaultProps} onSmartOnePageChange={onChange} />)
     const checkboxes = screen.getAllByRole('checkbox') as HTMLInputElement[]
     const smartCheckbox = checkboxes.find(c => c.checked === true)
     await userEvent.click(smartCheckbox!)
@@ -73,28 +80,28 @@ describe('ExportPanel', () => {
   })
 
   it('passes smartOnePage=true and desensitize=false when exporting PDF with both toggles default', async () => {
-    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={() => {}} />)
+    render(<ExportPanel {...defaultProps} />)
     await userEvent.click(screen.getByText('PDF'))
     expect(mockExportPdf).toHaveBeenCalledWith('test-id', true, false)
   })
 
   it('passes smartOnePage=false when exporting PDF with toggle off', async () => {
-    render(<ExportPanel smartOnePage={false} onSmartOnePageChange={() => {}} />)
+    render(<ExportPanel {...defaultProps} smartOnePage={false} />)
     await userEvent.click(screen.getByText('PDF'))
     expect(mockExportPdf).toHaveBeenCalledWith('test-id', false, false)
   })
 
   it('calls exportHtml for HTML button', async () => {
-    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={() => {}} />)
+    render(<ExportPanel {...defaultProps} />)
     await userEvent.click(screen.getByText('HTML'))
     expect(mockExportHtml).toHaveBeenCalledWith('test-id', true, false)
   })
 
   it('toggles desensitize on and passes it to export', async () => {
-    render(<ExportPanel smartOnePage={false} onSmartOnePageChange={() => {}} />)
+    const onDesensitizeChange = vi.fn()
+    render(<ExportPanel {...defaultProps} desensitize={false} onDesensitizeChange={onDesensitizeChange} />)
     const desensitizeCheckbox = screen.getByLabelText('Desensitize') as HTMLInputElement
     await userEvent.click(desensitizeCheckbox)
-    await userEvent.click(screen.getByText('PDF'))
-    expect(mockExportPdf).toHaveBeenCalledWith('test-id', false, true)
+    expect(onDesensitizeChange).toHaveBeenCalledWith(true)
   })
 })

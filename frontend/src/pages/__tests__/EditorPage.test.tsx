@@ -131,7 +131,7 @@ describe('EditorPage preview refresh on theme change', () => {
   it('calls preview API on initial render', async () => {
     render(<EditorPageApp />)
     await vi.waitFor(() => {
-      expect(mockPreview).toHaveBeenCalledWith('test-id', true)
+      expect(mockPreview).toHaveBeenCalledWith('test-id', true, false)
     })
   })
 
