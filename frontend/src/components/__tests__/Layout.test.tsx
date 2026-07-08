@@ -14,6 +14,13 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toasts: [], toast: vi.fn(), dismiss: vi.fn() }),
 }))
 
+vi.mock('@/stores/authStore', () => ({
+  useAuthStore: vi.fn((selector?: any) => {
+    const state = { token: 'mock', username: 'testuser', logout: vi.fn() }
+    return selector ? selector(state) : state
+  }),
+}))
+
 describe('Layout', () => {
   it('renders app title', () => {
     render(

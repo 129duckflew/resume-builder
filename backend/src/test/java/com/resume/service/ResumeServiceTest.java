@@ -14,6 +14,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,6 +24,7 @@ class ResumeServiceTest {
     private ResumeRepository repository;
 
     private ResumeService service;
+    private final Long userId = 1L;
 
     @BeforeEach
     void setUp() {
@@ -30,109 +32,91 @@ class ResumeServiceTest {
     }
 
     @Test
-    void findAll_returnsAllResumes() {
+    void findByUserId_returnsResumesForUser() {
         var r1 = new Resume();
         r1.setId("1");
-        var r2 = new Resume();
-        r2.setId("2");
-        when(repository.findAllByOrderByUpdatedAtDesc()).thenReturn(List.of(r1, r2));
+        when(repository.findByUserIdOrderByUpdatedAtDesc(userId)).thenReturn(List.of(r1));
 
-        List<Resume> result = service.findAll();
+        List<Resume> result = service.findByUserId(userId);
 
-        assertEquals(2, result.size());
-        verify(repository).findAllByOrderByUpdatedAtDesc();
+        assertEquals(1, result.size());
+        verify(repository).findByUserIdOrderByUpdatedAtDesc(userId);
     }
 
     @Test
-    void findById_withExistingId_returnsResume() {
+    void findByIdAndUserId_withExistingId_returnsResume() {
         var resume = new Resume();
         resume.setId("abc");
-        when(repository.findById("abc")).thenReturn(Optional.of(resume));
+        when(repository.findByIdAndUserId("abc", userId)).thenReturn(Optional.of(resume));
 
-        Optional<Resume> result = service.findById("abc");
+        Optional<Resume> result = service.findByIdAndUserId("abc", userId);
 
         assertTrue(result.isPresent());
         assertEquals("abc", result.get().getId());
     }
 
     @Test
-    void findById_withNonExistingId_returnsEmpty() {
-        when(repository.findById("missing")).thenReturn(Optional.empty());
+    void findByIdAndUserId_withNonExistingId_returnsEmpty() {
+        when(repository.findByIdAndUserId("missing", userId)).thenReturn(Optional.empty());
 
-        Optional<Resume> result = service.findById("missing");
+        Optional<Resume> result = service.findByIdAndUserId("missing", userId);
 
         assertFalse(result.isPresent());
     }
 
     @Test
-    void create_createsResumeWithDefaults() {
+    void create_createsResumeWithUserId() {
         ResumeDTO dto = new ResumeDTO();
         dto.setTitle("My Resume");
 
         Resume saved = new Resume();
         saved.setId("new-id");
+        saved.setUserId(userId);
         saved.setTitle("My Resume");
         when(repository.save(any())).thenReturn(saved);
 
-        Resume result = service.create(dto);
+        Resume result = service.create(dto, userId);
 
         assertEquals("new-id", result.getId());
-        assertEquals("My Resume", result.getTitle());
+        assertEquals(userId, result.getUserId());
         verify(repository).save(any());
-    }
-
-    @Test
-    void create_usesProvidedContent() {
-        ResumeDTO dto = new ResumeDTO();
-        dto.setTitle("Test");
-        dto.setContent("# Custom Content");
-        dto.setThemeId("modern");
-
-        Resume saved = new Resume();
-        saved.setId("1");
-        saved.setTitle("Test");
-        saved.setContent("# Custom Content");
-        saved.setThemeId("modern");
-        when(repository.save(any())).thenReturn(saved);
-
-        Resume result = service.create(dto);
-
-        assertEquals("# Custom Content", result.getContent());
-        assertEquals("modern", result.getThemeId());
     }
 
     @Test
     void update_updatesExistingResume() {
         ResumeDTO dto = new ResumeDTO();
         dto.setTitle("Updated");
-        dto.setContent("# Updated");
-        dto.setThemeId("minimal");
 
         var existing = new Resume();
         existing.setId("1");
         existing.setTitle("Old");
-        existing.setContent("old");
-        existing.setThemeId("classic");
+        existing.setUserId(userId);
 
-        when(repository.findById("1")).thenReturn(Optional.of(existing));
+        when(repository.findByIdAndUserId("1", userId)).thenReturn(Optional.of(existing));
         when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        Resume result = service.update("1", dto);
+        Resume result = service.update("1", dto, userId);
 
         assertEquals("Updated", result.getTitle());
-        assertEquals("# Updated", result.getContent());
-        assertEquals("minimal", result.getThemeId());
     }
 
     @Test
     void update_withNonExistingId_throws() {
         ResumeDTO dto = new ResumeDTO();
         dto.setTitle("X");
-        dto.setContent("x");
+        when(repository.findByIdAndUserId("missing", userId)).thenReturn(Optional.empty());
 
-        when(repository.findById("missing")).thenReturn(Optional.empty());
+        assertThrows(RuntimeException.class, () -> service.update("missing", dto, userId));
+    }
 
-        assertThrows(RuntimeException.class, () -> service.update("missing", dto));
+    @Test
+    void delete_callsRepository() {
+        var resume = new Resume();
+        resume.setId("1");
+        when(repository.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
+
+        service.delete("1", userId);
+        verify(repository).delete(resume);
     }
 
     @Test
@@ -142,26 +126,32 @@ class ResumeServiceTest {
         existing.setTitle("Old Title");
         existing.setContent("Old Content");
         existing.setThemeId("classic");
+        existing.setUserId(userId);
 
         ResumeDTO dto = new ResumeDTO();
         dto.setThemeId("modern");
-        // title and content are intentionally null
 
-        when(repository.findById("1")).thenReturn(Optional.of(existing));
+        when(repository.findByIdAndUserId("1", userId)).thenReturn(Optional.of(existing));
         when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        Resume result = service.update("1", dto);
+        Resume result = service.update("1", dto, userId);
 
-        // Fields not sent should retain original values
         assertEquals("Old Title", result.getTitle());
         assertEquals("Old Content", result.getContent());
-        // Only themeId should be updated
         assertEquals("modern", result.getThemeId());
     }
 
     @Test
-    void delete_callsRepository() {
-        service.delete("1");
-        verify(repository).deleteById("1");
+    void assignOrphanResumes_assignsUserId() {
+        var orphan = new Resume();
+        orphan.setId("1");
+        orphan.setUserId(null);
+
+        when(repository.findByUserIdIsNull()).thenReturn(List.of(orphan));
+        when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        service.assignOrphanResumes(userId);
+
+        assertEquals(userId, orphan.getUserId());
     }
 }

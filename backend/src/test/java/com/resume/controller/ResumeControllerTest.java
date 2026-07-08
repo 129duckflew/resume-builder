@@ -4,29 +4,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.resume.dto.ResumeDTO;
 import com.resume.entity.Resume;
 import com.resume.service.ExportService;
+import com.resume.config.JwtUtil;
 import com.resume.service.PdfGenerationService;
 import com.resume.service.ResumeService;
 import com.resume.service.SmartOnePageService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
-
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ResumeController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ResumeControllerTest {
 
     @Autowired
@@ -47,13 +48,24 @@ class ResumeControllerTest {
     @MockBean
     private PdfGenerationService pdfGenerationService;
 
+    @MockBean
+    private JwtUtil jwtUtil;
+
+    private final Long userId = 1L;
+
+    @BeforeEach
+    void setUp() {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(userId + ":testuser", null, List.of()));
+    }
+
     @Test
     void list_returnsResumes() throws Exception {
         var resume = new Resume();
         resume.setId("1");
         resume.setTitle("Test");
 
-        when(resumeService.findAll()).thenReturn(List.of(resume));
+        when(resumeService.findByUserId(userId)).thenReturn(List.of(resume));
 
         mockMvc.perform(get("/api/resumes"))
                 .andExpect(status().isOk())
@@ -67,7 +79,7 @@ class ResumeControllerTest {
         resume.setId("abc");
         resume.setTitle("Found");
 
-        when(resumeService.findById("abc")).thenReturn(Optional.of(resume));
+        when(resumeService.findByIdAndUserId("abc", userId)).thenReturn(Optional.of(resume));
 
         mockMvc.perform(get("/api/resumes/abc"))
                 .andExpect(status().isOk())
@@ -76,7 +88,7 @@ class ResumeControllerTest {
 
     @Test
     void get_withNonExistingId_returns404() throws Exception {
-        when(resumeService.findById("missing")).thenReturn(Optional.empty());
+        when(resumeService.findByIdAndUserId("missing", userId)).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/resumes/missing"))
                 .andExpect(status().isNotFound());
@@ -91,7 +103,7 @@ class ResumeControllerTest {
         saved.setId("new-id");
         saved.setTitle("New");
 
-        when(resumeService.create(any())).thenReturn(saved);
+        when(resumeService.create(any(), eq(userId))).thenReturn(saved);
 
         mockMvc.perform(post("/api/resumes")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -123,7 +135,7 @@ class ResumeControllerTest {
         updated.setTitle("Updated");
         updated.setContent("# New");
 
-        when(resumeService.update(eq("1"), any())).thenReturn(updated);
+        when(resumeService.update(eq("1"), any(), eq(userId))).thenReturn(updated);
 
         mockMvc.perform(put("/api/resumes/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -141,9 +153,8 @@ class ResumeControllerTest {
         resume.setContent("# Hello");
         resume.setThemeId("classic");
 
-        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
 
-        // Only send themeId — no title or content
         mockMvc.perform(put("/api/resumes/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"themeId\":\"modern\"}"))
@@ -162,7 +173,7 @@ class ResumeControllerTest {
         resume.setId("1");
         resume.setContent("# Hello");
 
-        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
         when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
 
         mockMvc.perform(post("/api/resumes/1/preview"))
@@ -176,7 +187,7 @@ class ResumeControllerTest {
         resume.setId("1");
         resume.setContent("# Hello");
 
-        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
         when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
 
         mockMvc.perform(post("/api/resumes/1/export/html"))
@@ -192,7 +203,7 @@ class ResumeControllerTest {
         resume.setId("1");
         resume.setContent("# Long");
 
-        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
         when(exportService.generateHtml(resume)).thenReturn("<h1>Long</h1>");
 
         var adjustment = new SmartOnePageService.AdjustmentResult();
@@ -212,7 +223,7 @@ class ResumeControllerTest {
         resume.setId("1");
         resume.setContent("# Hello");
 
-        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
         when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
 
         var adjustment = new SmartOnePageService.AdjustmentResult();
@@ -231,7 +242,7 @@ class ResumeControllerTest {
         resume.setId("1");
         resume.setContent("# Hello");
 
-        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
         when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
 
         var adjustment = new SmartOnePageService.AdjustmentResult();
@@ -255,7 +266,7 @@ class ResumeControllerTest {
         resume.setId("1");
         resume.setContent("# Hello");
 
-        when(resumeService.findById("1")).thenReturn(Optional.of(resume));
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
         when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
         when(pdfGenerationService.isAvailable()).thenReturn(true);
         when(pdfGenerationService.generatePdf(anyString()))
