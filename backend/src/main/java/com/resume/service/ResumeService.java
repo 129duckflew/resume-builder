@@ -6,6 +6,8 @@ import com.resume.repository.ResumeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -13,9 +15,12 @@ import java.util.Optional;
 public class ResumeService {
 
     private final ResumeRepository resumeRepository;
+    private final ResumeVersionService versionService;
 
-    public ResumeService(ResumeRepository resumeRepository) {
+    public ResumeService(ResumeRepository resumeRepository,
+                         ResumeVersionService versionService) {
         this.resumeRepository = resumeRepository;
+        this.versionService = versionService;
     }
 
     public List<Resume> findByUserId(Long userId) {
@@ -77,12 +82,28 @@ Write a brief 2-3 sentence professional summary that highlights your key qualifi
     public Resume update(String id, ResumeDTO dto, Long userId) {
         Resume resume = resumeRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found: " + id));
+        // Snapshot before applying changes
+        versionService.saveSnapshot(resume);
         if (dto.getTitle() != null) resume.setTitle(dto.getTitle());
         if (dto.getContent() != null) resume.setContent(dto.getContent());
         if (dto.getThemeId() != null) resume.setThemeId(dto.getThemeId());
         if (dto.getFontSize() != null) resume.setFontSize(dto.getFontSize());
         if (dto.getLineHeight() != null) resume.setLineHeight(dto.getLineHeight());
         if (dto.getSectionSpacing() != null) resume.setSectionSpacing(dto.getSectionSpacing());
+        return resumeRepository.save(resume);
+    }
+
+    @Transactional
+    public Resume restoreFromVersion(Resume restored, Long userId) {
+        Resume resume = resumeRepository.findByIdAndUserId(restored.getId(), userId)
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+        versionService.saveSnapshot(resume);
+        resume.setTitle(restored.getTitle());
+        resume.setContent(restored.getContent());
+        resume.setThemeId(restored.getThemeId());
+        resume.setFontSize(restored.getFontSize());
+        resume.setLineHeight(restored.getLineHeight());
+        resume.setSectionSpacing(restored.getSectionSpacing());
         return resumeRepository.save(resume);
     }
 

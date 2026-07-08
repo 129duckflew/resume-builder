@@ -92,6 +92,17 @@ export const sectionTemplateApi = {
     http.delete(`/section-templates/${id}`),
 }
 
+export const versionApi = {
+  list: (resumeId: string) =>
+    http.get<ResumeVersion[]>(`/resumes/${resumeId}/versions`).then(r => r.data),
+
+  get: (resumeId: string, version: number) =>
+    http.get<ResumeVersion>(`/resumes/${resumeId}/versions/${version}`).then(r => r.data),
+
+  restore: (resumeId: string, version: number) =>
+    http.post<Resume>(`/resumes/${resumeId}/versions/${version}/restore`).then(r => r.data),
+}
+
 export const styleApi = {
   getStyle: (resumeId: string, themeId: string) =>
     http.get<ResumeStyle>(`/resumes/${resumeId}/styles`, { params: { themeId } })

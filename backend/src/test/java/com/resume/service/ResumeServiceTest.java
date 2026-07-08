@@ -23,12 +23,15 @@ class ResumeServiceTest {
     @Mock
     private ResumeRepository repository;
 
+    @Mock
+    private ResumeVersionService versionService;
+
     private ResumeService service;
     private final Long userId = 1L;
 
     @BeforeEach
     void setUp() {
-        service = new ResumeService(repository);
+        service = new ResumeService(repository, versionService);
     }
 
     @Test

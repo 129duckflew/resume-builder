@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import MDEditor from '@uiw/react-md-editor'
-import { Save } from 'lucide-react'
+import { Save, Clock } from 'lucide-react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { useResumeStore } from '@/stores/resumeStore'
 import { useHistoryStore } from '@/stores/historyStore'
@@ -12,6 +12,7 @@ import { toast } from '@/hooks/use-toast'
 import SectionDragList from '@/components/editor/SectionDragList'
 import ThemeSelector from '@/components/editor/ThemeSelector'
 import ExportPanel from '@/components/editor/ExportPanel'
+import VersionPanel from '@/components/editor/VersionPanel'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -35,6 +36,7 @@ export default function EditorPage() {
   const [draftContent, setDraftContent] = useState<string | null>(null)
   const [smartOnePage, setSmartOnePage] = useState(true)
   const [desensitize, setDesensitize] = useState(false)
+  const [showVersions, setShowVersions] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -164,6 +166,9 @@ export default function EditorPage() {
           Save
         </Button>
         <ThemeSelector />
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowVersions(true)} title="Version History">
+          <Clock className="h-4 w-4" />
+        </Button>
         <ExportPanel smartOnePage={smartOnePage} onSmartOnePageChange={setSmartOnePage} desensitize={desensitize} onDesensitizeChange={setDesensitize} />
       </div>
 
@@ -217,6 +222,11 @@ export default function EditorPage() {
           </div>
         </Panel>
       </PanelGroup>
+
+      {id && (
+        <VersionPanel resumeId={id} open={showVersions} onOpenChange={setShowVersions}
+          onRestore={() => fetchResume(id).then(() => { clearDraft(id) })} />
+      )}
 
       {/* Draft recovery dialog */}
       <Dialog open={showDraftDialog} onOpenChange={setShowDraftDialog}>
