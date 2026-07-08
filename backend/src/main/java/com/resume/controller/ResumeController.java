@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,35 +35,35 @@ public class ResumeController {
 
     @GetMapping
     public List<Resume> list() {
-        return resumeService.findAll();
+        return resumeService.findByUserId(currentUserId());
     }
 
     @PostMapping
     public Resume create(@Valid @RequestBody ResumeDTO dto) {
-        return resumeService.create(dto);
+        return resumeService.create(dto, currentUserId());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Resume> get(@PathVariable String id) {
-        return resumeService.findById(id)
+        return resumeService.findByIdAndUserId(id, currentUserId())
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     public Resume update(@PathVariable String id, @RequestBody ResumeDTO dto) {
-        return resumeService.update(id, dto);
+        return resumeService.update(id, dto, currentUserId());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {
-        resumeService.delete(id);
+        resumeService.delete(id, currentUserId());
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{id}/preview")
     public ResponseEntity<String> preview(@PathVariable String id) {
-        Resume resume = resumeService.findById(id)
+        Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         String html = exportService.generateHtml(resume);
         return ResponseEntity.ok(html);
@@ -70,7 +71,7 @@ public class ResumeController {
 
     @PostMapping("/{id}/export/html")
     public ResponseEntity<String> exportHtml(@PathVariable String id) {
-        Resume resume = resumeService.findById(id)
+        Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         String html = exportService.generateHtml(resume);
         return ResponseEntity.ok()
@@ -83,7 +84,7 @@ public class ResumeController {
     @PostMapping("/{id}/export/pdf")
     public ResponseEntity<?> exportPdf(@PathVariable String id,
                                        @RequestParam(defaultValue = "true") boolean smartOnePage) {
-        Resume resume = resumeService.findById(id)
+        Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         String html = exportService.generateHtml(resume);
 
@@ -115,5 +116,11 @@ public class ResumeController {
             return ResponseEntity.internalServerError()
                     .body(java.util.Map.of("error", "PDF generation failed: " + e.getMessage()));
         }
+    }
+
+    private Long currentUserId() {
+        String principal = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        return Long.parseLong(principal.split(":", 2)[0]);
     }
 }

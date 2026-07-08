@@ -1,10 +1,20 @@
-import { Outlet, Link } from 'react-router-dom'
-import { FileText, Plus } from 'lucide-react'
+import { Outlet, Link, useNavigate } from 'react-router-dom'
+import { FileText, Plus, LogOut } from 'lucide-react'
 import { Button } from './ui/button'
 import { Toaster } from './ui/toaster'
+import { useAuthStore } from '@/stores/authStore'
 import { useResumeStore } from '@/stores/resumeStore'
 
 export default function Layout() {
+  const navigate = useNavigate()
+  const username = useAuthStore((s) => s.username)
+  const logout = useAuthStore((s) => s.logout)
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b bg-white px-6 py-3 flex items-center justify-between">
@@ -14,7 +24,13 @@ export default function Layout() {
             Resume Builder
           </Link>
         </div>
-        <NewResumeButton />
+        <div className="flex items-center gap-3">
+          <NewResumeButton />
+          <span className="text-sm text-muted-foreground">{username}</span>
+          <Button variant="ghost" size="sm" onClick={handleLogout} title="Sign out">
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
       </header>
       <main className="flex-1">
         <Outlet />

@@ -1,9 +1,11 @@
 package com.resume.controller;
 
+import com.resume.config.JwtUtil;
 import com.resume.entity.Theme;
 import com.resume.service.ThemeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -16,6 +18,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ThemeController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class ThemeControllerTest {
 
     @Autowired
@@ -23,6 +26,9 @@ class ThemeControllerTest {
 
     @MockBean
     private ThemeService themeService;
+
+    @MockBean
+    private JwtUtil jwtUtil;
 
     @Test
     void list_returnsThemes() throws Exception {

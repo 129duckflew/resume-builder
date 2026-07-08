@@ -4,6 +4,7 @@ import com.resume.dto.ResumeDTO;
 import com.resume.entity.Resume;
 import com.resume.repository.ResumeRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,16 +18,17 @@ public class ResumeService {
         this.resumeRepository = resumeRepository;
     }
 
-    public List<Resume> findAll() {
-        return resumeRepository.findAllByOrderByUpdatedAtDesc();
+    public List<Resume> findByUserId(Long userId) {
+        return resumeRepository.findByUserIdOrderByUpdatedAtDesc(userId);
     }
 
-    public Optional<Resume> findById(String id) {
-        return resumeRepository.findById(id);
+    public Optional<Resume> findByIdAndUserId(String id, Long userId) {
+        return resumeRepository.findByIdAndUserId(id, userId);
     }
 
-    public Resume create(ResumeDTO dto) {
+    public Resume create(ResumeDTO dto, Long userId) {
         Resume resume = new Resume();
+        resume.setUserId(userId);
         resume.setTitle(dto.getTitle());
         resume.setContent(dto.getContent() != null ? dto.getContent() : DEFAULT_CONTENT);
         resume.setThemeId(dto.getThemeId() != null ? dto.getThemeId() : "classic");
@@ -72,8 +74,8 @@ Write a brief 2-3 sentence professional summary that highlights your key qualifi
 - **Certifications:** Cert 1, Cert 2
 """;
 
-    public Resume update(String id, ResumeDTO dto) {
-        Resume resume = resumeRepository.findById(id)
+    public Resume update(String id, ResumeDTO dto, Long userId) {
+        Resume resume = resumeRepository.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found: " + id));
         if (dto.getTitle() != null) resume.setTitle(dto.getTitle());
         if (dto.getContent() != null) resume.setContent(dto.getContent());
@@ -84,7 +86,18 @@ Write a brief 2-3 sentence professional summary that highlights your key qualifi
         return resumeRepository.save(resume);
     }
 
-    public void delete(String id) {
-        resumeRepository.deleteById(id);
+    public void delete(String id, Long userId) {
+        Resume resume = resumeRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new RuntimeException("Resume not found: " + id));
+        resumeRepository.delete(resume);
+    }
+
+    @Transactional
+    public void assignOrphanResumes(Long userId) {
+        List<Resume> orphans = resumeRepository.findByUserIdIsNull();
+        for (Resume r : orphans) {
+            r.setUserId(userId);
+            resumeRepository.save(r);
+        }
     }
 }
