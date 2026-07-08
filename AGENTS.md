@@ -74,15 +74,15 @@ resume-builder/
 收到功能需求后，按以下关卡顺序推进。**带 🚧 的关卡完成后必须停下汇报、等用户确认再进下一关**；未带 🚧 的可自动连续执行。
 
 | # | 关卡 | 动作 | 派发 / 加载 | 类型 |
-|---|---|---|---|---|---|
+| :--- |:---|:---| :--- | :--- |
 | 1 | 规划 | 出方案（影响面、文件清单、测试计划） | `plan` 或 build 内规划 | 🚧 |
 | 2 | API 设计 | 涉及后端新端点 / DB 变更时先拿规范 | `task` → `@api-designer` | 自动 |
 | 3 | 实现 | TDD：Red → Green → Refactor | 按需 `skill(...)` | 自动 |
-| 4 | 测试 | 跑后端 `mvn test` + 前端 `npm test` | `task` → `@test-runner` | 🚧 |
-| 5 | 审查 | 审 diff（安全 / 并发 / 资源 / 覆盖） | `task` → `@code-reviewer` | 🚧 |
-| 6 | 提交 | 实现 + 测试同提交 | 询问用户后 commit | 🚧 |
-| 7 | 部署 | `docker compose up --build -d` backend + frontend | `task` → `@docker-ops` | 自动 |
-
+| 4 | 测试 | 跑 `mvn test` + `npm test` | `task` → `@test-runner` | 🚧 |
+| 5 | 审查 | 审 diff（安全/并发/资源/覆盖） | `task` → `@code-reviewer` | 🚧 |
+| 6 | 提交 | 实现+测试同提交，询问用户后 commit | 主 agent 直接执行 | 🚧 |
+| 7 | 部署 | `docker compose up --build -d` | `task` → `@docker-ops` | 自动 |
+| 8 | 输出文档 | 归档进度到 `progress.md`，清理上下文，定义下一 Goal | `task` → `@doc-recorder` | 自动 |
 ### 派发规则（满足即派，不要自己硬扛）
 
 - 涉及 DB Schema / 新 REST 端点 → 先 `task` 派 `@api-designer`，拿到 JSON 规范再写后端
@@ -119,7 +119,7 @@ resume-builder/
 | `@docker-ops` | Docker 构建/部署/日志 | 长日志不进主线程，只返结论 |
 | `@code-reviewer` | 安全审查、并发分析、资源泄漏检查 | 检查报告不中断主线开发 |
 | `@test-runner` | 批量测试、失败分析、覆盖率缺口 | 测试日志蒸馏为通过/失败清单 |
-
+| `@doc-recorder` | 维护 progress.md、归档当前迭代、清理上下文并定义新 Goal | 复杂的变更日志与归档逻辑，输出精简的阶段里程碑 |
 ---
 
 ## Skills 按需加载
@@ -132,12 +132,13 @@ resume-builder/
 - `@skill react-component` — React 组件编写 Checklist
 - `@skill docker-deploy` — Docker 部署 Checklist
 - `@skill testing` — 测试规范 Checklist
-
+- `@skill tdd-protocol` — Agentic TDD Red→Green→Refactor→Verify→Commit 完整协议
+- `@skill doc-recording` — 进度归档与 progress.md 维护规范 Checklist
 ---
 
 ## 禁止事项
 
-- 禁止修改 `progress.md`
+
 - 禁止直接操作数据库（使用 JPA Repository）
 - 禁止跳过测试直接提交
 - 禁止硬编码密钥（使用 `application.yml` + 环境变量）

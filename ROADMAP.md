@@ -1,50 +1,76 @@
 # Resume Builder — 项目蓝图
 
-## 短期高价值目标
+## 进度
+
+| 目标 | 状态 | 提交 |
+|---|---|---|
+| ✅ 1. 自定义章节模板 | 已完成 | `7bc7736` |
+| ✅ 2. JSON Resume 导入导出 | 已完成 | `017aec1` + `48b8243` |
+| ✅ 3. 切换主题保留样式微调 | 已完成 | `5e888df` |
 
 ---
 
-### 目标一：自定义章节模板
+## 中期核心能力
 
-降低用户输入门槛，提供预置章节模板并支持自定义。
+### 目标四：服务端版本历史
 
-| 步骤 | 内容 | 涉及文件 |
+每次 `PUT /api/resumes/{id}` 自动存档，支持版本浏览、diff 对比、一键回滚。
+
+| # | 内容 | 涉及 |
 |---|---|---|
-| 1.1 | 设计 `SectionTemplate` 实体：`id`, `userId`(null=系统内置), `name`, `icon`, `prompt`(markdown 模板), `sortOrder` | `entity/SectionTemplate.java` |
-| 1.2 | 初始化系统内置模板（个人信息、工作经历、教育背景、技能、项目经历、证书） | `service/SectionTemplateService.java` + `@PostConstruct` |
-| 1.3 | API: `GET /api/section-templates`（系统+用户）、`POST/PUT/DELETE /api/section-templates`（用户自定义） | `controller/SectionTemplateController.java` |
-| 1.4 | 前端 Section 侧栏增加「+ 添加章节」按钮，弹出模板选择列表 | `components/editor/SectionDragList.tsx` → 新增 `SectionTemplatePicker` 组件 |
-| 1.5 | 选中模板后，在编辑器光标处插入模板 Markdown 内容 | `pages/EditorPage.tsx` 集成 |
-| 1.6 | 为新增端点添加测试 | `SectionTemplateServiceTest.java`, `SectionTemplateControllerTest.java` |
+| 4.1 | 新建 `ResumeVersion` 实体：`id, resumeId, versionNumber, title, content, themeId, fontSize, lineHeight, sectionSpacing, createdAt` | `entity/ResumeVersion.java` |
+| 4.2 | 实现 `ResumeVersionService`：每次 update 前自动 `saveSnapshot()`，版本号递增 | `service/ResumeVersionService.java` |
+| 4.3 | API: `GET /api/resumes/{id}/versions`（列表）、`GET /api/resumes/{id}/versions/{version}`（详情）、`POST /api/resumes/{id}/versions/{version}/restore`（回滚） | `controller/ResumeVersionController.java` |
+| 4.4 | 前端 EditorPage 增加版本侧栏/下拉：版本列表、显示时间戳、点击恢复 | `components/editor/VersionPanel.tsx` |
+| 4.5 | 版本间 diff 对比展示（修改/新增/删除行高亮） | `components/editor/VersionDiff.tsx` |
+| 4.6 | 测试 + 版本数上限策略（保留最近 N 版或自动清理旧版） | —— |
+
+**影响评估**：数据库新表，业务核心变更，需注意每次 update 多一次 insert 写入。建议保留最近 50 版。
 
 ---
 
-### 目标二：JSON Resume 导入导出
+### 目标五：可分享链接
 
-支持 [jsonresume.org](https://jsonresume.org) 标准格式，实现跨平台简历迁移。
+生成公开只读链接，可选择是否套用脱敏规则。
 
-| 步骤 | 内容 | 涉及文件 |
+| # | 内容 | 涉及 |
 |---|---|---|
-| 2.1 | 设计 `jsonresume-schema` 到内部 Markdown 的双向转换器 | `service/JsonResumeConverter.java` |
-| 2.2 | 实现 `import(content)`：将 JSON Resume → Markdown（按 `basics`、`work`、`education`、`skills` 等节生成对应 Markdown 标题+列表） | `service/JsonResumeConverter.java` |
-| 2.3 | 实现 `export(resume)`：解析现有 Markdown → JSON Resume 结构（按 Markdown 标题映射回 JSON 字段） | `service/JsonResumeConverter.java` |
-| 2.4 | API: `POST /api/resumes/import/json`（创建新简历）、`GET /api/resumes/{id}/export/json`（下载 `.json`） | `controller/ResumeController.java` |
-| 2.5 | 前端 HomePage 增加「导入 JSON」按钮；Editor/Preview 增加「导出 JSON」按钮 | `pages/HomePage.tsx`, `components/editor/ExportPanel.tsx` |
-| 2.6 | 为转换器添加测试（round-trip 验证） | `JsonResumeConverterTest.java` |
+| 5.1 | `ShareLink` 实体：`id(UUID), resumeId, enabled, desensitize, expiresAt, createdAt` | `entity/ShareLink.java` |
+| 5.2 | `POST /api/resumes/{id}/share` 创建分享链接，`GET /s/{token}` 公开访问（无 JWT） | `controller/ShareController.java` |
+| 5.3 | 公开端点返回纯 HTML（同 preview），受 `enabled` + `expiresAt` 控制 | `config/SecurityConfig.java` 放行 `/s/**` |
+| 5.4 | 前端 Editor/Preview 增加"分享"按钮 → 创建链接 → 显示可复制 URL + 开关 | —— |
+| 5.5 | 测试 | —— |
 
 ---
 
-### 目标三：切换主题保留用户样式微调
+### 目标六：E2E 测试（Playwright）
 
-当前切换主题会丢失用户对 `fontSize`/`lineHeight` 的微调。目标是将用户自定义样式持久化并按主题独立存储。
+用 Playwright 覆盖核心用户流程，避免回归。
 
-| 步骤 | 内容 | 涉及文件 |
+| # | 内容 | 涉及 |
 |---|---|---|
-| 3.1 | 扩展 Resume 实体或新建 `ResumeStyle` 实体，按 `(resumeId, themeId)` 存储样式覆盖值 | `entity/ResumeStyle.java` |
-| 3.2 | 新增 `GET /api/resumes/{id}/styles?themeId=` 和 `PUT /api/resumes/{id}/styles` 端点 | `controller/ResumeController.java`, `service/ResumeStyleService.java` |
-| 3.3 | 前端 `ThemeSelector` 切换主题时，先保存当前主题的样式，再加载新主题的已存样式 | `components/editor/ThemeSelector.tsx` |
-| 3.4 | 导出时应用当前主题 + 对应样式覆盖 | `service/ExportService.java` |
-| 3.5 | 为服务和端点添加测试 | `ResumeStyleServiceTest.java` |
+| 6.1 | 配置 Playwright Test Runner | `frontend/e2e/playwright.config.ts` |
+| 6.2 | 注册 → 登录 → 创建简历 → 编辑内容 → 切换主题 → 保存 | `e2e/auth-resume.spec.ts` |
+| 6.3 | 拖拽排序章节 → 导出 PDF → 导出 HTML → 导出 JSON | `e2e/export.spec.ts` |
+| 6.4 | 导入 JSON → 验证内容渲染正确 | `e2e/import.spec.ts` |
+| 6.5 | CI 集成（GitHub Actions / docker compose 启动 → 跑 e2e） | `.github/workflows/e2e.yml` |
+
+**注意**：需要 docker 内 Playwright 浏览器镜像，或 host 模式共享主机 Chromium。
+
+---
+
+### 目标七：AI 辅助写作
+
+接入 LLM API，提供语法润色、内容建议、根据岗位描述定制简历。
+
+| # | 内容 | 涉及 |
+|---|---|---|
+| 7.1 | 后端 `AiService` 封装 LLM API 调用（OpenAI 兼容接口） | `service/AiService.java` |
+| 7.2 | `POST /api/resumes/{id}/ai/rewrite` — 润色当前内容 | `controller/AiController.java` |
+| 7.3 | `POST /api/resumes/{id}/ai/suggest` — 基于岗位描述生成定制建议 | —— |
+| 7.4 | 前端 EditorPage 增加 Magic Wand 按钮 → 弹出 AI 助手面板 | `components/editor/AiAssistant.tsx` |
+| 7.5 | 流式输出（SSE）逐 token 渲染到预览 | —— |
+| 7.6 | API Key 管理（用户自行配置或系统全局配置） | —— |
 
 ---
 
