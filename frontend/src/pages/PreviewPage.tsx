@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Download, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Download, AlertTriangle, Shield } from 'lucide-react'
 import { resumeApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 
@@ -11,19 +11,20 @@ export default function PreviewPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [smartOnePage, setSmartOnePage] = useState(true)
+  const [desensitize, setDesensitize] = useState(false)
 
   useEffect(() => {
     if (!id) return
     setLoading(true)
     setError(null)
-    resumeApi.preview(id, smartOnePage).then((h) => {
+    resumeApi.preview(id, smartOnePage, desensitize).then((h) => {
       setHtml(h)
       setLoading(false)
     }).catch((err) => {
       setError(err.response?.data?.error || 'Preview generation failed')
       setLoading(false)
     })
-  }, [id, smartOnePage])
+  }, [id, smartOnePage, desensitize])
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -63,11 +64,21 @@ export default function PreviewPage() {
           />
           Smart One-Page
         </label>
-        <Button variant="outline" size="sm" onClick={() => resumeApi.exportPdf(id!, smartOnePage)}>
+        <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors">
+          <input
+            type="checkbox"
+            checked={desensitize}
+            onChange={(e) => setDesensitize(e.target.checked)}
+            className="accent-primary rounded"
+          />
+          <Shield className="h-3 w-3" />
+          Desensitize
+        </label>
+        <Button variant="outline" size="sm" onClick={() => resumeApi.exportPdf(id!, smartOnePage, desensitize)}>
           <Download className="h-4 w-4 mr-1" />
           Download PDF
         </Button>
-        <Button variant="outline" size="sm" onClick={() => resumeApi.exportHtml(id!, smartOnePage)}>
+        <Button variant="outline" size="sm" onClick={() => resumeApi.exportHtml(id!, smartOnePage, desensitize)}>
           <Download className="h-4 w-4 mr-1" />
           Download HTML
         </Button>

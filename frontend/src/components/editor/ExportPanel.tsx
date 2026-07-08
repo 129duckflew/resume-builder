@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FileText, FileDown, Loader2, AlertTriangle } from 'lucide-react'
+import { FileText, FileDown, Loader2, AlertTriangle, Shield, Settings2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
 import { toast } from '@/hooks/use-toast'
 import { resumeApi } from '@/lib/api'
 import { useResumeStore } from '@/stores/resumeStore'
+import DesensitizeSettings from './DesensitizeSettings'
 
 export default function ExportPanel({ smartOnePage, onSmartOnePageChange }: {
   smartOnePage: boolean
@@ -18,6 +19,8 @@ export default function ExportPanel({ smartOnePage, onSmartOnePageChange }: {
 }) {
   const [exporting, setExporting] = useState<'pdf' | 'html' | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [desensitize, setDesensitize] = useState(false)
+  const [showSettings, setShowSettings] = useState(false)
   const currentResume = useResumeStore((s) => s.currentResume)
 
   if (!currentResume) return null
@@ -27,13 +30,13 @@ export default function ExportPanel({ smartOnePage, onSmartOnePageChange }: {
     setError(null)
     try {
       if (type === 'pdf') {
-        await resumeApi.exportPdf(currentResume.id, smartOnePage)
+        await resumeApi.exportPdf(currentResume.id, smartOnePage, desensitize)
       } else {
-        await resumeApi.exportHtml(currentResume.id, smartOnePage)
+        await resumeApi.exportHtml(currentResume.id, smartOnePage, desensitize)
       }
       toast({
         title: 'Export successful',
-        description: `Resume exported as ${type.toUpperCase()}`,
+        description: `Resume exported as ${type.toUpperCase()}${desensitize ? ' (desensitized)' : ''}`,
         variant: 'success',
       })
     } catch (err: any) {
@@ -66,6 +69,19 @@ export default function ExportPanel({ smartOnePage, onSmartOnePageChange }: {
           />
           Smart One-Page
         </label>
+        <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors">
+          <input
+            type="checkbox"
+            checked={desensitize}
+            onChange={(e) => setDesensitize(e.target.checked)}
+            className="accent-primary rounded"
+          />
+          <Shield className="h-3 w-3" />
+          Desensitize
+        </label>
+        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSettings(true)} title="Desensitize Settings">
+          <Settings2 className="h-3.5 w-3.5" />
+        </Button>
         <Button
           variant="outline"
           size="sm"
@@ -112,6 +128,8 @@ export default function ExportPanel({ smartOnePage, onSmartOnePageChange }: {
           </div>
         </DialogContent>
       </Dialog>
+
+      <DesensitizeSettings open={showSettings} onOpenChange={setShowSettings} />
     </>
   )
 }

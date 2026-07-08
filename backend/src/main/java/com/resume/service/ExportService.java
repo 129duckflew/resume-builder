@@ -4,21 +4,30 @@ import com.resume.entity.Resume;
 import com.resume.entity.Theme;
 import org.springframework.stereotype.Service;
 
-import java.io.StringWriter;
-
 @Service
 public class ExportService {
 
     private final MarkdownService markdownService;
     private final ThemeService themeService;
+    private final DesensitizeService desensitizeService;
 
-    public ExportService(MarkdownService markdownService, ThemeService themeService) {
+    public ExportService(MarkdownService markdownService, ThemeService themeService,
+                         DesensitizeService desensitizeService) {
         this.markdownService = markdownService;
         this.themeService = themeService;
+        this.desensitizeService = desensitizeService;
     }
 
     public String generateHtml(Resume resume) {
-        String bodyHtml = markdownService.toHtml(resume.getContent());
+        return generateHtml(resume, false, null);
+    }
+
+    public String generateHtml(Resume resume, boolean desensitize, Long userId) {
+        String content = resume.getContent();
+        if (desensitize) {
+            content = desensitizeService.apply(content, userId);
+        }
+        String bodyHtml = markdownService.toHtml(content);
         Theme theme = themeService.findById(resume.getThemeId())
                 .orElse(themeService.findById("classic").orElse(null));
         String css = theme != null ? theme.getCssContent() : "";
