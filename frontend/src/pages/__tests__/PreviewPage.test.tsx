@@ -45,11 +45,11 @@ describe('PreviewPage', () => {
     expect(screen.getByText('Loading preview...')).toBeTruthy()
   })
 
-  it('calls preview API with smartOnePage=true on mount', async () => {
+  it('calls preview API with smartOnePage=true and desensitize=false on mount', async () => {
     mockPreview.mockResolvedValue('<h1>Hello</h1>')
     render(<PreviewPageApp />)
     await vi.waitFor(() => {
-      expect(mockPreview).toHaveBeenCalledWith('test-id', true)
+      expect(mockPreview).toHaveBeenCalledWith('test-id', true, false)
     })
   })
 
@@ -95,16 +95,33 @@ describe('PreviewPage', () => {
     })
 
     mockPreview.mockResolvedValue('<h1>World</h1>')
-    const checkbox = screen.getByRole('checkbox') as HTMLInputElement
-    await userEvent.click(checkbox)
+    const smartCheckbox = screen.getByLabelText('Smart One-Page') as HTMLInputElement
+    await userEvent.click(smartCheckbox)
 
     await vi.waitFor(() => {
       expect(mockPreview).toHaveBeenCalledTimes(2)
     })
-    expect(mockPreview).toHaveBeenCalledWith('test-id', false)
+    expect(mockPreview).toHaveBeenCalledWith('test-id', false, false)
   })
 
-  it('Download PDF button calls exportPdf with smartOnePage=true', async () => {
+  it('toggling desensitize re-fetches preview', async () => {
+    mockPreview.mockResolvedValue('<h1>Hello</h1>')
+    render(<PreviewPageApp />)
+
+    await vi.waitFor(() => {
+      expect(screen.queryByText('Loading preview...')).toBeNull()
+    })
+
+    mockPreview.mockResolvedValue('<h1>Masked</h1>')
+    const desensitizeCheckbox = screen.getByLabelText('Desensitize') as HTMLInputElement
+    await userEvent.click(desensitizeCheckbox)
+
+    await vi.waitFor(() => {
+      expect(mockPreview).toHaveBeenCalledWith('test-id', true, true)
+    })
+  })
+
+  it('Download PDF button calls exportPdf with smartOnePage=true and desensitize=false', async () => {
     mockPreview.mockResolvedValue('<h1>Hello</h1>')
     render(<PreviewPageApp />)
 
@@ -113,10 +130,10 @@ describe('PreviewPage', () => {
     })
 
     await userEvent.click(screen.getByText('Download PDF'))
-    expect(mockExportPdf).toHaveBeenCalledWith('test-id', true)
+    expect(mockExportPdf).toHaveBeenCalledWith('test-id', true, false)
   })
 
-  it('Download HTML button calls exportHtml with smartOnePage=true', async () => {
+  it('Download HTML button calls exportHtml with smartOnePage=true and desensitize=false', async () => {
     mockPreview.mockResolvedValue('<h1>Hello</h1>')
     render(<PreviewPageApp />)
 
@@ -125,7 +142,7 @@ describe('PreviewPage', () => {
     })
 
     await userEvent.click(screen.getByText('Download HTML'))
-    expect(mockExportHtml).toHaveBeenCalledWith('test-id', true)
+    expect(mockExportHtml).toHaveBeenCalledWith('test-id', true, false)
   })
 
   it('renders Back to Editor button', async () => {

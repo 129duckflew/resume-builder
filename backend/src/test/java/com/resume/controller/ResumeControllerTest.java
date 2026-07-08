@@ -174,7 +174,7 @@ class ResumeControllerTest {
         resume.setContent("# Hello");
 
         when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
-        when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
+        when(exportService.generateHtml(resume, false, userId)).thenReturn("<h1>Hello</h1>");
 
         mockMvc.perform(post("/api/resumes/1/preview"))
                 .andExpect(status().isOk())
@@ -188,7 +188,7 @@ class ResumeControllerTest {
         resume.setContent("# Hello");
 
         when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
-        when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
+        when(exportService.generateHtml(resume, false, userId)).thenReturn("<h1>Hello</h1>");
 
         var adjustment = new SmartOnePageService.AdjustmentResult();
         adjustment.fontSize = 9f;
@@ -208,7 +208,7 @@ class ResumeControllerTest {
         resume.setContent("# Hello");
 
         when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
-        when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
+        when(exportService.generateHtml(resume, false, userId)).thenReturn("<h1>Hello</h1>");
 
         mockMvc.perform(post("/api/resumes/1/export/html"))
                 .andExpect(status().isOk())
@@ -224,7 +224,7 @@ class ResumeControllerTest {
         resume.setContent("# Long");
 
         when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
-        when(exportService.generateHtml(resume)).thenReturn("<h1>Long</h1>");
+        when(exportService.generateHtml(resume, false, userId)).thenReturn("<h1>Long</h1>");
 
         var adjustment = new SmartOnePageService.AdjustmentResult();
         adjustment.fitsOnOnePage = false;
@@ -244,7 +244,7 @@ class ResumeControllerTest {
         resume.setContent("# Hello");
 
         when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
-        when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
+        when(exportService.generateHtml(resume, false, userId)).thenReturn("<h1>Hello</h1>");
 
         var adjustment = new SmartOnePageService.AdjustmentResult();
         adjustment.fitsOnOnePage = true;
@@ -263,7 +263,7 @@ class ResumeControllerTest {
         resume.setContent("# Hello");
 
         when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
-        when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
+        when(exportService.generateHtml(resume, false, userId)).thenReturn("<h1>Hello</h1>");
 
         var adjustment = new SmartOnePageService.AdjustmentResult();
         adjustment.fitsOnOnePage = true;
@@ -287,7 +287,7 @@ class ResumeControllerTest {
         resume.setContent("# Hello");
 
         when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
-        when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
+        when(exportService.generateHtml(resume, false, userId)).thenReturn("<h1>Hello</h1>");
         when(pdfGenerationService.isAvailable()).thenReturn(true);
         when(pdfGenerationService.generatePdf(anyString()))
                 .thenReturn("PDF DATA".getBytes());

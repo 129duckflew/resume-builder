@@ -67,10 +67,12 @@ public class ResumeController {
 
     @PostMapping("/{id}/preview")
     public ResponseEntity<?> preview(@PathVariable String id,
-                                     @RequestParam(defaultValue = "false") boolean smartOnePage) {
-        Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
+                                     @RequestParam(defaultValue = "false") boolean smartOnePage,
+                                     @RequestParam(defaultValue = "false") boolean desensitize) {
+        Long userId = currentUserId();
+        Resume resume = resumeService.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
-        String html = exportService.generateHtml(resume);
+        String html = exportService.generateHtml(resume, desensitize, userId);
 
         if (smartOnePage) {
             try {
@@ -87,10 +89,12 @@ public class ResumeController {
 
     @PostMapping("/{id}/export/html")
     public ResponseEntity<?> exportHtml(@PathVariable String id,
-                                        @RequestParam(defaultValue = "false") boolean smartOnePage) {
-        Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
+                                        @RequestParam(defaultValue = "false") boolean smartOnePage,
+                                        @RequestParam(defaultValue = "false") boolean desensitize) {
+        Long userId = currentUserId();
+        Resume resume = resumeService.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
-        String html = exportService.generateHtml(resume);
+        String html = exportService.generateHtml(resume, desensitize, userId);
 
         if (smartOnePage) {
             try {
@@ -111,10 +115,12 @@ public class ResumeController {
 
     @PostMapping("/{id}/export/pdf")
     public ResponseEntity<?> exportPdf(@PathVariable String id,
-                                       @RequestParam(defaultValue = "true") boolean smartOnePage) {
-        Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
+                                       @RequestParam(defaultValue = "true") boolean smartOnePage,
+                                       @RequestParam(defaultValue = "false") boolean desensitize) {
+        Long userId = currentUserId();
+        Resume resume = resumeService.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
-        String html = exportService.generateHtml(resume);
+        String html = exportService.generateHtml(resume, desensitize, userId);
 
         if (smartOnePage) {
             SmartOnePageService.AdjustmentResult adjustment =

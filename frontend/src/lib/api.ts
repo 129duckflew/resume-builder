@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { DesensitizeRule } from '@/types/desensitize'
 import type { Resume } from '@/types/resume'
 
 export const http = axios.create({
@@ -26,6 +27,15 @@ http.interceptors.response.use(
   },
 )
 
+function blobDownload(data: Blob, filename: string) {
+  const url = URL.createObjectURL(new Blob([data], { type: data.type }))
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export const resumeApi = {
   list: () => http.get<Resume[]>('/resumes').then(r => r.data),
 
@@ -39,31 +49,17 @@ export const resumeApi = {
 
   delete: (id: string) => http.delete(`/resumes/${id}`),
 
-  preview: (id: string, smartOnePage: boolean = false) =>
-    http.post<string>(`/resumes/${id}/preview?smartOnePage=${smartOnePage}`).then(r => r.data),
+  preview: (id: string, smartOnePage: boolean = false, desensitize: boolean = false) =>
+    http.post<string>(`/resumes/${id}/preview?smartOnePage=${smartOnePage}&desensitize=${desensitize}`).then(r => r.data),
 
-  exportHtml: (id: string, smartOnePage: boolean = false) =>
-    http.post(`/resumes/${id}/export/html?smartOnePage=${smartOnePage}`, null, { responseType: 'blob' })
-      .then(r => {
-        const url = URL.createObjectURL(new Blob([r.data], { type: 'text/html' }))
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'resume.html'
-        a.click()
-        URL.revokeObjectURL(url)
-      }),
+  exportHtml: (id: string, smartOnePage: boolean = false, desensitize: boolean = false) =>
+    http.post(`/resumes/${id}/export/html?smartOnePage=${smartOnePage}&desensitize=${desensitize}`, null, { responseType: 'blob' })
+      .then(r => blobDownload(r.data, 'resume.html')),
 
-  exportPdf: (id: string, smart: boolean = true) =>
-    http.post(`/resumes/${id}/export/pdf?smartOnePage=${smart}`, null,
+  exportPdf: (id: string, smart: boolean = true, desensitize: boolean = false) =>
+    http.post(`/resumes/${id}/export/pdf?smartOnePage=${smart}&desensitize=${desensitize}`, null,
       { responseType: 'blob' })
-      .then(r => {
-        const url = URL.createObjectURL(new Blob([r.data], { type: 'application/pdf' }))
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'resume.pdf'
-        a.click()
-        URL.revokeObjectURL(url)
-      }),
+      .then(r => blobDownload(r.data, 'resume.pdf')),
 }
 
 export const themeApi = {
@@ -71,4 +67,12 @@ export const themeApi = {
 
   getCss: (id: string) =>
     http.get(`/themes/${id}/css`, { responseType: 'text' }).then(r => r.data),
+}
+
+export const desensitizeApi = {
+  getRules: () =>
+    http.get<DesensitizeRule[]>('/users/desensitize-rules').then(r => r.data),
+
+  saveRules: (rules: DesensitizeRule[]) =>
+    http.put('/users/desensitize-rules', rules),
 }
