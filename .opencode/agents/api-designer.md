@@ -1,5 +1,5 @@
 ---
-description: Designs REST APIs and queries database schemas
+description: Designs REST endpoints & queries DB schema, returns JSON spec. Use BEFORE writing backend controller/service when a new endpoint or DB change is needed. Read-only.
 mode: subagent
 permission:
   edit: deny

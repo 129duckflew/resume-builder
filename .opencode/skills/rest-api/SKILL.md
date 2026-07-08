@@ -1,3 +1,8 @@
+---
+name: rest-api
+description: REST API design checklist for Spring Boot controllers. Use when adding or changing @RestController endpoints, request/response DTOs, status codes, @Valid validation, or pagination.
+---
+
 ## REST API 设计 Checklist
 
 - [ ] GET /resources — 列表查询，返回 `200 + JSON[]`

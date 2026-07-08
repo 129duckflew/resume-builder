@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Download } from 'lucide-react'
+import { ArrowLeft, Download, AlertTriangle } from 'lucide-react'
 import { resumeApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 
@@ -9,15 +9,21 @@ export default function PreviewPage() {
   const navigate = useNavigate()
   const [html, setHtml] = useState('')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [smartOnePage, setSmartOnePage] = useState(true)
 
   useEffect(() => {
     if (!id) return
     setLoading(true)
-    resumeApi.preview(id).then((h) => {
+    setError(null)
+    resumeApi.preview(id, smartOnePage).then((h) => {
       setHtml(h)
       setLoading(false)
-    }).catch(() => setLoading(false))
-  }, [id])
+    }).catch((err) => {
+      setError(err.response?.data?.error || 'Preview generation failed')
+      setLoading(false)
+    })
+  }, [id, smartOnePage])
 
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
@@ -48,16 +54,31 @@ export default function PreviewPage() {
           Back to Editor
         </Button>
         <div className="flex-1" />
-        <Button variant="outline" size="sm" onClick={() => resumeApi.exportPdf(id!)}>
+        <label className="flex items-center gap-1 text-xs text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors">
+          <input
+            type="checkbox"
+            checked={smartOnePage}
+            onChange={(e) => setSmartOnePage(e.target.checked)}
+            className="accent-primary rounded"
+          />
+          Smart One-Page
+        </label>
+        <Button variant="outline" size="sm" onClick={() => resumeApi.exportPdf(id!, smartOnePage)}>
           <Download className="h-4 w-4 mr-1" />
           Download PDF
         </Button>
-        <Button variant="outline" size="sm" onClick={() => resumeApi.exportHtml(id!)}>
+        <Button variant="outline" size="sm" onClick={() => resumeApi.exportHtml(id!, smartOnePage)}>
           <Download className="h-4 w-4 mr-1" />
           Download HTML
         </Button>
       </div>
       <div className="flex-1 bg-gray-100 overflow-y-auto flex justify-center p-8">
+        {error && (
+          <div className="flex items-center gap-2 text-amber-600 bg-amber-50 border border-amber-200 rounded px-4 py-2 mb-4">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span className="text-sm">{error}</span>
+          </div>
+        )}
         <div className="shadow-2xl bg-white w-[210mm] min-h-[297mm]">
           <iframe ref={iframeRef} className="w-full h-[297mm]" title="Resume Preview" />
         </div>

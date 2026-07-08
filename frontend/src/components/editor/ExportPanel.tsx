@@ -12,10 +12,12 @@ import { toast } from '@/hooks/use-toast'
 import { resumeApi } from '@/lib/api'
 import { useResumeStore } from '@/stores/resumeStore'
 
-export default function ExportPanel() {
+export default function ExportPanel({ smartOnePage, onSmartOnePageChange }: {
+  smartOnePage: boolean
+  onSmartOnePageChange: (v: boolean) => void
+}) {
   const [exporting, setExporting] = useState<'pdf' | 'html' | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [smartOnePage, setSmartOnePage] = useState(true)
   const currentResume = useResumeStore((s) => s.currentResume)
 
   if (!currentResume) return null
@@ -27,7 +29,7 @@ export default function ExportPanel() {
       if (type === 'pdf') {
         await resumeApi.exportPdf(currentResume.id, smartOnePage)
       } else {
-        await resumeApi.exportHtml(currentResume.id)
+        await resumeApi.exportHtml(currentResume.id, smartOnePage)
       }
       toast({
         title: 'Export successful',
@@ -59,7 +61,7 @@ export default function ExportPanel() {
           <input
             type="checkbox"
             checked={smartOnePage}
-            onChange={(e) => setSmartOnePage(e.target.checked)}
+            onChange={(e) => onSmartOnePageChange(e.target.checked)}
             className="accent-primary rounded"
           />
           Smart One-Page

@@ -8,22 +8,20 @@
     "read": "allow",
     "glob": "allow",
     "grep": "allow",
-    "bash": "ask",
+    "bash": "allow",
     "skill": "allow",
     "webfetch": "allow",
     "websearch": "allow"
   },
-  "model": {
-    "compact": {
-      "tail_turns": 20
-    }
+  "compaction": {
+    "tail_turns": 20
   },
   "agent": {
     "build": {
       "mode": "primary",
       "permission": {
         "edit": "allow",
-        "bash": "ask"
+        "bash": "allow"
       }
     },
     "plan": {

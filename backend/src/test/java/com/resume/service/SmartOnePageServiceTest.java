@@ -88,6 +88,14 @@ class SmartOnePageServiceTest {
         assertTrue(injected.contains("--resume-font-size: 10.0pt"));
         assertTrue(injected.contains("--resume-line-height: 1.30"));
         assertTrue(injected.contains("--resume-section-margin: 12px"));
+        assertTrue(injected.contains("--resume-h1-size:"));
+        assertTrue(injected.contains("--resume-h2-size:"));
+        assertTrue(injected.contains("--resume-h3-size:"));
+        assertTrue(injected.contains(".resume-page h1 { font-size:"));
+        assertTrue(injected.contains(".resume-page h2 { font-size:"));
+        assertTrue(injected.contains(".resume-page h3 { font-size:"));
+        assertTrue(injected.contains(".resume-page p { font-size:"));
+        assertTrue(injected.contains(".resume-page li { font-size:"));
         assertTrue(injected.indexOf("--resume-font-size") < injected.indexOf("</head>"));
     }
 

@@ -14,10 +14,14 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/resumes")
 public class ResumeController {
+
+    private static final Logger log = LoggerFactory.getLogger(ResumeController.class);
 
     private final ResumeService resumeService;
     private final ExportService exportService;
@@ -62,18 +66,42 @@ public class ResumeController {
     }
 
     @PostMapping("/{id}/preview")
-    public ResponseEntity<String> preview(@PathVariable String id) {
+    public ResponseEntity<?> preview(@PathVariable String id,
+                                     @RequestParam(defaultValue = "false") boolean smartOnePage) {
         Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         String html = exportService.generateHtml(resume);
+
+        if (smartOnePage) {
+            try {
+                SmartOnePageService.AdjustmentResult adjustment =
+                        smartOnePageService.calculateOptimalSettings(resume, html);
+                html = SmartOnePageService.injectCssVariables(html, adjustment);
+            } catch (RuntimeException e) {
+                log.warn("Smart one-page adjustment failed, using default layout", e);
+            }
+        }
+
         return ResponseEntity.ok(html);
     }
 
     @PostMapping("/{id}/export/html")
-    public ResponseEntity<String> exportHtml(@PathVariable String id) {
+    public ResponseEntity<?> exportHtml(@PathVariable String id,
+                                        @RequestParam(defaultValue = "false") boolean smartOnePage) {
         Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         String html = exportService.generateHtml(resume);
+
+        if (smartOnePage) {
+            try {
+                SmartOnePageService.AdjustmentResult adjustment =
+                        smartOnePageService.calculateOptimalSettings(resume, html);
+                html = SmartOnePageService.injectCssVariables(html, adjustment);
+            } catch (RuntimeException e) {
+                log.warn("Smart one-page adjustment failed, using default layout", e);
+            }
+        }
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
                         "attachment; filename=\"resume.html\"")

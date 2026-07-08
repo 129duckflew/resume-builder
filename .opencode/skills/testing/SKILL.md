@@ -1,3 +1,8 @@
+---
+name: testing
+description: Test conventions checklist (backend mvn test / frontend npm test). Use when writing @WebMvcTest/@ExtendWith/MockMvc or vitest render/renderHook tests, or before running the full suite.
+---
+
 ## 测试规范 Checklist
 
 - [ ] 后端：`cd backend && mvn test`（62 用例）

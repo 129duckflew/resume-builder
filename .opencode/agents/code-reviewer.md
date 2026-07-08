@@ -1,5 +1,5 @@
 ---
-description: Reviews code for bugs, security, and best practices
+description: Reviews git diff for security/concurrency/resource/style/coverage; returns P0/P1/P2. Use AFTER tests pass and BEFORE commit. Read-only.
 mode: subagent
 permission:
   edit: deny

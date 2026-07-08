@@ -112,17 +112,37 @@ public class SmartOnePageService {
     }
 
     public static String injectCssVariables(String html, AdjustmentResult result) {
+        if (html == null || result == null) return html;
+
+        float h1Size = Math.max(result.fontSize * 2.1f, 14f);
+        float h2Size = Math.max(result.fontSize * 1.1f, 9f);
+        float h3Size = Math.max(result.fontSize * 1.0f, 8.5f);
+        float liMarginBottom = Math.max(result.fontSize * 0.25f, 1f);
+        float pMarginBottom = Math.max(result.fontSize * 0.4f, 2f);
+
         String vars = String.format("""
                 <style>
                 :root {
                     --resume-font-size: %.1fpt;
                     --resume-line-height: %.2f;
                     --resume-section-margin: %.0fpx;
+                    --resume-h1-size: %.1fpt;
+                    --resume-h2-size: %.1fpt;
+                    --resume-h3-size: %.1fpt;
                 }
-                body { font-size: var(--resume-font-size, 11pt); line-height: var(--resume-line-height, 1.4); }
-                .resume-section { margin-bottom: var(--resume-section-margin, 16px); }
+                .resume-page { font-size: var(--resume-font-size); line-height: var(--resume-line-height); }
+                .resume-page h1 { font-size: var(--resume-h1-size, %.1fpt); }
+                .resume-page h2 { font-size: var(--resume-h2-size, %.1fpt); }
+                .resume-page h3 { font-size: var(--resume-h3-size, %.1fpt); }
+                .resume-page p { font-size: var(--resume-font-size); margin-bottom: %.0fpx; }
+                .resume-page li { font-size: var(--resume-font-size); margin-bottom: %.0fpx; }
+                .resume-section { margin-bottom: var(--resume-section-margin); }
                 </style>
-                """, result.fontSize, result.lineHeight, result.sectionMargin);
+                """,
+                result.fontSize, result.lineHeight, result.sectionMargin,
+                h1Size, h2Size, h3Size,
+                h1Size, h2Size, h3Size,
+                pMarginBottom, liMarginBottom);
 
         int headEnd = html.indexOf("</head>");
         if (headEnd > 0) {

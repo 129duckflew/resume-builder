@@ -46,41 +46,40 @@ describe('ExportPanel', () => {
   })
 
   it('renders PDF and HTML buttons', () => {
-    render(<ExportPanel />)
+    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={() => {}} />)
     expect(screen.getByText('PDF')).toBeTruthy()
     expect(screen.getByText('HTML')).toBeTruthy()
   })
 
   it('smart one-page toggle defaults to checked', () => {
-    render(<ExportPanel />)
+    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={() => {}} />)
     const checkbox = screen.getByRole('checkbox') as HTMLInputElement
     expect(checkbox.checked).toBe(true)
   })
 
   it('allows toggling smart one-page off', async () => {
-    render(<ExportPanel />)
+    const onChange = vi.fn()
+    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={onChange} />)
     const checkbox = screen.getByRole('checkbox') as HTMLInputElement
     await userEvent.click(checkbox)
-    expect(checkbox.checked).toBe(false)
+    expect(onChange).toHaveBeenCalledWith(false)
   })
 
   it('passes smartOnePage=true when exporting PDF with toggle on', async () => {
-    render(<ExportPanel />)
+    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={() => {}} />)
     await userEvent.click(screen.getByText('PDF'))
     expect(mockExportPdf).toHaveBeenCalledWith('test-id', true)
   })
 
   it('passes smartOnePage=false when exporting PDF with toggle off', async () => {
-    render(<ExportPanel />)
-    const checkbox = screen.getByRole('checkbox') as HTMLInputElement
-    await userEvent.click(checkbox)
+    render(<ExportPanel smartOnePage={false} onSmartOnePageChange={() => {}} />)
     await userEvent.click(screen.getByText('PDF'))
     expect(mockExportPdf).toHaveBeenCalledWith('test-id', false)
   })
 
   it('calls exportHtml for HTML button', async () => {
-    render(<ExportPanel />)
+    render(<ExportPanel smartOnePage={true} onSmartOnePageChange={() => {}} />)
     await userEvent.click(screen.getByText('HTML'))
-    expect(mockExportHtml).toHaveBeenCalledWith('test-id')
+    expect(mockExportHtml).toHaveBeenCalledWith('test-id', true)
   })
 })
