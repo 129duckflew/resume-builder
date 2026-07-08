@@ -36,4 +36,17 @@ public class UserService {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
+
+    public void updateApiKey(Long userId, String apiKey) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setApiKey(apiKey);
+        userRepository.save(user);
+    }
+
+    public String getApiKey(Long userId) {
+        return userRepository.findById(userId)
+                .map(User::getApiKey)
+                .orElse(null);
+    }
 }
