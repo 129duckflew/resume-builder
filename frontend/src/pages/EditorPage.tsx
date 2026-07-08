@@ -39,8 +39,13 @@ export default function EditorPage() {
     fetchResume(id).then(() => {
       const draft = getDraft(id)
       if (draft) {
-        setDraftContent(draft)
-        setShowDraftDialog(true)
+        const serverContent = useResumeStore.getState().currentResume?.content
+        if (draft !== serverContent) {
+          setDraftContent(draft)
+          setShowDraftDialog(true)
+        } else {
+          clearDraft(id)
+        }
       }
     })
   }, [id, fetchResume])
