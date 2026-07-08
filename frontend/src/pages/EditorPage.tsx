@@ -170,11 +170,8 @@ export default function EditorPage() {
       {/* Main editing area */}
       <PanelGroup direction="horizontal" className="flex-1 overflow-hidden" data-testid="panel-group">
         {/* Sections sidebar */}
-        <Panel defaultSize={15} minSize={10} maxSize={25} data-panel>
+          <Panel defaultSize={15} minSize={10} maxSize={25} data-panel>
           <div className="h-full border-r bg-gray-50 p-3 overflow-y-auto">
-            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-              Sections
-            </h3>
             <SectionDragList markdown={currentResume.content} onSectionClick={scrollEditorToLine} />
           </div>
         </Panel>

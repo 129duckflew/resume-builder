@@ -1,6 +1,7 @@
 import axios from 'axios'
 import type { DesensitizeRule } from '@/types/desensitize'
 import type { Resume } from '@/types/resume'
+import type { SectionTemplate } from '@/types/sectionTemplate'
 
 export const http = axios.create({
   baseURL: '/api',
@@ -75,4 +76,18 @@ export const desensitizeApi = {
 
   saveRules: (rules: DesensitizeRule[]) =>
     http.put('/users/desensitize-rules', rules),
+}
+
+export const sectionTemplateApi = {
+  list: () =>
+    http.get<SectionTemplate[]>('/section-templates').then(r => r.data),
+
+  create: (template: Partial<SectionTemplate>) =>
+    http.post<SectionTemplate>('/section-templates', template).then(r => r.data),
+
+  update: (id: number, template: Partial<SectionTemplate>) =>
+    http.put<SectionTemplate>(`/section-templates/${id}`, template).then(r => r.data),
+
+  delete: (id: number) =>
+    http.delete(`/section-templates/${id}`),
 }
