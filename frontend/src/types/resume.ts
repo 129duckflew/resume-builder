@@ -35,3 +35,16 @@ export interface ResumeStyle {
   lineHeight: number | null
   sectionSpacing: string | null
 }
+
+export interface ResumeVersion {
+  id: number
+  resumeId: string
+  versionNumber: number
+  title: string
+  content: string | null
+  themeId: string
+  fontSize: number | null
+  lineHeight: number | null
+  sectionSpacing: string | null
+  createdAt: string
+}
