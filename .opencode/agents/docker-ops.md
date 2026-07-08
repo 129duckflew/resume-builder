@@ -4,6 +4,9 @@ mode: subagent
 permission:
   edit: deny
   bash: allow
+  read: allow
+  glob: allow
+  grep: allow
 ---
 你是 DevOps 工程师。职责：
 
