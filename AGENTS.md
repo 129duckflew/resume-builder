@@ -1,145 +1,139 @@
 # Resume Builder — AI 开发指南
 
-## 你的角色
+## 角色
 
-你是一个全栈工程师，负责维护一个前后端分离的简历生成系统。技术栈：Spring Boot 3.2 + React 18 + PostgreSQL 16 + Playwright。
-
----
-
-## 项目全景
+全栈工程师，维护前后端分离的简历生成系统（Spring Boot 3.2 + React 18 + PostgreSQL 16 + Playwright）。
 
 ```
 resume-builder/
-├── AGENTS.md              # 本文件 — AI 主指令
-├── opencode.json          # Harness 配置
-├── .opencode/
-│   ├── agents/            # Subagent 定义
-│   └── skills/            # Checklist 技能模块
-├── backend/               # Spring Boot 3.2 (Java 17, Maven)
-│   ├── controller/        # @RestController 层
-│   ├── service/           # @Service 业务逻辑
-│   ├── repository/        # JpaRepository 数据访问
-│   ├── entity/            # JPA 实体
-│   ├── config/            # Security + JWT + CORS + Playwright
-│   └── dto/               # 请求/响应 DTO
-├── frontend/              # React 18 (Vite, TypeScript)
-│   ├── pages/             # LoginPage | RegisterPage | HomePage | EditorPage | PreviewPage
-│   ├── components/
-│   │   ├── ui/            # shadcn/ui 组件（button/dialog/toast/dropdown-menu）
-│   │   └── editor/        # 编辑器专属组件
-│   ├── stores/            # authStore (JWT) + resumeStore + historyStore
-│   ├── hooks/             # useKeyboardShortcuts / useDraftBackup / use-toast
-│   └── lib/               # api.ts (axios) + markdown.ts (章节解析)
-├── docker-compose.yml     # PostgreSQL 16 + Backend(:8081) + Frontend(:3000)
-└── themes/                # 7 个内置 CSS 主题
+├── AGENTS.md, opencode.json, docker-compose.yml, themes/
+├── backend/   (controller/ → service/ → repository/ → entity/)
+└── frontend/  (pages/ → components/{ui,editor}/ → stores/ → lib/api.ts)
 ```
 
+## 核心原则
 
-## 编码规范
-- **TDD**: 测试驱动开发
-- **前后端分离**：前端通过 `/api/` → nginx 代理 → 后端
-- **后端分层**：`@RestController` → `@Service` → `JpaRepository`
-- **前端分层**：`Page` → `Component` → `Store(zustand)` → `API(axios)`
-- **API 路径**：`/api/resumes`, `/api/auth`, `/api/themes`
-- **REST 风格**：GET(列表) / GET(id) / POST(创建) / PUT(部分更新) / DELETE(204)
-- **部分更新**：PUT 请求中 null 字段不覆盖已有值
-- **每个新功能必须有对应测试**
-- **测试文件命名**：`{ClassName}Test.java` / `{module}.test.ts`
-- **测试方法命名**：`方法_场景_预期结果`（Java）/ `it('does x when y')`（TS）
+| 原则 | 规则 |
+|---|---|
+| **TDD** | 先写测试 → 实现 → 重构 → 同一提交 |
+| **前后端** | 前端 `/api/` → nginx → 后端；各层单向依赖 |
+| **测试** | 每个功能必须有测试；文件 `*.test.ts` / `*Test.java`；与源文件同目录 `__tests__/` |
+| **API** | RESTful：GET(列表) / GET(id) / POST(创建) / PUT(部分更新) / DELETE(204)；null 字段不覆盖 |
+| **安全** | 注册/登录 + 主题列表 = 公开；其余需 JWT；用户只能操作自己的数据；BCrypt 加密 |
 
 ---
 
-## 安全规则
+## 开发流水线
 
-- `POST /api/auth/register` + `/api/auth/login` — 公开
-- `GET /api/themes/**` — 公开
-- `GET/POST/PUT/DELETE /api/resumes/**` — 需要 JWT（`Authorization: Bearer <token>`）
-- 用户只能操作自己的简历（`Resume.userId` 过滤）
-- 密码使用 `BCryptPasswordEncoder`
-- Token 载荷：`userId:username` 复合字符串
-
----
-
-## TDD 流程
-
-1. **Red** — 先写失败测试
-2. **Green** — 实现功能使测试通过
-3. **Refactor** — 重构优化代码
-4. **Commit** — 实现 + 测试在同一提交
-
----
-
-## 开发工作流（主 agent 编排闭环）
-
-收到功能需求后，按以下关卡顺序推进。**带 🚧 的关卡完成后必须停下汇报、等用户确认再进下一关**；未带 🚧 的可自动连续执行。
-
-| # | 关卡 | 动作 | 派发 / 加载 | 类型 |
-| :--- |:---|:---| :--- | :--- |
-| 1 | 规划 | 出方案（影响面、文件清单、测试计划） | `plan` 或 build 内规划 | 🚧 |
-| 2 | API 设计 | 涉及后端新端点 / DB 变更时先拿规范 | `task` → `@api-designer` | 自动 |
-| 3 | 实现 | TDD：Red → Green → Refactor | 按需 `skill(...)` | 自动 |
-| 4 | 测试 | 跑 `mvn test` + `npm test` | `task` → `@test-runner` | 🚧 |
-| 5 | 审查 | 审 diff（安全/并发/资源/覆盖） | `task` → `@code-reviewer` | 🚧 |
-| 6 | 提交 | 实现+测试同提交，询问用户后 commit | 主 agent 直接执行 | 🚧 |
-| 7 | 部署 | `docker compose up --build -d` | `task` → `@docker-ops` | 自动 |
-| 8 | 输出文档 | 归档进度到 `progress.md`，清理上下文，定义下一 Goal | `task` → `@doc-recorder` | 自动 |
-### 派发规则（满足即派，不要自己硬扛）
-
-- 涉及 DB Schema / 新 REST 端点 → 先 `task` 派 `@api-designer`，拿到 JSON 规范再写后端
-- 任何代码实现完成 → `task` 派 `@test-runner`；未达当前测试基线禁止进审查
-- 测试通过、提交前 → `task` 派 `@code-reviewer`；P0/P1 必须先修复并复测
-- **提交完成后 → 自动 `task` 派 `@docker-ops` 执行 `docker compose up --build -d` 部署 backend + frontend，取蒸馏结论汇报**
-- 需要 docker / 端口 / 日志（非部署场景）→ `task` 派 `@docker-ops`；原始日志留在子线程，只取蒸馏结论
-- 写 JPA / REST / Security / React / Docker / 测试 → 调用 `skill` 工具加载对应 checklist
-
-### 🚧 关卡汇报格式
+收到需求后，按以下相位自动推进。**每完成一个相位，自动判断下一个相位**，形成自驱动循环。
 
 ```
-✅ 关卡 N 完成：<关卡名>
-结果：<一句话结论>
-下一步：<下一关卡将做的事>
-请确认是否继续？
+                   ┌─────────────────────────┐
+                   │   P1  规 划              │
+                   │  输出: 方案(影响面/文件/  │
+                   │        测试计划)          │
+                   └────────────┬────────────┘
+                                │
+                   ┌────────────▼────────────┐
+                   │   P2  API 设 计          │ ← 仅限新端点/DB变更
+                   │  派发: @api-designer     │
+                   │  输出: JSON API 规范      │
+                   └────────────┬────────────┘
+                                │
+                   ┌────────────▼────────────┐
+                   │   P3  实 现              │
+                   │  动作: TDD + skill(...)  │
+                   └────────────┬────────────┘
+                                │
+              ┌──────────────────┼──────────────────┐
+              ▼                  ▼                  ▼
+     ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+     │  P4 测试验证   │  │  P5 代码审查  │  │  修复循环     │
+     │ @test-runner  │  │ @code-reviewer│  │ P0/P1 项     │
+     │ 输出: 通过/   │  │ 输出:         │  │ → 回到 P3    │
+     │     失败 +    │  │   P0/P1/P2   │  │              │
+     │     覆盖率    │  │   报告       │  │              │
+     └──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+            │                 │                  │
+            │    失败          │ 有 P0/P1         │
+            └──────→──────────┴──────→───────────┘
+                                    │ 全部通过
+                                    ▼
+                          ┌─────────────────────┐
+                          │  P6  提 交           │ ← 询问用户后执行
+                          │  动作: git add +     │
+                          │   commit             │
+                          └──────────┬──────────┘
+                                     │
+                          ┌──────────▼──────────┐
+                          │  P7  部 署           │
+                          │  @docker-ops        │
+                          │  docker compose up   │
+                          └──────────┬──────────┘
+                                     │
+                          ┌──────────▼──────────┐
+                          │  P8  归 档           │
+                          │  @doc-recorder       │
+                          │  → progress.md      │
+                          └─────────────────────┘
 ```
 
-### 闭环纪律
+### 自驱动循环规则
 
-- 子 agent 返回的是结论，不是原始日志，不要回贴主线程
-- 一轮需求走完 1 → 7 才算闭环；任何 🚧 被否决则回对应关卡重做
-- 禁止跳过测试或审查直接提交
-
----
-
-## Subagent 委派
-
-在对话中用 `@` 提及以下子代理（调度规则见上方「开发工作流」一节）：
-
-| Agent | 职责 | 隔离内容 |
+| 当前相位完成 | → 自动派发 | 条件 |
 |---|---|---|
-| `@api-designer` | 查询 DB Schema、设计 API、返回结构化规范 | Schema 查询结果不污染主线程 |
-| `@docker-ops` | Docker 构建/部署/日志 | 长日志不进主线程，只返结论 |
-| `@code-reviewer` | 安全审查、并发分析、资源泄漏检查 | 检查报告不中断主线开发 |
-| `@test-runner` | 批量测试、失败分析、覆盖率缺口 | 测试日志蒸馏为通过/失败清单 |
-| `@doc-recorder` | 维护 progress.md、归档当前迭代、清理上下文并定义新 Goal | 复杂的变更日志与归档逻辑，输出精简的阶段里程碑 |
+| P1 规划 | P2 或 P3 | 涉及新端点/DB → P2；纯 UI 改动 → P3 |
+| P2 API 设计 | P3 实现 | — |
+| P3 实现 | P4 测试验证 | `task` → `@test-runner` |
+| P4 测试通过 | P5 代码审查 | `task` → `@code-reviewer` |
+| P4 测试失败 | P3 实现 | 返回修复 |
+| P5 有 P0/P1 | P3 实现 | 记录问题后返回，修复后重走 P4 → P5 |
+| P5 无 P0/P1 | P6 提交 | 询问用户确认后执行 |
+| P6 提交完成 | P7 部署 | `task` → `@docker-ops` |
+| P7 部署成功 | P8 归档 | `task` → `@doc-recorder` |
+
+### 与用户交互
+
+| 用户输入 | 行为 |
+|---|---|
+| `继续` / `go` / `yes` | 进入下一相位，无需重复解释 |
+| `修复 p1+p2` / `fix all` | 批量修复审查报告中的所有 P0/P1/P2，然后自动重走 P4→P5 |
+| 具体指令（如"修改 X 文件中的 Y"） | 直接执行，跳过当前相位的汇报 |
+| 拒绝/否决 | 回退到对应相位重做 |
+
+### Agent 输出规范
+
+| Agent | 输出格式 | 要求 |
+|---|---|---|
+| 主 agent（汇报） | `✅ 相位 N 完成：<名称>` + 一句话结果 + 下一步 + `请确认是否继续` | 不贴原始日志 |
+| `@test-runner` | 总览（通过/失败）+ 覆盖率缺口 | 失败时含根因分析 |
+| `@code-reviewer` | P0/P1/P2 列表（每项含文件:行号 + 建议） | P0/P1 必须修复 |
+| `@docker-ops` | 结论表格（服务名 / 端口 / 状态） | 不贴原始 docker 日志 |
+| `@doc-recorder` | 闭环摘要（提交 hash / 测试基线 / 文件清单） | 只写 progress.md，不回贴全文 |
+
 ---
 
-## Skills 按需加载
+## Agent 清单
 
-相关任务触发时，加载对应技能模块（已注册为 opencode 原生 skill，由主 agent 的 `skill` 工具按 description 自动匹配；调度规则见上方「开发工作流」一节）：
+在对话中用 `@` 提及（或由主 agent 按自驱动规则自动派发）：
 
-- `@skill spring-data-jpa` — JPA 实体设计 Checklist
-- `@skill rest-api` — REST API 设计 Checklist
-- `@skill auth-security` — Spring Security + JWT Checklist
-- `@skill react-component` — React 组件编写 Checklist
-- `@skill docker-deploy` — Docker 部署 Checklist
-- `@skill testing` — 测试规范 Checklist
-- `@skill tdd-protocol` — Agentic TDD Red→Green→Refactor→Verify→Commit 完整协议
-- `@skill doc-recording` — 进度归档与 progress.md 维护规范 Checklist
----
+| Agent | 触发时机 | 权限 | 职责 |
+|---|---|---|---|
+| `@api-designer` | P2：涉及新端点/DB 变更 | read-only | 查 Schema，返回 JSON API 规范 |
+| `@test-runner` | P4：实现完成 | test-only | 跑 `mvn test` + `npm test`，返回通过/失败 |
+| `@code-reviewer` | P5：测试通过 | read-only | 审 diff，返回 P0/P1/P2 报告 |
+| `@docker-ops` | P7：提交完成 | bash | 构建/部署/排障，返回结论表格 |
+| `@doc-recorder` | P8：部署成功 | edit+bash | 更新 progress.md，定义下一 Goal |
 
-## 禁止事项
+## Skill 清单
 
+实现阶段按需加载（`skill("xxx")`）：
 
-- 禁止直接操作数据库（使用 JPA Repository）
-- 禁止跳过测试直接提交
-- 禁止硬编码密钥（使用 `application.yml` + 环境变量）
-- 禁止在 Controller 中写业务逻辑
+- `spring-data-jpa` — JPA 实体设计
+- `rest-api` — REST API 设计
+- `auth-security` — Spring Security + JWT
+- `react-component` — React 组件编写
+- `docker-deploy` — Docker 部署
+- `testing` — 测试规范
+- `tdd-protocol` — TDD 完整协议
+- `doc-recording` — 进度归档规范
