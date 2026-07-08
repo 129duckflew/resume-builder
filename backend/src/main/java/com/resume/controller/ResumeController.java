@@ -3,10 +3,12 @@ package com.resume.controller;
 import com.resume.dto.JsonResumeDTO;
 import com.resume.dto.ResumeDTO;
 import com.resume.entity.Resume;
+import com.resume.entity.ResumeStyle;
 import com.resume.service.ExportService;
 import com.resume.service.JsonResumeConverter;
 import com.resume.service.PdfGenerationService;
 import com.resume.service.ResumeService;
+import com.resume.service.ResumeStyleService;
 import com.resume.service.SmartOnePageService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
@@ -30,16 +32,19 @@ public class ResumeController {
     private final SmartOnePageService smartOnePageService;
     private final PdfGenerationService pdfGenerationService;
     private final JsonResumeConverter jsonResumeConverter;
+    private final ResumeStyleService resumeStyleService;
 
     public ResumeController(ResumeService resumeService, ExportService exportService,
                             SmartOnePageService smartOnePageService,
                             PdfGenerationService pdfGenerationService,
-                            JsonResumeConverter jsonResumeConverter) {
+                            JsonResumeConverter jsonResumeConverter,
+                            ResumeStyleService resumeStyleService) {
         this.resumeService = resumeService;
         this.exportService = exportService;
         this.smartOnePageService = smartOnePageService;
         this.pdfGenerationService = pdfGenerationService;
         this.jsonResumeConverter = jsonResumeConverter;
+        this.resumeStyleService = resumeStyleService;
     }
 
     @GetMapping
@@ -172,6 +177,25 @@ public class ResumeController {
         Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         return ResponseEntity.ok(jsonResumeConverter.fromResume(resume));
+    }
+
+    @GetMapping("/{id}/styles")
+    public ResponseEntity<ResumeStyle> getStyle(@PathVariable String id,
+                                                 @RequestParam String themeId) {
+        resumeService.findByIdAndUserId(id, currentUserId())
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+        return resumeStyleService.getStyle(id, themeId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.noContent().build());
+    }
+
+    @PutMapping("/{id}/styles")
+    public ResumeStyle saveStyle(@PathVariable String id,
+                                 @RequestParam String themeId,
+                                 @RequestBody ResumeStyle style) {
+        resumeService.findByIdAndUserId(id, currentUserId())
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+        return resumeStyleService.saveStyle(id, themeId, style);
     }
 
     private Long currentUserId() {

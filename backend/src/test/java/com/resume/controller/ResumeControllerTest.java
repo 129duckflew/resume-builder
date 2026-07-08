@@ -54,6 +54,9 @@ class ResumeControllerTest {
     @MockBean
     private com.resume.service.JsonResumeConverter jsonResumeConverter;
 
+    @MockBean
+    private com.resume.service.ResumeStyleService resumeStyleService;
+
     private final Long userId = 1L;
 
     @BeforeEach
