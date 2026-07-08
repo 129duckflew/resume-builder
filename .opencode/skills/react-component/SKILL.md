@@ -1,3 +1,8 @@
+---
+name: react-component
+description: React 18 + TypeScript component checklist. Use when creating or editing frontend pages, components, zustand stores, hooks, or api.ts (axios) in frontend/src/.
+---
+
 ## React 组件编写 Checklist
 
 - [ ] 使用 TypeScript 函数组件 + Props interface

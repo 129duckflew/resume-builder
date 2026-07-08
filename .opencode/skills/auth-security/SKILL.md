@@ -1,3 +1,8 @@
+---
+name: auth-security
+description: Spring Security + JWT checklist. Use when touching SecurityConfig, JwtAuthFilter, JwtUtil, login/register endpoints, BCrypt, CORS, or authorization rules.
+---
+
 ## Spring Security + JWT Checklist
 
 - [ ] `SecurityConfig.permitAll()` 覆盖 `/api/auth/**` 和 `/api/themes/**`

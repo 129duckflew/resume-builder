@@ -182,6 +182,26 @@ class ResumeControllerTest {
     }
 
     @Test
+    void preview_withSmartOnePage_appliesAdjustments() throws Exception {
+        var resume = new Resume();
+        resume.setId("1");
+        resume.setContent("# Hello");
+
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
+        when(exportService.generateHtml(resume)).thenReturn("<h1>Hello</h1>");
+
+        var adjustment = new SmartOnePageService.AdjustmentResult();
+        adjustment.fontSize = 9f;
+        adjustment.lineHeight = 1.2f;
+        when(smartOnePageService.calculateOptimalSettings(any(), anyString()))
+                .thenReturn(adjustment);
+
+        mockMvc.perform(post("/api/resumes/1/preview?smartOnePage=true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("--resume-font-size: 9.0pt")));
+    }
+
+    @Test
     void exportHtml_returnsAttachment() throws Exception {
         var resume = new Resume();
         resume.setId("1");

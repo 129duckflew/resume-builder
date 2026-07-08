@@ -1,5 +1,5 @@
 ---
-description: Docker build, deploy, and log troubleshooting
+description: Docker Compose build/deploy/log troubleshoot, returns distilled pass/fail. Use when services must start, ports be checked, or logs inspected. Read-only.
 mode: subagent
 permission:
   edit: deny

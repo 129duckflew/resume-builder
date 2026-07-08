@@ -33,6 +33,7 @@ export default function EditorPage() {
   const [previewHtml, setPreviewHtml] = useState('')
   const [showDraftDialog, setShowDraftDialog] = useState(false)
   const [draftContent, setDraftContent] = useState<string | null>(null)
+  const [smartOnePage, setSmartOnePage] = useState(true)
 
   useEffect(() => {
     if (!id) return
@@ -85,24 +86,22 @@ export default function EditorPage() {
     [id, currentResume, updateResume],
   )
 
-  // Debounced backend preview — re-fetches on content or theme change
+  // Debounced backend preview — re-fetches on content, theme, or smart one-page toggle
   useEffect(() => {
-    setPreviewHtml('')
     if (!id || !currentResume?.content) return
     if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
     previewTimerRef.current = setTimeout(async () => {
       try {
-        const html = await resumeApi.preview(id)
+        const html = await resumeApi.preview(id, smartOnePage)
         setPreviewHtml(html)
       } catch {
         // fallback to client-side preview
-        setPreviewHtml('')
       }
     }, 800)
     return () => {
       if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
     }
-  }, [id, currentResume?.content, currentResume?.themeId])
+  }, [id, currentResume?.content, currentResume?.themeId, smartOnePage])
 
   useKeyboardShortcuts({ onSave: save })
 
@@ -150,7 +149,7 @@ export default function EditorPage() {
           Save
         </Button>
         <ThemeSelector />
-        <ExportPanel />
+        <ExportPanel smartOnePage={smartOnePage} onSmartOnePageChange={setSmartOnePage} />
       </div>
 
       {/* Main editing area */}

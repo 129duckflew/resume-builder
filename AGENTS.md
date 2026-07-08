@@ -91,9 +91,48 @@ docker compose logs frontend                     # 前端日志
 
 ---
 
+## 开发工作流（主 agent 编排闭环）
+
+收到功能需求后，按以下关卡顺序推进。**带 🚧 的关卡完成后必须停下汇报、等用户确认再进下一关**；未带 🚧 的可自动连续执行。
+
+| # | 关卡 | 动作 | 派发 / 加载 | 类型 |
+|---|---|---|---|---|
+| 1 | 规划 | 出方案（影响面、文件清单、测试计划） | `plan` 或 build 内规划 | 🚧 |
+| 2 | API 设计 | 涉及后端新端点 / DB 变更时先拿规范 | `task` → `@api-designer` | 自动 |
+| 3 | 实现 | TDD：Red → Green → Refactor | 按需 `skill(...)` | 自动 |
+| 4 | 测试 | 跑后端 `mvn test` + 前端 `npm test` | `task` → `@test-runner` | 🚧 |
+| 5 | 审查 | 审 diff（安全 / 并发 / 资源 / 覆盖） | `task` → `@code-reviewer` | 🚧 |
+| 6 | 部署验证 | 需要联调时起容器并取蒸馏结论 | `task` → `@docker-ops` | 🚧 可选 |
+| 7 | 提交 | 实现 + 测试同提交 | 询问用户后 commit | 🚧 |
+
+### 派发规则（满足即派，不要自己硬扛）
+
+- 涉及 DB Schema / 新 REST 端点 → 先 `task` 派 `@api-designer`，拿到 JSON 规范再写后端
+- 任何代码实现完成 → `task` 派 `@test-runner`；未达当前测试基线禁止进审查
+- 测试通过、提交前 → `task` 派 `@code-reviewer`；P0/P1 必须先修复并复测
+- 需要 docker / 端口 / 日志 → `task` 派 `@docker-ops`；原始日志留在子线程，只取蒸馏结论
+- 写 JPA / REST / Security / React / Docker / 测试 → 调用 `skill` 工具加载对应 checklist
+
+### 🚧 关卡汇报格式
+
+```
+✅ 关卡 N 完成：<关卡名>
+结果：<一句话结论>
+下一步：<下一关卡将做的事>
+请确认是否继续？
+```
+
+### 闭环纪律
+
+- 子 agent 返回的是结论，不是原始日志，不要回贴主线程
+- 一轮需求走完 1 → 7 才算闭环；任何 🚧 被否决则回对应关卡重做
+- 禁止跳过测试或审查直接提交
+
+---
+
 ## Subagent 委派
 
-在对话中用 `@` 提及以下子代理：
+在对话中用 `@` 提及以下子代理（调度规则见上方「开发工作流」一节）：
 
 | Agent | 职责 | 隔离内容 |
 |---|---|---|
@@ -106,14 +145,14 @@ docker compose logs frontend                     # 前端日志
 
 ## Skills 按需加载
 
-相关任务触发时，加载对应技能模块：
+相关任务触发时，加载对应技能模块（已注册为 opencode 原生 skill，由主 agent 的 `skill` 工具按 description 自动匹配；调度规则见上方「开发工作流」一节）：
 
-- `@.opencode/skills/spring-data-jpa.md` — JPA 实体设计 Checklist
-- `@.opencode/skills/rest-api.md` — REST API 设计 Checklist
-- `@.opencode/skills/auth-security.md` — Spring Security + JWT Checklist
-- `@.opencode/skills/react-component.md` — React 组件编写 Checklist
-- `@.opencode/skills/docker-deploy.md` — Docker 部署 Checklist
-- `@.opencode/skills/testing.md` — 测试规范 Checklist
+- `@skill spring-data-jpa` — JPA 实体设计 Checklist
+- `@skill rest-api` — REST API 设计 Checklist
+- `@skill auth-security` — Spring Security + JWT Checklist
+- `@skill react-component` — React 组件编写 Checklist
+- `@skill docker-deploy` — Docker 部署 Checklist
+- `@skill testing` — 测试规范 Checklist
 
 ---
 

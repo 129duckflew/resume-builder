@@ -1,3 +1,8 @@
+---
+name: spring-data-jpa
+description: JPA entity & repository design checklist. Use when creating or modifying JPA @Entity, @Table, JpaRepository, @Query, or column mappings in backend/.
+---
+
 ## JPA 实体设计 Checklist
 
 - [ ] `@Entity` + `@Table(name = "...")` 表名 snake_case

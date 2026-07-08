@@ -39,11 +39,11 @@ export const resumeApi = {
 
   delete: (id: string) => http.delete(`/resumes/${id}`),
 
-  preview: (id: string) =>
-    http.post<string>(`/resumes/${id}/preview`).then(r => r.data),
+  preview: (id: string, smartOnePage: boolean = false) =>
+    http.post<string>(`/resumes/${id}/preview?smartOnePage=${smartOnePage}`).then(r => r.data),
 
-  exportHtml: (id: string) =>
-    http.post(`/resumes/${id}/export/html`, null, { responseType: 'blob' })
+  exportHtml: (id: string, smartOnePage: boolean = false) =>
+    http.post(`/resumes/${id}/export/html?smartOnePage=${smartOnePage}`, null, { responseType: 'blob' })
       .then(r => {
         const url = URL.createObjectURL(new Blob([r.data], { type: 'text/html' }))
         const a = document.createElement('a')

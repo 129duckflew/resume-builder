@@ -1,3 +1,8 @@
+---
+name: docker-deploy
+description: Docker Compose deploy & troubleshoot checklist. Use when running docker compose up/ps/logs, fixing port conflicts, or debugging container startup failures.
+---
+
 ## Docker 部署 Checklist
 
 - [ ] `docker compose up --build -d` — 构建并启动全部服务
