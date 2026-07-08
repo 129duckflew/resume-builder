@@ -92,6 +92,22 @@ export const sectionTemplateApi = {
     http.delete(`/section-templates/${id}`),
 }
 
+export const aiApi = {
+  rewrite: (resumeId: string, instruction: string) =>
+    http.post<{ content: string }>(`/resumes/${resumeId}/ai/rewrite`, { instruction }).then(r => r.data),
+
+  suggest: (resumeId: string, jobDescription: string) =>
+    http.post<{ content: string }>(`/resumes/${resumeId}/ai/suggest`, { jobDescription }).then(r => r.data),
+}
+
+export const userApi = {
+  getApiKey: () =>
+    http.get<{ apiKey: string }>('/users/api-key').then(r => r.data),
+
+  updateApiKey: (apiKey: string) =>
+    http.put('/users/api-key', { apiKey }),
+}
+
 export const shareApi = {
   list: (resumeId: string) =>
     http.get<ShareLink[]>(`/resumes/${resumeId}/shares`).then(r => r.data),
