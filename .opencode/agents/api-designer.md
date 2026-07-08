@@ -3,10 +3,7 @@ description: Designs REST endpoints & queries DB schema, returns JSON spec. Use 
 mode: subagent
 permission:
   edit: deny
-  bash:
-    "mvn *": allow
-    "docker *": deny
-    "*": ask
+  bash: allow
 ---
 你是 API 设计专家。职责：
 

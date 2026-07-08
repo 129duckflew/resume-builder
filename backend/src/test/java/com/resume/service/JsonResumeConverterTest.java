@@ -189,6 +189,23 @@ class JsonResumeConverterTest {
     }
 
     @Test
+    void fromResume_withDefaultTemplate_parsesBasics() {
+        Resume resume = new Resume();
+        resume.setContent("# YOUR NAME\n## Job Title / Tagline\n\nEmail: name@example.com | Tel: +1 (555) 123-4567\n\n## Summary\n\nA brief summary.\n\n## Experience\n\n### Company | Location | Dates\n**Role**\n- Did stuff\n\n## Education\n\n### Univ | 2020\n**Degree**\n- GPA: 3.8\n\n## Skills\n\n- **Technical:** Java, Python\n- **Languages:** English\n");
+
+        JsonResumeDTO dto = converter.fromResume(resume);
+        assertNotNull(dto.getBasics());
+        assertEquals("name@example.com", dto.getBasics().getEmail());
+        assertNotNull(dto.getWork());
+        assertEquals("Company", dto.getWork().get(0).getName());
+        assertEquals("Role", dto.getWork().get(0).getPosition());
+        assertNotNull(dto.getEducation());
+        assertEquals("Univ", dto.getEducation().get(0).getInstitution());
+        assertNotNull(dto.getSkills());
+        assertTrue(dto.getSkills().size() >= 1);
+    }
+
+    @Test
     void roundTrip_preservesData() {
         JsonResumeDTO original = new JsonResumeDTO();
         JsonResumeDTO.Basics b = new JsonResumeDTO.Basics();
