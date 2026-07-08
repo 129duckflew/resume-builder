@@ -91,3 +91,11 @@ export const sectionTemplateApi = {
   delete: (id: number) =>
     http.delete(`/section-templates/${id}`),
 }
+
+export const jsonResumeApi = {
+  importJson: (data: any) =>
+    http.post('/resumes/import/json', data).then(r => r.data),
+
+  exportJson: (id: string) =>
+    http.get(`/resumes/${id}/export/json`).then(r => r.data),
+}

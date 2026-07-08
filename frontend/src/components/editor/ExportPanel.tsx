@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { FileText, FileDown, Loader2, AlertTriangle, Shield, Settings2 } from 'lucide-react'
+import { FileText, FileDown, Loader2, AlertTriangle, Shield, Settings2, FileCode } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
-import { resumeApi } from '@/lib/api'
+import { resumeApi, jsonResumeApi } from '@/lib/api'
 import { useResumeStore } from '@/stores/resumeStore'
 import DesensitizeSettings from './DesensitizeSettings'
 
@@ -108,6 +108,28 @@ export default function ExportPanel({ smartOnePage, onSmartOnePageChange, desens
             <FileText className="h-4 w-4 mr-1" />
           )}
           {exporting === 'html' ? 'Exporting...' : 'HTML'}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            if (!currentResume) return
+            jsonResumeApi.exportJson(currentResume.id)
+              .then(json => {
+                const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
+                const url = URL.createObjectURL(blob)
+                const a = document.createElement('a')
+                a.href = url
+                a.download = 'resume.json'
+                a.click()
+                URL.revokeObjectURL(url)
+                toast({ title: 'JSON exported', variant: 'success' })
+              })
+              .catch(() => toast({ title: 'Export failed', variant: 'destructive' }))
+          }}
+        >
+          <FileCode className="h-4 w-4 mr-1" />
+          JSON
         </Button>
       </div>
 
