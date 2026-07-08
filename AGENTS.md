@@ -96,21 +96,22 @@ docker compose logs frontend                     # 前端日志
 收到功能需求后，按以下关卡顺序推进。**带 🚧 的关卡完成后必须停下汇报、等用户确认再进下一关**；未带 🚧 的可自动连续执行。
 
 | # | 关卡 | 动作 | 派发 / 加载 | 类型 |
-|---|---|---|---|---|
+|---|---|---|---|---|---|
 | 1 | 规划 | 出方案（影响面、文件清单、测试计划） | `plan` 或 build 内规划 | 🚧 |
 | 2 | API 设计 | 涉及后端新端点 / DB 变更时先拿规范 | `task` → `@api-designer` | 自动 |
 | 3 | 实现 | TDD：Red → Green → Refactor | 按需 `skill(...)` | 自动 |
 | 4 | 测试 | 跑后端 `mvn test` + 前端 `npm test` | `task` → `@test-runner` | 🚧 |
 | 5 | 审查 | 审 diff（安全 / 并发 / 资源 / 覆盖） | `task` → `@code-reviewer` | 🚧 |
-| 6 | 部署验证 | 需要联调时起容器并取蒸馏结论 | `task` → `@docker-ops` | 🚧 可选 |
-| 7 | 提交 | 实现 + 测试同提交 | 询问用户后 commit | 🚧 |
+| 6 | 提交 | 实现 + 测试同提交 | 询问用户后 commit | 🚧 |
+| 7 | 部署 | `docker compose up --build -d` backend + frontend | `task` → `@docker-ops` | 自动 |
 
 ### 派发规则（满足即派，不要自己硬扛）
 
 - 涉及 DB Schema / 新 REST 端点 → 先 `task` 派 `@api-designer`，拿到 JSON 规范再写后端
 - 任何代码实现完成 → `task` 派 `@test-runner`；未达当前测试基线禁止进审查
 - 测试通过、提交前 → `task` 派 `@code-reviewer`；P0/P1 必须先修复并复测
-- 需要 docker / 端口 / 日志 → `task` 派 `@docker-ops`；原始日志留在子线程，只取蒸馏结论
+- **提交完成后 → 自动 `task` 派 `@docker-ops` 执行 `docker compose up --build -d` 部署 backend + frontend，取蒸馏结论汇报**
+- 需要 docker / 端口 / 日志（非部署场景）→ `task` 派 `@docker-ops`；原始日志留在子线程，只取蒸馏结论
 - 写 JPA / REST / Security / React / Docker / 测试 → 调用 `skill` 工具加载对应 checklist
 
 ### 🚧 关卡汇报格式
