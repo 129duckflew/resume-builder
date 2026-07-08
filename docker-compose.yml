@@ -44,6 +44,26 @@ services:
       - backend
     ports:
       - "3000:80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  e2e:
+    build:
+      context: ./frontend/e2e
+      dockerfile: Dockerfile
+    container_name: resume-e2e
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_healthy
+    environment:
+      BASE_URL: http://frontend:80
 
 volumes:
   postgres_data:
