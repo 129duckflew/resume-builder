@@ -1,21 +1,36 @@
-import { useEffect } from 'react'
+import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Edit3, Trash2, Eye, FileText, Plus, Sparkles } from 'lucide-react'
+import { Edit3, Trash2, Eye, FileText, Plus, Sparkles, Upload } from 'lucide-react'
 import { useResumeStore } from '@/stores/resumeStore'
+import { jsonResumeApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { toast } from '@/hooks/use-toast'
 
 export default function HomePage() {
   const navigate = useNavigate()
   const { resumes, loading, fetchResumes, deleteResume, createResume } = useResumeStore()
-
-  useEffect(() => {
-    fetchResumes()
-  }, [fetchResumes])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleCreate = async () => {
     const title = `Resume ${new Date().toLocaleDateString()}`
     const resume = await createResume(title)
     navigate(`/editor/${resume.id}`)
+  }
+
+  const handleImportJson = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+      const resume = await jsonResumeApi.importJson(data)
+      toast({ title: 'Imported successfully', variant: 'success' })
+      fetchResumes()
+      navigate(`/editor/${resume.id}`)
+    } catch {
+      toast({ title: 'Import failed', description: 'Invalid JSON Resume file', variant: 'destructive' })
+    }
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   if (loading) {
@@ -30,10 +45,23 @@ export default function HomePage() {
     <div className="max-w-5xl mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold">My Resumes</h1>
-        <Button onClick={handleCreate}>
-          <Plus className="h-4 w-4 mr-1" />
-          New Resume
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+            <Upload className="h-4 w-4 mr-1" />
+            Import JSON
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={handleImportJson}
+          />
+          <Button onClick={handleCreate}>
+            <Plus className="h-4 w-4 mr-1" />
+            New Resume
+          </Button>
+        </div>
       </div>
 
       {resumes.length === 0 ? (
@@ -69,7 +97,7 @@ export default function HomePage() {
             <div className="p-4 border rounded-lg bg-white">
               <h3 className="font-medium mb-1">3. Export</h3>
               <p className="text-sm text-muted-foreground">
-                Download as PDF or standalone HTML. Smart one-page ensures a perfect fit.
+                Download as PDF, HTML, or JSON. Smart one-page ensures a perfect fit.
               </p>
             </div>
           </div>

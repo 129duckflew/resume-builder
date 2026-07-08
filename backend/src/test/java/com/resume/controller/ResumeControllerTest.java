@@ -51,6 +51,9 @@ class ResumeControllerTest {
     @MockBean
     private JwtUtil jwtUtil;
 
+    @MockBean
+    private com.resume.service.JsonResumeConverter jsonResumeConverter;
+
     private final Long userId = 1L;
 
     @BeforeEach
@@ -296,5 +299,38 @@ class ResumeControllerTest {
                 .andExpect(status().isOk());
 
         verify(smartOnePageService, never()).calculateOptimalSettings(any(), anyString());
+    }
+
+    @Test
+    void importJson_createsResume() throws Exception {
+        String json = """
+                {"basics":{"name":"Alice","email":"a@b.com"}}
+                """;
+        when(jsonResumeConverter.toMarkdown(any())).thenReturn("# Personal Info\n\nName: Alice");
+        when(resumeService.create(any(), eq(1L))).thenAnswer(i -> {
+            Resume r = new Resume();
+            r.setId("new-id");
+            r.setTitle("Alice");
+            return r;
+        });
+
+        mockMvc.perform(post("/api/resumes/import/json")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("new-id"));
+    }
+
+    @Test
+    void exportJson_returnsJson() throws Exception {
+        Resume resume = new Resume();
+        resume.setId("1");
+        resume.setContent("# Personal Info\n\nName: Alice\n");
+
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
+        when(jsonResumeConverter.fromResume(resume)).thenReturn(new com.resume.dto.JsonResumeDTO());
+
+        mockMvc.perform(get("/api/resumes/1/export/json"))
+                .andExpect(status().isOk());
     }
 }

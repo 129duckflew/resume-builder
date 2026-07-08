@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, Download, AlertTriangle, Shield } from 'lucide-react'
-import { resumeApi } from '@/lib/api'
+import { ArrowLeft, Download, AlertTriangle, Shield, FileCode } from 'lucide-react'
+import { resumeApi, jsonResumeApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 
 export default function PreviewPage() {
@@ -81,6 +81,22 @@ export default function PreviewPage() {
         <Button variant="outline" size="sm" onClick={() => resumeApi.exportHtml(id!, smartOnePage, desensitize)}>
           <Download className="h-4 w-4 mr-1" />
           Download HTML
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => {
+          if (!id) return
+          jsonResumeApi.exportJson(id)
+            .then(json => {
+              const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = 'resume.json'
+              a.click()
+              URL.revokeObjectURL(url)
+            })
+        }}>
+          <FileCode className="h-4 w-4 mr-1" />
+          JSON
         </Button>
       </div>
       <div className="flex-1 bg-gray-100 overflow-y-auto flex justify-center p-8">

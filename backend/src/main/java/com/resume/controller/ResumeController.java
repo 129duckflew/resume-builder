@@ -1,8 +1,10 @@
 package com.resume.controller;
 
+import com.resume.dto.JsonResumeDTO;
 import com.resume.dto.ResumeDTO;
 import com.resume.entity.Resume;
 import com.resume.service.ExportService;
+import com.resume.service.JsonResumeConverter;
 import com.resume.service.PdfGenerationService;
 import com.resume.service.ResumeService;
 import com.resume.service.SmartOnePageService;
@@ -27,14 +29,17 @@ public class ResumeController {
     private final ExportService exportService;
     private final SmartOnePageService smartOnePageService;
     private final PdfGenerationService pdfGenerationService;
+    private final JsonResumeConverter jsonResumeConverter;
 
     public ResumeController(ResumeService resumeService, ExportService exportService,
                             SmartOnePageService smartOnePageService,
-                            PdfGenerationService pdfGenerationService) {
+                            PdfGenerationService pdfGenerationService,
+                            JsonResumeConverter jsonResumeConverter) {
         this.resumeService = resumeService;
         this.exportService = exportService;
         this.smartOnePageService = smartOnePageService;
         this.pdfGenerationService = pdfGenerationService;
+        this.jsonResumeConverter = jsonResumeConverter;
     }
 
     @GetMapping
@@ -150,6 +155,23 @@ public class ResumeController {
             return ResponseEntity.internalServerError()
                     .body(java.util.Map.of("error", "PDF generation failed: " + e.getMessage()));
         }
+    }
+
+    @PostMapping("/import/json")
+    public Resume importJson(@RequestBody JsonResumeDTO jsonResume) {
+        String markdown = jsonResumeConverter.toMarkdown(jsonResume);
+        ResumeDTO dto = new ResumeDTO();
+        dto.setTitle(jsonResume.getBasics() != null && jsonResume.getBasics().getName() != null
+                ? jsonResume.getBasics().getName() : "Imported Resume");
+        dto.setContent(markdown);
+        return resumeService.create(dto, currentUserId());
+    }
+
+    @GetMapping("/{id}/export/json")
+    public ResponseEntity<JsonResumeDTO> exportJson(@PathVariable String id) {
+        Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+        return ResponseEntity.ok(jsonResumeConverter.fromResume(resume));
     }
 
     private Long currentUserId() {
