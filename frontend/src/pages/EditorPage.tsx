@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import MDEditor from '@uiw/react-md-editor'
-import { Save, Clock } from 'lucide-react'
+import { Save, Clock, Share2 } from 'lucide-react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { useResumeStore } from '@/stores/resumeStore'
 import { useHistoryStore } from '@/stores/historyStore'
@@ -13,6 +13,7 @@ import SectionDragList from '@/components/editor/SectionDragList'
 import ThemeSelector from '@/components/editor/ThemeSelector'
 import ExportPanel from '@/components/editor/ExportPanel'
 import VersionPanel from '@/components/editor/VersionPanel'
+import SharePanel from '@/components/editor/SharePanel'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -37,6 +38,7 @@ export default function EditorPage() {
   const [smartOnePage, setSmartOnePage] = useState(true)
   const [desensitize, setDesensitize] = useState(false)
   const [showVersions, setShowVersions] = useState(false)
+  const [showShare, setShowShare] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -169,6 +171,9 @@ export default function EditorPage() {
         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowVersions(true)} title="Version History">
           <Clock className="h-4 w-4" />
         </Button>
+        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowShare(true)} title="Share">
+          <Share2 className="h-4 w-4" />
+        </Button>
         <ExportPanel smartOnePage={smartOnePage} onSmartOnePageChange={setSmartOnePage} desensitize={desensitize} onDesensitizeChange={setDesensitize} />
       </div>
 
@@ -224,8 +229,11 @@ export default function EditorPage() {
       </PanelGroup>
 
       {id && (
-        <VersionPanel resumeId={id} open={showVersions} onOpenChange={setShowVersions}
-          onRestore={() => fetchResume(id).then(() => { clearDraft(id) })} />
+        <>
+          <VersionPanel resumeId={id} open={showVersions} onOpenChange={setShowVersions}
+            onRestore={() => fetchResume(id).then(() => { clearDraft(id) })} />
+          <SharePanel resumeId={id} open={showShare} onOpenChange={setShowShare} />
+        </>
       )}
 
       {/* Draft recovery dialog */}

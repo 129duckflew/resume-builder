@@ -36,6 +36,15 @@ export interface ResumeStyle {
   sectionSpacing: string | null
 }
 
+export interface ShareLink {
+  id: string
+  resumeId: string
+  enabled: boolean
+  desensitize: boolean
+  expiresAt: string | null
+  createdAt: string
+}
+
 export interface ResumeVersion {
   id: number
   resumeId: string

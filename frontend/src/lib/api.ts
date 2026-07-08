@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type { DesensitizeRule } from '@/types/desensitize'
-import type { Resume, ResumeStyle } from '@/types/resume'
+import type { Resume, ResumeStyle, ResumeVersion, ShareLink } from '@/types/resume'
 import type { SectionTemplate } from '@/types/sectionTemplate'
 
 export const http = axios.create({
@@ -90,6 +90,17 @@ export const sectionTemplateApi = {
 
   delete: (id: number) =>
     http.delete(`/section-templates/${id}`),
+}
+
+export const shareApi = {
+  list: (resumeId: string) =>
+    http.get<ShareLink[]>(`/resumes/${resumeId}/shares`).then(r => r.data),
+
+  create: (resumeId: string, desensitize: boolean = false) =>
+    http.post<ShareLink>(`/resumes/${resumeId}/shares`, { desensitize }).then(r => r.data),
+
+  delete: (linkId: string) =>
+    http.delete(`/shares/${linkId}`),
 }
 
 export const versionApi = {
