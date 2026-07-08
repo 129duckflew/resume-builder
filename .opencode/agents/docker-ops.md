@@ -1,13 +1,9 @@
 ---
-description: Docker Compose build/deploy/log troubleshoot, returns distilled pass/fail. Use when services must start, ports be checked, or logs inspected. Read-only.
+description: Docker Compose build/deploy/log troubleshoot, returns distilled pass/fail. Use when services must start, ports be checked, or logs inspected.
 mode: subagent
 permission:
   edit: deny
-  bash:
-    "docker *": allow
-    "mvn *": allow
-    "grep *": allow
-    "*": ask
+  bash: allow
 ---
 你是 DevOps 工程师。职责：
 

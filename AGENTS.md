@@ -34,31 +34,9 @@ resume-builder/
 └── themes/                # 7 个内置 CSS 主题
 ```
 
----
-
-## 构建与测试
-
-```bash
-# 后端
-cd backend && mvn spring-boot:run               # 启动 :8080
-cd backend && mvn test                           # 62 用例
-
-# 前端
-cd frontend && npm install && npm run dev        # 启动 :3000
-cd frontend && npm test                          # 44 用例
-
-# Docker
-docker compose up --build -d                     # 全部容器
-docker compose logs backend                      # 后端日志
-docker compose logs frontend                     # 前端日志
-
-# 合计 106 测试，全部通过
-```
-
----
 
 ## 编码规范
-
+- **TDD**: 测试驱动开发
 - **前后端分离**：前端通过 `/api/` → nginx 代理 → 后端
 - **后端分层**：`@RestController` → `@Service` → `JpaRepository`
 - **前端分层**：`Page` → `Component` → `Store(zustand)` → `API(axios)`

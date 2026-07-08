@@ -205,61 +205,180 @@ public class JsonResumeConverter {
         String content = resume.getContent();
         if (content == null) return dto;
 
-        // Split by top-level headings using MULTILINE
-        String[] sections = Pattern.compile("(?m)^(?=# )").split(content);
-        for (String section : sections) {
-            section = section.trim();
-            if (section.isEmpty()) continue;
+        // Split by top-level h1 headings
+        String[] h1sections = Pattern.compile("(?m)^(?=# )").split(content);
+        for (String h1section : h1sections) {
+            h1section = h1section.trim();
+            if (h1section.isEmpty()) continue;
 
-            String title = extractHeading(section, 1);
-            if (title == null) continue;
+            String h1title = extractHeading(h1section, 1);
+            if (h1title == null) continue;
 
-            String body = section.replaceFirst("^# .+\n?", "").trim();
+            String h1body = h1section.replaceFirst("^# .+\n?", "").trim();
 
-            switch (title) {
-                case "Personal Info":
-                case "Contact":
-                    dto.setBasics(parseBasics(body));
-                    break;
-                case "Work Experience":
-                case "Experience":
-                    dto.setWork(parseWork(body));
-                    break;
-                case "Education":
-                    dto.setEducation(parseEducation(body));
-                    break;
-                case "Skills":
-                    dto.setSkills(parseSkills(body));
-                    break;
-                case "Projects":
-                    dto.setProjects(parseProjects(body));
-                    break;
-                case "Certificates":
-                case "Certifications":
-                    dto.setCertificates(parseCertificates(body));
-                    break;
-                case "Languages":
-                    dto.setLanguages(parseLanguages(body));
-                    break;
-                case "Interests":
-                    dto.setInterests(parseInterests(body));
-                    break;
-                case "Volunteer":
-                    dto.setVolunteer(parseVolunteer(body));
-                    break;
-                case "Awards":
-                    dto.setAwards(parseAwards(body));
-                    break;
-                case "Publications":
-                    dto.setPublications(parsePublications(body));
-                    break;
-                case "References":
-                    dto.setReferences(parseReferences(body));
-                    break;
+            // Extract h2 sub-sections
+            // If h1 title matches known section, parse the whole body (handles h2/h3 internally)
+            String lowerH1 = h1title.toLowerCase().trim();
+            if (isKnownSection(lowerH1)) {
+                parseInto(dto, h1title, h1body);
+                continue;
+            }
+
+            // Unknown h1 — split into h2 and handle each sub-section
+            List<SectionBlock> subs = extractH2Sections(h1section);
+
+            if (!subs.isEmpty()) {
+                String beforeFirstH2 = subs.get(0).before;
+                if (!beforeFirstH2.isEmpty()) {
+                    parseInto(dto, h1title, beforeFirstH2);
+                }
+                for (SectionBlock sub : subs) {
+                    parseInto(dto, sub.title, sub.body);
+                }
+            } else {
+                parseInto(dto, h1title, h1body);
             }
         }
 
         return dto;
+    }
+
+    private static class SectionBlock {
+        String title;
+        String body;
+        String before; // content before this h2 (between h1 and first h2)
+    }
+
+    private List<SectionBlock> extractH2Sections(String h1section) {
+        List<SectionBlock> result = new ArrayList<>();
+        String[] parts = H2_SPLIT.split(h1section);
+        boolean first = true;
+        String beforeContent = "";
+        for (String part : parts) {
+            part = part.trim();
+            if (part.isEmpty()) continue;
+            if (first) {
+                // The first part may be the h1 line + content before first h2
+                String afterH1 = part.replaceFirst("^# .+\n?", "").trim();
+                String title = extractHeading(part, 2);
+                if (title != null) {
+                    SectionBlock sb = new SectionBlock();
+                    sb.title = title;
+                    sb.body = afterH1;
+                    sb.before = beforeContent;
+                    result.add(sb);
+                } else {
+                    beforeContent = afterH1;
+                }
+                first = false;
+            } else {
+                String title = extractHeading(part, 2);
+                if (title == null) continue;
+                String body = part.replaceFirst("^## .+\n?", "").trim();
+                SectionBlock sb = new SectionBlock();
+                sb.title = title;
+                sb.body = body;
+                sb.before = "";
+                result.add(sb);
+            }
+        }
+        // Set before on first sub-section
+        if (!result.isEmpty()) {
+            result.get(0).before = beforeContent;
+        }
+        return result;
+    }
+
+    private boolean isKnownSection(String lowerTitle) {
+        return switch (lowerTitle) {
+            case "personal info", "contact", "work experience", "experience",
+                 "education", "skills", "projects", "certificates", "certifications",
+                 "languages", "interests", "volunteer", "awards", "publications",
+                 "references" -> true;
+            default -> false;
+        };
+    }
+
+    private boolean parseInto(JsonResumeDTO dto, String title, String body) {
+        if (title == null || body == null) return false;
+        String t = title.toLowerCase().trim();
+
+        switch (t) {
+            case "personal info":
+            case "contact":
+                dto.setBasics(parseBasics(body));
+                return true;
+            case "work experience":
+            case "experience":
+                dto.setWork(parseWork(body));
+                return true;
+            case "education":
+                dto.setEducation(parseEducation(body));
+                return true;
+            case "skills":
+                dto.setSkills(parseSkills(body));
+                return true;
+            case "projects":
+                dto.setProjects(parseProjects(body));
+                return true;
+            case "certificates":
+            case "certifications":
+                dto.setCertificates(parseCertificates(body));
+                return true;
+            case "languages":
+                dto.setLanguages(parseLanguages(body));
+                return true;
+            case "interests":
+                dto.setInterests(parseInterests(body));
+                return true;
+            case "volunteer":
+                dto.setVolunteer(parseVolunteer(body));
+                return true;
+            case "awards":
+                dto.setAwards(parseAwards(body));
+                return true;
+            case "publications":
+                dto.setPublications(parsePublications(body));
+                return true;
+            case "references":
+                dto.setReferences(parseReferences(body));
+                return true;
+            default:
+                // Unknown section — content-based detection
+                return parseByContent(dto, body, t);
+        }
+    }
+
+    private boolean parseByContent(JsonResumeDTO dto, String body, String lowerTitle) {
+        // Check for name patterns (first h1 with name-like content)
+        if (containsAny(body, "email:", "phone:", "linkedin:", "tel:")) {
+            dto.setBasics(parseBasics(body));
+            return true;
+        }
+        // Check for work patterns (h2/### with | and dates)
+        if (body.contains("|") && containsAny(body, "–", "-", "**")) {
+            var work = parseWork(body);
+            if (!work.isEmpty()) { dto.setWork(work); return true; }
+        }
+        // Check for education patterns
+        if (containsAny(body, "gpa:", "university", "college", "institute", "school")) {
+            var edu = parseEducation(body);
+            if (!edu.isEmpty()) { dto.setEducation(edu); return true; }
+        }
+        // Check for skills (bullets with **Technical:** or comma-separated)
+        if (containsAny(body, "**technical:**", "**languages:**", "**skills:**")) {
+            var skills = parseSkills(body);
+            if (!skills.isEmpty()) { dto.setSkills(skills); return true; }
+        }
+        return false;
+    }
+
+    private boolean containsAny(String text, String... keywords) {
+        String lower = text.toLowerCase();
+        for (String k : keywords) {
+            if (lower.contains(k)) return true;
+        }
+        return false;
     }
 
     public String markdownFromResume(Resume resume) {
@@ -296,25 +415,39 @@ public class JsonResumeConverter {
     }
 
     private Pattern H2_SPLIT = Pattern.compile("(?m)^(?=## )");
+    private Pattern H3_SPLIT = Pattern.compile("(?m)^(?=### )");
+
+    private String[] splitEntries(String body) {
+        String[] byH2 = H2_SPLIT.split(body);
+        if (byH2.length > 1) return byH2;
+        String[] byH3 = H3_SPLIT.split(body);
+        if (byH3.length > 1) return byH3;
+        return new String[]{body};
+    }
 
     private List<JsonResumeDTO.Work> parseWork(String body) {
         List<JsonResumeDTO.Work> result = new ArrayList<>();
-        String[] entries = H2_SPLIT.split(body);
+        String[] entries = splitEntries(body);
         for (String entry : entries) {
             entry = entry.trim();
             if (entry.isEmpty()) continue;
             JsonResumeDTO.Work w = new JsonResumeDTO.Work();
             String titleLine = extractHeading(entry, 2);
+            if (titleLine == null) titleLine = extractHeading(entry, 3);
             if (titleLine != null) {
                 String[] parts = titleLine.split("\\s*\\|\\s*");
                 w.setName(parts[0].trim());
                 if (parts.length > 1) {
-                    String[] dates = parts[1].split("\\s*–\\s*");
-                    w.setStartDate(dates[0].trim());
-                    if (dates.length > 1) w.setEndDate(dates[1].trim());
+                    String maybeDates = parts[parts.length - 1].trim();
+                    if (maybeDates.matches(".*\\d.*") || maybeDates.contains("–") || maybeDates.contains("-")) {
+                        String[] dateParts = maybeDates.split("\\s*[–-]\\s*");
+                        w.setStartDate(dateParts[0].trim());
+                        if (dateParts.length > 1) w.setEndDate(dateParts[1].trim());
+                    }
                 }
             }
-            String position = extractRegexValue(entry, "^\\*(.+?)\\*");
+            String position = extractRegexValue(entry, "^\\*\\*(.+?)\\*\\*");
+            if (position == null) position = extractRegexValue(entry, "^\\*(.+?)\\*");
             if (position != null) w.setPosition(position);
             List<String> highlights = extractBullets(entry);
             if (!highlights.isEmpty()) w.setHighlights(highlights);
@@ -325,12 +458,13 @@ public class JsonResumeConverter {
 
     private List<JsonResumeDTO.Education> parseEducation(String body) {
         List<JsonResumeDTO.Education> result = new ArrayList<>();
-        String[] entries = H2_SPLIT.split(body);
+        String[] entries = splitEntries(body);
         for (String entry : entries) {
             entry = entry.trim();
             if (entry.isEmpty()) continue;
             JsonResumeDTO.Education e = new JsonResumeDTO.Education();
             String titleLine = extractHeading(entry, 2);
+            if (titleLine == null) titleLine = extractHeading(entry, 3);
             if (titleLine != null) {
                 String[] parts = titleLine.split("\\s*\\|\\s*");
                 e.setInstitution(parts[0].trim());
@@ -344,7 +478,8 @@ public class JsonResumeConverter {
                     }
                 }
             }
-            String degree = extractRegexValue(entry, "^\\*(.+?)\\*");
+            String degree = extractRegexValue(entry, "^\\*\\*(.+?)\\*\\*");
+            if (degree == null) degree = extractRegexValue(entry, "^\\*(.+?)\\*");
             if (degree != null) {
                 if (degree.contains(" in ")) {
                     String[] degreeParts = degree.split(" in ", 2);
@@ -403,12 +538,13 @@ public class JsonResumeConverter {
 
     private List<JsonResumeDTO.Project> parseProjects(String body) {
         List<JsonResumeDTO.Project> result = new ArrayList<>();
-        String[] entries = H2_SPLIT.split(body);
+        String[] entries = splitEntries(body);
         for (String entry : entries) {
             entry = entry.trim();
             if (entry.isEmpty()) continue;
             JsonResumeDTO.Project p = new JsonResumeDTO.Project();
             String titleLine = extractHeading(entry, 2);
+            if (titleLine == null) titleLine = extractHeading(entry, 3);
             if (titleLine != null) p.setName(titleLine);
             p.setDescription(extractLineValue(entry, "Description:\\s*(.+)"));
             String tech = extractLineValue(entry, "Technology:\\s*(.+)");
@@ -476,12 +612,13 @@ public class JsonResumeConverter {
 
     private List<JsonResumeDTO.Volunteer> parseVolunteer(String body) {
         List<JsonResumeDTO.Volunteer> result = new ArrayList<>();
-        String[] entries = H2_SPLIT.split(body);
+        String[] entries = splitEntries(body);
         for (String entry : entries) {
             entry = entry.trim();
             if (entry.isEmpty()) continue;
             JsonResumeDTO.Volunteer v = new JsonResumeDTO.Volunteer();
             String titleLine = extractHeading(entry, 2);
+            if (titleLine == null) titleLine = extractHeading(entry, 3);
             if (titleLine != null) {
                 String[] parts = titleLine.split("\\s*\\|\\s*");
                 v.setOrganization(parts[0].trim());
@@ -517,12 +654,13 @@ public class JsonResumeConverter {
 
     private List<JsonResumeDTO.Publication> parsePublications(String body) {
         List<JsonResumeDTO.Publication> result = new ArrayList<>();
-        String[] entries = H2_SPLIT.split(body);
+        String[] entries = splitEntries(body);
         for (String entry : entries) {
             entry = entry.trim();
             if (entry.isEmpty()) continue;
             JsonResumeDTO.Publication p = new JsonResumeDTO.Publication();
             String titleLine = extractHeading(entry, 2);
+            if (titleLine == null) titleLine = extractHeading(entry, 3);
             if (titleLine != null) p.setName(titleLine);
             p.setPublisher(extractLineValue(entry, "Publisher:\\s*(.+)"));
             p.setReleaseDate(extractLineValue(entry, "Date:\\s*(.+)"));
@@ -553,7 +691,7 @@ public class JsonResumeConverter {
     }
 
     private String extractLineValue(String text, String prefix) {
-        Pattern p = Pattern.compile("(?m)^" + Pattern.quote(prefix) + "\\s*(.+)$");
+        Pattern p = Pattern.compile("(?m)^" + Pattern.quote(prefix) + "\\s*([^|\r\n]+)");
         Matcher m = p.matcher(text);
         return m.find() ? m.group(1).trim() : null;
     }

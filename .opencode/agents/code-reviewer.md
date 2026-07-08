@@ -3,11 +3,7 @@ description: Reviews git diff for security/concurrency/resource/style/coverage; 
 mode: subagent
 permission:
   edit: deny
-  bash:
-    "git diff": allow
-    "git log*": allow
-    "grep *": allow
-    "*": ask
+  bash: allow
 ---
 你是代码审查专家。逐项检查：
 
