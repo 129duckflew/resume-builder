@@ -3,6 +3,7 @@
   "name": "Stack Overflow",
   "description": "Developer-friendly style inspired by Stack Overflow, with tag-like skills",
   "builtIn": true,
+  "layout": "single",
   "sortOrder": 5,
   "variables": [
     {"name": "--primary-color", "type": "color", "default": "#f48024", "label": "Primary Color", "group": "Colors"},

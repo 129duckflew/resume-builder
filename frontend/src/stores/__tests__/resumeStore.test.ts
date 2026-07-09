@@ -158,4 +158,19 @@ describe('resumeStore', () => {
 
     expect(useResumeStore.getState().customVariables).toEqual({})
   })
+
+  it('createTheme action exists', () => {
+    const store = useResumeStore.getState()
+    expect(typeof store.createTheme).toBe('function')
+  })
+
+  it('updateTheme action exists', () => {
+    const store = useResumeStore.getState()
+    expect(typeof store.updateTheme).toBe('function')
+  })
+
+  it('deleteTheme action exists', () => {
+    const store = useResumeStore.getState()
+    expect(typeof store.deleteTheme).toBe('function')
+  })
 })

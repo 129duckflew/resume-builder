@@ -18,15 +18,18 @@ public class ExportService {
     private final ThemeService themeService;
     private final DesensitizeService desensitizeService;
     private final ResumeStyleService resumeStyleService;
+    private final LayoutSplitter layoutSplitter;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ExportService(MarkdownService markdownService, ThemeService themeService,
                          DesensitizeService desensitizeService,
-                         ResumeStyleService resumeStyleService) {
+                         ResumeStyleService resumeStyleService,
+                         LayoutSplitter layoutSplitter) {
         this.markdownService = markdownService;
         this.themeService = themeService;
         this.desensitizeService = desensitizeService;
         this.resumeStyleService = resumeStyleService;
+        this.layoutSplitter = layoutSplitter;
     }
 
     public String generateHtml(Resume resume) {
@@ -38,15 +41,17 @@ public class ExportService {
         if (desensitize) {
             content = desensitizeService.apply(content, userId);
         }
-        String bodyHtml = markdownService.toHtml(content);
         Theme theme = themeService.findById(resume.getThemeId())
                 .orElse(themeService.findById("classic").orElse(null));
         String css = theme != null ? theme.getCssContent() : "";
+        String layout = theme != null && theme.getLayout() != null ? theme.getLayout() : "single";
 
         // Build :root CSS variables block
         String rootVars = buildRootVariablesBlock(resume);
 
         String cssBlock = rootVars != null ? rootVars + "\n" + css : css;
+
+        String bodyHtml = buildLayoutHtml(content, layout);
 
         return """
 <!DOCTYPE html>
@@ -60,12 +65,81 @@ public class ExportService {
 </style>
 </head>
 <body>
-<div class="resume-page">
 %s
-</div>
 </body>
 </html>
 """.formatted(escapeHtml(resume.getTitle()), cssBlock, bodyHtml);
+    }
+
+    /**
+     * Build the HTML body according to the layout type.
+     * {@code single} layout follows the old path — renders the entire markdown in one div.
+     */
+    private String buildLayoutHtml(String markdown, String layout) {
+        if ("header-bar".equals(layout)) {
+            return buildHeaderBarHtml(markdown);
+        }
+
+        Map<String, String> parts = layoutSplitter.split(markdown, layout);
+
+        // single / null → old path: whole body in one resume-page div
+        if (!parts.containsKey("sidebar")) {
+            String bodyHtml = markdownService.toHtml(parts.get("body"));
+            return "<div class=\"resume-page\">\n" + bodyHtml + "\n</div>";
+        }
+
+        String sidebarHtml = markdownService.toHtml(parts.get("sidebar"));
+        String mainHtml = markdownService.toHtml(parts.get("main"));
+
+        if ("sidebar-right".equals(layout)) {
+            return """
+<div class="resume-page">
+<main class="resume-main">
+%s
+</main>
+<aside class="resume-sidebar">
+%s
+</aside>
+</div>""".formatted(mainHtml, sidebarHtml);
+        }
+
+        // sidebar-left (default sidebar)
+        return """
+<div class="resume-page">
+<aside class="resume-sidebar">
+%s
+</aside>
+<main class="resume-main">
+%s
+</main>
+</div>""".formatted(sidebarHtml, mainHtml);
+    }
+
+    /**
+     * Build HTML for header-bar layout: first &lt;h2&gt; section is the header bar,
+     * everything after is the body.
+     */
+    private String buildHeaderBarHtml(String markdown) {
+        String fullHtml = markdownService.toHtml(markdown);
+        int h2Index = fullHtml.indexOf("<h2");
+        String headerHtml;
+        String bodyHtml;
+        if (h2Index >= 0) {
+            headerHtml = fullHtml.substring(0, h2Index);
+            bodyHtml = fullHtml.substring(h2Index);
+        } else {
+            headerHtml = fullHtml;
+            bodyHtml = "";
+        }
+        return """
+<div class="resume-page">
+<header class="resume-header-bar">
+%s
+</header>
+<div class="resume-body">
+%s
+</div>
+</div>""".formatted(headerHtml, bodyHtml);
     }
 
     private String buildRootVariablesBlock(Resume resume) {

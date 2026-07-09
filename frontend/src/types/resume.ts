@@ -15,7 +15,17 @@ export interface Theme {
   name: string
   description: string
   builtIn: boolean
+  layout: string
+  userId?: number | null
   variablesSchema?: string
+}
+
+export interface ThemeDTO {
+  name?: string
+  description?: string
+  cssContent?: string
+  variablesSchema?: string
+  layout?: string
 }
 
 export interface VariableDeclaration {

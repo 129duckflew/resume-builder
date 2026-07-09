@@ -1,10 +1,10 @@
 {
-  "id": "sidebar",
-  "name": "Sidebar",
-  "description": "Two-column layout with a colored sidebar for contact and skills",
+  "id": "sidebar-right",
+  "name": "Sidebar Right",
+  "description": "Two-column layout with colored sidebar on the right",
   "builtIn": true,
-  "layout": "sidebar-left",
-  "sortOrder": 4,
+  "layout": "sidebar-right",
+  "sortOrder": 8,
   "variables": [
     {"name": "--primary-color", "type": "color", "default": "#1a365d", "label": "Primary Color", "group": "Colors"},
     {"name": "--sidebar-bg", "type": "color", "default": "#1a365d", "label": "Sidebar Background", "group": "Colors"},
