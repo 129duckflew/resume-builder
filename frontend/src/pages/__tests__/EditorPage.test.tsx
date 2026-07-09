@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
@@ -131,7 +131,7 @@ describe('EditorPage preview refresh on theme change', () => {
   it('calls preview API on initial render', async () => {
     render(<EditorPageApp />)
     await vi.waitFor(() => {
-      expect(mockPreview).toHaveBeenCalledWith('test-id', true, false)
+      expect(mockPreview).toHaveBeenCalledWith('test-id', true, false, expect.any(String))
     })
   })
 
@@ -156,6 +156,13 @@ describe('EditorPage preview refresh on theme change', () => {
     // The effect should re-run because themeId changed → preview cleared + re-fetched
     await vi.waitFor(() => {
       expect(mockPreview).toHaveBeenCalledTimes(2)
+    })
+  })
+
+  it('passes current content to preview API', async () => {
+    render(<EditorPageApp />)
+    await vi.waitFor(() => {
+      expect(mockPreview).toHaveBeenCalledWith('test-id', true, false, '# Hello\n## Section\ncontent')
     })
   })
 })
@@ -199,5 +206,70 @@ describe('EditorPage section click locates editor', () => {
     spy.mockClear()
     await user.click(screen.getByRole('button', { name: 'Section' }))
     expect(spy).toHaveBeenCalledWith(18)
+  })
+})
+
+describe('EditorPage preview race condition', () => {
+  let deferredResolve: Array<(html: string) => void>
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    storeState = { ...initialStore, currentResume: { ...initialStore.currentResume } }
+    deferredResolve = []
+    mockPreview.mockReset()
+    mockPreview.mockImplementation(() => {
+      return new Promise<string>((resolve) => {
+        deferredResolve.push(resolve)
+      })
+    })
+  })
+
+  afterEach(() => {
+    deferredResolve.forEach(r => r('<html></html>'))
+    mockPreview.mockReset()
+    mockPreview.mockResolvedValue('<h1>Initial preview</h1>')
+  })
+
+  it('discards stale preview response', async () => {
+    const { rerender } = render(<EditorPageApp />)
+
+    // Initial preview request
+    await vi.waitFor(() => {
+      expect(mockPreview).toHaveBeenCalledTimes(1)
+    }, { timeout: 2000 })
+
+    // Change content → triggers request A (2nd call)
+    storeState = {
+      ...storeState,
+      currentResume: { ...storeState.currentResume!, content: '# Version A' },
+    }
+    act(() => { rerender(<EditorPageApp />) })
+    await vi.waitFor(() => {
+      expect(mockPreview).toHaveBeenCalledTimes(2)
+    }, { timeout: 2000 })
+
+    // Change content again → triggers request B (3rd call)
+    storeState = {
+      ...storeState,
+      currentResume: { ...storeState.currentResume!, content: '# Version B' },
+    }
+    act(() => { rerender(<EditorPageApp />) })
+    await vi.waitFor(() => {
+      expect(mockPreview).toHaveBeenCalledTimes(3)
+    }, { timeout: 2000 })
+
+    // Resolve stale response A first (should be discarded by seq check)
+    deferredResolve[1]('<h1>Version A html</h1>')
+    await new Promise(r => setTimeout(r, 100))
+
+    // DOM should NOT show stale A content
+    const previewDiv = document.querySelector('.resume-page')
+    expect(previewDiv?.innerHTML).not.toContain('Version A html')
+
+    // Resolve latest response B (should be applied)
+    deferredResolve[2]('<h1>Version B html</h1>')
+    await vi.waitFor(() => {
+      expect(document.querySelector('.resume-page')?.innerHTML).toContain('Version B html')
+    }, { timeout: 2000 })
   })
 })

@@ -193,6 +193,23 @@ class ResumeControllerTest {
     }
 
     @Test
+    void preview_withBodyContent_usesBodyContent() throws Exception {
+        var resume = new Resume();
+        resume.setId("1");
+        resume.setContent("# DB content");
+
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
+        when(exportService.generateHtml(argThat(r -> "# Body content".equals(r.getContent())), eq(false), eq(userId)))
+                .thenReturn("<h1>Body content</h1>");
+
+        mockMvc.perform(post("/api/resumes/1/preview")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"content\":\"# Body content\"}"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("<h1>Body content</h1>"));
+    }
+
+    @Test
     void preview_withSmartOnePage_appliesAdjustments() throws Exception {
         var resume = new Resume();
         resume.setId("1");

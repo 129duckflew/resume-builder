@@ -27,7 +27,7 @@ import {
 export default function EditorPage() {
   const { id } = useParams<{ id: string }>()
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
-  const previewTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const previewSeqRef = useRef(0)
   const { currentResume, currentThemeCss, loading, fetchResume, updateResume, setContent } =
     useResumeStore()
   const pushState = useHistoryStore((s) => s.pushState)
@@ -75,6 +75,7 @@ export default function EditorPage() {
     (content: string) => {
       setContent(content)
       pushState(content)
+      setPreviewHtml('')
       if (timerRef.current) clearTimeout(timerRef.current)
       timerRef.current = setTimeout(() => {
         if (id) updateResume(id, { content })
@@ -93,21 +94,19 @@ export default function EditorPage() {
     [id, currentResume, updateResume],
   )
 
-  // Debounced backend preview — re-fetches on content, theme, smart one-page, or desensitize toggle
+  // Debounced backend preview — passes content directly to avoid DB race
   useEffect(() => {
     if (!id || !currentResume?.content) return
-    if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
-    previewTimerRef.current = setTimeout(async () => {
+    const seq = ++previewSeqRef.current
+    const timer = setTimeout(async () => {
       try {
-        const html = await resumeApi.preview(id, smartOnePage, desensitize)
-        setPreviewHtml(html)
+        const html = await resumeApi.preview(id, smartOnePage, desensitize, currentResume.content)
+        if (previewSeqRef.current === seq) setPreviewHtml(html)
       } catch {
-        // fallback to client-side preview
+        // fallback to clientPreview
       }
-    }, 800)
-    return () => {
-      if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
-    }
+    }, 500)
+    return () => clearTimeout(timer)
   }, [id, currentResume?.content, currentResume?.themeId, smartOnePage, desensitize])
 
   useKeyboardShortcuts({ onSave: save })

@@ -1,6 +1,7 @@
 package com.resume.controller;
 
 import com.resume.dto.JsonResumeDTO;
+import com.resume.dto.PreviewRequest;
 import com.resume.dto.ResumeDTO;
 import com.resume.dto.ResumeStyleDTO;
 import com.resume.entity.Resume;
@@ -79,10 +80,14 @@ public class ResumeController {
     @PostMapping("/{id}/preview")
     public ResponseEntity<?> preview(@PathVariable String id,
                                      @RequestParam(defaultValue = "false") boolean smartOnePage,
-                                     @RequestParam(defaultValue = "false") boolean desensitize) {
+                                     @RequestParam(defaultValue = "false") boolean desensitize,
+                                     @RequestBody(required = false) PreviewRequest body) {
         Long userId = currentUserId();
         Resume resume = resumeService.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
+        if (body != null && body.getContent() != null) {
+            resume.setContent(body.getContent());
+        }
         String html = exportService.generateHtml(resume, desensitize, userId);
 
         if (smartOnePage) {
