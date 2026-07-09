@@ -71,7 +71,7 @@ class ThemeServiceTest {
 
     @Test
     void initBuiltInThemes_overwritesExistingThemes() {
-        for (String id : List.of("classic", "modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact", "sidebar-right", "header-bar")) {
+        for (String id : List.of("classic", "modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact", "sidebar-right", "header-bar", "jake", "academic", "swiss", "harvard")) {
             when(repository.findById(id)).thenReturn(Optional.of(new Theme()));
         }
         when(resourceLoader.getResource(anyString()))
@@ -79,13 +79,13 @@ class ThemeServiceTest {
 
         service.initBuiltInThemes();
 
-        verify(repository, times(9)).save(any());
+        verify(repository, times(13)).save(any());
     }
 
     @Test
     void initBuiltInThemes_createsMissingTheme_withResourceFallback() {
         when(repository.findById("classic")).thenReturn(Optional.empty());
-        for (String id : List.of("modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact", "sidebar-right", "header-bar")) {
+        for (String id : List.of("modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact", "sidebar-right", "header-bar", "jake", "academic", "swiss", "harvard")) {
             when(repository.findById(id)).thenReturn(Optional.of(new Theme()));
         }
         when(resourceLoader.getResource(anyString()))
@@ -93,7 +93,7 @@ class ThemeServiceTest {
 
         service.initBuiltInThemes();
 
-        verify(repository, times(9)).save(any());
+        verify(repository, times(13)).save(any());
     }
 
     @Test
