@@ -51,6 +51,10 @@ public class ThemeService {
         loadOrRefreshBuiltIn("compact", "Compact", "Dense layout for experienced professionals");
         loadOrRefreshBuiltIn("sidebar-right", "Sidebar Right", "Two-column layout with colored sidebar on the right");
         loadOrRefreshBuiltIn("header-bar", "Header Bar", "Top header bar with colored background");
+        loadOrRefreshBuiltIn("jake", "Jake's Resume", "ATS-optimized single-column sans-serif layout for technical roles");
+        loadOrRefreshBuiltIn("academic", "Academic CV", "Scholarly serif layout with centered header and hanging indentation");
+        loadOrRefreshBuiltIn("swiss", "Swiss", "Swiss minimalist design with strong grid, generous whitespace, and vermillion accent");
+        loadOrRefreshBuiltIn("harvard", "Harvard", "Classic MBA-style layout with Times New Roman, uppercase headings, and thick underline");
     }
 
     private final ObjectMapper objectMapper = new ObjectMapper();

@@ -32,7 +32,7 @@ class ThemeServiceVariablesTest {
 
     private static final List<String> ALL_THEMES = List.of(
             "classic", "modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact",
-            "sidebar-right", "header-bar"
+            "sidebar-right", "header-bar", "jake", "academic", "swiss", "harvard"
     );
 
     @BeforeEach
@@ -54,14 +54,14 @@ class ThemeServiceVariablesTest {
                 .thenReturn(new ByteArrayResource(
                         ("{\"variables\":[{\"name\":\"--primary-color\",\"type\":\"color\",\"default\":\"#000\"}]}")
                                 .getBytes(StandardCharsets.UTF_8)));
-        for (String id : List.of("modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact", "sidebar-right", "header-bar")) {
+        for (String id : List.of("modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact", "sidebar-right", "header-bar", "jake", "academic", "swiss", "harvard")) {
             when(resourceLoader.getResource("classpath:themes/" + id + "/theme.json"))
                     .thenReturn(new ByteArrayResource("{}".getBytes(StandardCharsets.UTF_8)));
         }
 
         service.initBuiltInThemes();
 
-        verify(repository, times(9)).save(any());
+        verify(repository, times(13)).save(any());
     }
 
     @Test

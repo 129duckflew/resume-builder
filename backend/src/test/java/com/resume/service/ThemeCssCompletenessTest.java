@@ -21,7 +21,9 @@ class ThemeCssCompletenessTest {
     };
 
     private static final List<String> ALL_THEME_IDS = List.of(
-            "classic", "modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact"
+            "classic", "modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact",
+            "sidebar-right", "header-bar",
+            "jake", "academic", "swiss", "harvard"
     );
 
     @Test
