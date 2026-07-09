@@ -351,6 +351,26 @@ class ExportServiceTest {
     }
 
     @Test
+    void generateHtml_sidebarRightNoSidebarKeywords_rendersContentNotBlank() {
+        Resume resume = createResume("sidebar-right");
+        resume.setContent("# Name\n## Experience\nWorked at ACME");
+        when(markdownService.toHtml(resume.getContent())).thenReturn("<h1>Name</h1><h2>Experience</h2><p>Worked at ACME</p>");
+        Theme theme = new Theme();
+        theme.setCssContent("body { color: #000; }");
+        theme.setLayout("sidebar-right");
+        when(themeService.findById("sidebar-right")).thenReturn(Optional.of(theme));
+        when(layoutSplitter.split(anyString(), eq("sidebar-right")))
+                .thenReturn(java.util.Map.of("body", resume.getContent()));
+        when(resumeStyleService.getStyle("1", "sidebar-right")).thenReturn(Optional.empty());
+
+        String html = exportService.generateHtml(resume, false, 1L);
+
+        assertTrue(html.contains("Worked at ACME"));
+        assertFalse(html.contains("resume-sidebar"));
+        assertFalse(html.contains("resume-main"));
+    }
+
+    @Test
     void generateHtml_sidebarRight_containsMainBeforeSidebar() {
         Resume resume = createResume("sidebar-right");
         resume.setContent("## Skills\nJava\n## Experience\nWorked");
