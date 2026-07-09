@@ -33,6 +33,7 @@
     },
     "api-designer": {
       "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -43,6 +44,7 @@
     },
     "code-reviewer": {
       "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -53,6 +55,7 @@
     },
     "test-runner": {
       "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
       "permission": {
         "edit": "deny",
         "bash": {
@@ -68,6 +71,7 @@
     },
     "docker-ops": {
       "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
       "permission": {
         "edit": "deny",
         "bash": "allow",
@@ -78,12 +82,25 @@
     },
     "doc-recorder": {
       "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
       "permission": {
         "edit": "allow",
         "bash": "allow",
         "read": "allow",
         "glob": "allow",
         "grep": "allow"
+      }
+    },
+    "coder": {
+      "mode": "subagent",
+      "model": "opencode-go/deepseek-v4-flash",
+      "permission": {
+        "edit": "allow",
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "bash": "allow",
+        "skill": "allow"
       }
     },
     "explore": {
