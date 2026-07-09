@@ -3,6 +3,7 @@
   "name": "Elegant",
   "description": "Refined business style with warm tones and delicate serif typography",
   "builtIn": true,
+  "layout": "single",
   "sortOrder": 6,
   "variables": [
     {"name": "--primary-color", "type": "color", "default": "#1b4332", "label": "Primary Color", "group": "Colors"},

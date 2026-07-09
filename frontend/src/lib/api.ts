@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type { DesensitizeRule } from '@/types/desensitize'
-import type { Resume, ResumeStyle, ResumeVersion, ShareLink, VariableDeclaration } from '@/types/resume'
+import type { Resume, ResumeStyle, ResumeVersion, ShareLink, VariableDeclaration, ThemeDTO } from '@/types/resume'
 import type { SectionTemplate } from '@/types/sectionTemplate'
 
 export const http = axios.create({
@@ -71,6 +71,15 @@ export const themeApi = {
 
   getVariables: (id: string) =>
     http.get<VariableDeclaration[]>(`/themes/${id}/variables`).then(r => r.data),
+
+  create: (data: ThemeDTO) =>
+    http.post('/themes', data).then(r => r.data),
+
+  update: (id: string, data: ThemeDTO) =>
+    http.put(`/themes/${id}`, data).then(r => r.data),
+
+  delete: (id: string) =>
+    http.delete(`/themes/${id}`),
 }
 
 export const desensitizeApi = {

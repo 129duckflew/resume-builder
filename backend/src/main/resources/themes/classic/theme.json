@@ -3,6 +3,7 @@
   "name": "Classic",
   "description": "Traditional corporate style with serif fonts, monochrome palette, uppercase headings",
   "builtIn": true,
+  "layout": "single",
   "sortOrder": 1,
   "variables": [
     {"name": "--primary-color", "type": "color", "default": "#000000", "label": "Primary Color", "group": "Colors"},

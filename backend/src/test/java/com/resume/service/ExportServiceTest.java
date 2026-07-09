@@ -29,12 +29,15 @@ class ExportServiceTest {
     @Mock
     private ResumeStyleService resumeStyleService;
 
+    @Mock
+    private LayoutSplitter layoutSplitter;
+
     private ExportService exportService;
 
     @BeforeEach
     void setUp() {
         exportService = new ExportService(markdownService, themeService, desensitizeService,
-                resumeStyleService);
+                resumeStyleService, layoutSplitter);
     }
 
     private Resume createResume(String themeId) {
@@ -46,6 +49,11 @@ class ExportServiceTest {
         return resume;
     }
 
+    private void mockSingleLayout(Theme theme) {
+        when(layoutSplitter.split(anyString(), any()))
+                .thenReturn(java.util.Map.of("body", "# Hello"));
+    }
+
     @Test
     void generateHtml_withCustomVariables_injectsRootBlock() {
         Resume resume = createResume("modern");
@@ -54,6 +62,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { color: var(--primary-color, #000); }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
 
         ResumeStyle style = new ResumeStyle();
         style.setCustomVariables("{\"--primary-color\":\"#ff0000\",\"--font-size\":\"12pt\"}");
@@ -75,6 +84,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { color: #000; }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
 
         when(resumeStyleService.getStyle("1", "modern")).thenReturn(Optional.empty());
 
@@ -92,6 +102,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { color: #000; }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
 
         ResumeStyle style = new ResumeStyle();
         style.setCustomVariables("{}");
@@ -113,6 +124,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { font-size: var(--font-size, 10pt); }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
 
         ResumeStyle style = new ResumeStyle();
         style.setCustomVariables("{\"--primary-color\":\"#ff0000\"}");
@@ -137,6 +149,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { font-size: var(--font-size, 10pt); }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
 
         ResumeStyle style = new ResumeStyle();
         style.setCustomVariables("{\"--font-size\":\"14pt\"}");
@@ -156,6 +169,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { color: #000; }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
 
         when(resumeStyleService.getStyle("1", "modern")).thenReturn(Optional.empty());
 
@@ -173,6 +187,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { font-size: var(--font-size, 10pt); }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
 
         when(resumeStyleService.getStyle("1", "modern")).thenReturn(Optional.empty());
 
@@ -193,6 +208,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { color: #000; }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
         when(resumeStyleService.getStyle("1", "modern")).thenReturn(Optional.empty());
 
         String html = exportService.generateHtml(resume, false, 1L);
@@ -210,6 +226,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { color: var(--primary-color, #000); }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
 
         ResumeStyle style = new ResumeStyle();
         style.setCustomVariables("{\"--primary-color\":\"#ff0000\"}");
@@ -233,6 +250,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { color: #000; }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
 
         // Value that attempts to break out of the :root block
         ResumeStyle style = new ResumeStyle();
@@ -270,6 +288,7 @@ class ExportServiceTest {
         Theme theme = new Theme();
         theme.setCssContent("body { color: #000; }");
         when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        mockSingleLayout(theme);
 
         // Key with illegal characters attempting CSS injection
         ResumeStyle style = new ResumeStyle();
@@ -283,5 +302,137 @@ class ExportServiceTest {
         assertTrue(html.contains("--valid-key: #00ff00"), "valid key should be present");
         assertFalse(html.contains("color: red"),
                 "malicious key should be skipped and not inject CSS");
+    }
+
+    // ---- Layout-based tests ----
+
+    @Test
+    void generateHtml_singleLayout_containsResumePageOnly() {
+        Resume resume = createResume("modern");
+        when(markdownService.toHtml("# Hello")).thenReturn("<h1>Hello</h1>");
+        Theme theme = new Theme();
+        theme.setCssContent("body { color: #000; }");
+        theme.setLayout("single");
+        when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        when(layoutSplitter.split(anyString(), eq("single")))
+                .thenReturn(java.util.Map.of("body", "# Hello"));
+        when(resumeStyleService.getStyle("1", "modern")).thenReturn(Optional.empty());
+
+        String html = exportService.generateHtml(resume, false, 1L);
+
+        assertTrue(html.contains("<div class=\"resume-page\">"));
+        assertFalse(html.contains("resume-sidebar"));
+        assertFalse(html.contains("resume-main"));
+    }
+
+    @Test
+    void generateHtml_sidebarLeft_containsSidebarBeforeMain() {
+        Resume resume = createResume("sidebar");
+        resume.setContent("## Contact\nEmail\n## Experience\nWorked");
+        when(markdownService.toHtml("## Contact\nEmail")).thenReturn("<h2>Contact</h2><p>Email</p>");
+        when(markdownService.toHtml("## Experience\nWorked")).thenReturn("<h2>Experience</h2><p>Worked</p>");
+        Theme theme = new Theme();
+        theme.setCssContent("body { color: #000; }");
+        theme.setLayout("sidebar-left");
+        when(themeService.findById("sidebar")).thenReturn(Optional.of(theme));
+        when(layoutSplitter.split(anyString(), eq("sidebar-left")))
+                .thenReturn(java.util.Map.of("sidebar", "## Contact\nEmail", "main", "## Experience\nWorked"));
+        when(resumeStyleService.getStyle("1", "sidebar")).thenReturn(Optional.empty());
+
+        String html = exportService.generateHtml(resume, false, 1L);
+
+        assertTrue(html.contains("<div class=\"resume-page\">"));
+        assertTrue(html.contains("<aside class=\"resume-sidebar\">"));
+        assertTrue(html.contains("<main class=\"resume-main\">"));
+        // Sidebar should appear before main
+        int sidebarIdx = html.indexOf("resume-sidebar");
+        int mainIdx = html.indexOf("resume-main");
+        assertTrue(sidebarIdx < mainIdx, "sidebar should appear before main in sidebar-left");
+    }
+
+    @Test
+    void generateHtml_sidebarRight_containsMainBeforeSidebar() {
+        Resume resume = createResume("sidebar-right");
+        resume.setContent("## Skills\nJava\n## Experience\nWorked");
+        when(markdownService.toHtml("## Skills\nJava")).thenReturn("<h2>Skills</h2><p>Java</p>");
+        when(markdownService.toHtml("## Experience\nWorked")).thenReturn("<h2>Experience</h2><p>Worked</p>");
+        Theme theme = new Theme();
+        theme.setCssContent("body { color: #000; }");
+        theme.setLayout("sidebar-right");
+        when(themeService.findById("sidebar-right")).thenReturn(Optional.of(theme));
+        when(layoutSplitter.split(anyString(), eq("sidebar-right")))
+                .thenReturn(java.util.Map.of("sidebar", "## Skills\nJava", "main", "## Experience\nWorked"));
+        when(resumeStyleService.getStyle("1", "sidebar-right")).thenReturn(Optional.empty());
+
+        String html = exportService.generateHtml(resume, false, 1L);
+
+        assertTrue(html.contains("<div class=\"resume-page\">"));
+        assertTrue(html.contains("<aside class=\"resume-sidebar\">"));
+        assertTrue(html.contains("<main class=\"resume-main\">"));
+        // Main should appear before sidebar
+        int mainIdx = html.indexOf("resume-main");
+        int sidebarIdx = html.indexOf("resume-sidebar");
+        assertTrue(mainIdx < sidebarIdx, "main should appear before sidebar in sidebar-right");
+    }
+
+    @Test
+    void generateHtml_themeNoLayout_defaultsToSingle() {
+        Resume resume = createResume("modern");
+        when(markdownService.toHtml("# Hello")).thenReturn("<h1>Hello</h1>");
+        Theme theme = new Theme();
+        theme.setCssContent("body { color: #000; }");
+        // layout not set (null)
+        when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+        when(layoutSplitter.split(anyString(), any()))
+                .thenReturn(java.util.Map.of("body", "# Hello"));
+        when(resumeStyleService.getStyle("1", "modern")).thenReturn(Optional.empty());
+
+        String html = exportService.generateHtml(resume, false, 1L);
+
+        assertTrue(html.contains("<div class=\"resume-page\">"));
+        assertFalse(html.contains("resume-sidebar"));
+    }
+
+    @Test
+    void generateHtml_headerBar_containsHeaderBarAndBody() {
+        Resume resume = createResume("header-bar");
+        resume.setContent("John Doe\nj@e.com\n\n## Experience\nWorked");
+        when(markdownService.toHtml(resume.getContent()))
+                .thenReturn("<p>John Doe<br/>j@e.com</p>\n<h2>Experience</h2>\n<p>Worked</p>");
+        Theme theme = new Theme();
+        theme.setCssContent("body { color: #000; }");
+        theme.setLayout("header-bar");
+        when(themeService.findById("header-bar")).thenReturn(Optional.of(theme));
+        when(resumeStyleService.getStyle("1", "header-bar")).thenReturn(Optional.empty());
+
+        String html = exportService.generateHtml(resume, false, 1L);
+
+        assertTrue(html.contains("<div class=\"resume-page\">"));
+        assertTrue(html.contains("<header class=\"resume-header-bar\">"));
+        assertTrue(html.contains("<div class=\"resume-body\">"));
+        // Header should contain the name/email
+        assertTrue(html.contains("John Doe"));
+        // Body should contain Experience
+        assertTrue(html.contains("Experience"));
+    }
+
+    @Test
+    void generateHtml_headerBar_noH2_putsAllInHeader() {
+        Resume resume = createResume("header-bar");
+        resume.setContent("John Doe\nj@e.com");
+        when(markdownService.toHtml(resume.getContent()))
+                .thenReturn("<p>John Doe<br/>j@e.com</p>");
+        Theme theme = new Theme();
+        theme.setCssContent("body { color: #000; }");
+        theme.setLayout("header-bar");
+        when(themeService.findById("header-bar")).thenReturn(Optional.of(theme));
+        when(resumeStyleService.getStyle("1", "header-bar")).thenReturn(Optional.empty());
+
+        String html = exportService.generateHtml(resume, false, 1L);
+
+        assertTrue(html.contains("<header class=\"resume-header-bar\">"));
+        assertTrue(html.contains("John Doe"));
+        // body div should exist but be empty
+        assertTrue(html.contains("<div class=\"resume-body\">\n\n</div>") || html.contains("<div class=\"resume-body\">"));
     }
 }

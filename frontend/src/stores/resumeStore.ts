@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Resume, Theme, ResumeStyle, VariableDeclaration } from '@/types/resume'
+import type { Resume, Theme, ThemeDTO, ResumeStyle, VariableDeclaration } from '@/types/resume'
 import { resumeApi, themeApi, styleApi } from '@/lib/api'
 
 interface ResumeState {
@@ -25,6 +25,9 @@ interface ResumeState {
   fetchThemeVariables: (themeId: string) => Promise<void>
   updateCustomVariable: (name: string, value: string) => void
   resetCustomVariables: () => void
+  createTheme: (data: ThemeDTO) => Promise<Theme>
+  updateTheme: (id: string, data: ThemeDTO) => Promise<Theme>
+  deleteTheme: (id: string) => Promise<void>
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null
@@ -196,5 +199,23 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
     styleApi.saveStyle(current.id, current.themeId, {
       customVariables: {},
     }).catch(() => {})
+  },
+
+  createTheme: async (data: ThemeDTO) => {
+    const theme = await themeApi.create(data)
+    await get().fetchThemes()
+    return theme
+  },
+
+  updateTheme: async (id: string, data: ThemeDTO) => {
+    const theme = await themeApi.update(id, data)
+    // Refresh themes list to reflect changes
+    await get().fetchThemes()
+    return theme
+  },
+
+  deleteTheme: async (id: string) => {
+    await themeApi.delete(id)
+    await get().fetchThemes()
   },
 }))

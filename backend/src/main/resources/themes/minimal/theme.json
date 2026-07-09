@@ -3,6 +3,7 @@
   "name": "Minimal",
   "description": "Ultra-minimalist style with maximum whitespace, suitable for academic/research positions",
   "builtIn": true,
+  "layout": "single",
   "sortOrder": 3,
   "variables": [
     {"name": "--primary-color", "type": "color", "default": "#222222", "label": "Primary Color", "group": "Colors"},

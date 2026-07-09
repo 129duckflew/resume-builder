@@ -1,0 +1,20 @@
+{
+  "id": "header-bar",
+  "name": "Header Bar",
+  "description": "Top header bar with colored background and main content below",
+  "builtIn": true,
+  "layout": "header-bar",
+  "sortOrder": 9,
+  "variables": [
+    {"name": "--header-bg", "type": "color", "default": "#1a365d", "label": "Header Background", "group": "Colors"},
+    {"name": "--header-text", "type": "color", "default": "#ffffff", "label": "Header Text", "group": "Colors"},
+    {"name": "--primary-color", "type": "color", "default": "#2563eb", "label": "Primary Color", "group": "Colors"},
+    {"name": "--text-color", "type": "color", "default": "#1a202c", "label": "Text Color", "group": "Colors"},
+    {"name": "--heading-color", "type": "color", "default": "#1a365d", "label": "Heading Color", "group": "Colors"},
+    {"name": "--background-color", "type": "color", "default": "#ffffff", "label": "Background", "group": "Colors"},
+    {"name": "--font-family", "type": "font", "default": "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif", "label": "Font Family", "group": "Typography"},
+    {"name": "--font-size", "type": "size", "default": "10.5pt", "label": "Base Font Size", "group": "Typography"},
+    {"name": "--line-height", "type": "size", "default": "1.5", "label": "Line Height", "group": "Typography"},
+    {"name": "--section-spacing", "type": "size", "default": "12px", "label": "Section Spacing", "group": "Layout"}
+  ]
+}

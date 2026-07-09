@@ -1,0 +1,136 @@
+/* ===================================================
+   Header Bar Theme — Top Header with Colored Background
+   =================================================== */
+
+@page {
+    size: A4;
+    margin: 0;
+    background-color: var(--background-color, #ffffff);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-family, 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    color: var(--text-color, #1a202c);
+    font-size: var(--font-size, 10.5pt);
+    line-height: var(--line-height, 1.5);
+    background: var(--background-color, #ffffff);
+}
+
+.resume-page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ----- Header Bar (colored background) ----- */
+.resume-header-bar {
+    background: var(--header-bg, #1a365d);
+    color: var(--header-text, #ffffff);
+    padding: 14mm 18mm 10mm;
+    text-align: center;
+}
+
+.resume-header-bar h1 {
+    font-size: 22pt;
+    font-weight: 700;
+    color: var(--header-text, #ffffff);
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+}
+
+.resume-header-bar p {
+    font-size: 9.5pt;
+    color: var(--header-text, #e2e8f0);
+    margin-bottom: 2px;
+}
+
+.resume-header-bar .contact-info,
+.resume-header-bar .resume-contact {
+    font-size: 9pt;
+    color: var(--header-text, #cbd5e0);
+    margin-top: 6px;
+}
+
+.resume-header-bar a {
+    color: var(--header-text, #90cdf4);
+    text-decoration: none;
+}
+
+.resume-header-bar a:hover {
+    text-decoration: underline;
+}
+
+/* ----- Body below header ----- */
+.resume-body {
+    padding: 10mm 18mm;
+    background: #ffffff;
+    flex: 1;
+}
+
+.resume-body h2 {
+    font-size: 11pt;
+    font-weight: 600;
+    color: var(--heading-color, #1a365d);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1.5px solid var(--primary-color, #2563eb);
+    padding-bottom: 2px;
+    margin-bottom: 6px;
+    margin-top: 12px;
+}
+
+.resume-body h3 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--text-color, #2d3748);
+    margin-bottom: 3px;
+}
+
+.resume-body p {
+    color: var(--text-color, #4a5568);
+    font-size: 10pt;
+    margin-bottom: 4px;
+    text-align: justify;
+}
+
+.resume-body ul {
+    list-style-type: disc;
+    margin-left: 18px;
+    margin-bottom: 6px;
+}
+
+.resume-body li {
+    color: var(--text-color, #4a5568);
+    font-size: 10pt;
+    margin-bottom: 2px;
+}
+
+.resume-body strong {
+    color: var(--text-color, #2d3748);
+}
+
+.resume-body em {
+    color: var(--text-color, #718096);
+}
+
+.resume-body a {
+    color: var(--primary-color, #2563eb);
+    text-decoration: none;
+}
+
+.resume-body a:hover {
+    text-decoration: underline;
+}
+
+@media print {
+    body { background: var(--background-color, #ffffff); }
+    .resume-page { max-width: none; }
+}

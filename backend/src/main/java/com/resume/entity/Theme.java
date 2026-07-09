@@ -27,6 +27,12 @@ public class Theme {
     @Column(name = "variables_schema", columnDefinition = "TEXT")
     private String variablesSchema;
 
+    @Column(nullable = false, length = 20)
+    private String layout = "single";
+
+    @Column(name = "user_id")
+    private Long userId;
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getName() { return name; }
@@ -41,4 +47,8 @@ public class Theme {
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
     public String getVariablesSchema() { return variablesSchema; }
     public void setVariablesSchema(String variablesSchema) { this.variablesSchema = variablesSchema; }
+    public String getLayout() { return layout; }
+    public void setLayout(String layout) { this.layout = layout; }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 }
