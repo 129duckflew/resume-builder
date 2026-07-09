@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type { DesensitizeRule } from '@/types/desensitize'
-import type { Resume, ResumeStyle, ResumeVersion, ShareLink, VariableDeclaration, ThemeDTO } from '@/types/resume'
+import type { Resume, ResumeStyle, ResumeVersion, ShareLink, VariableDeclaration, ThemeDTO, VersionDiffResponse } from '@/types/resume'
 import type { SectionTemplate } from '@/types/sectionTemplate'
 
 export const http = axios.create({
@@ -141,6 +141,11 @@ export const versionApi = {
 
   restore: (resumeId: string, version: number) =>
     http.post<Resume>(`/resumes/${resumeId}/versions/${version}/restore`).then(r => r.data),
+
+  diff: (resumeId: string, versionA: number, versionB: number) =>
+    http.get<VersionDiffResponse>(`/resumes/${resumeId}/versions/diff`, {
+      params: { a: versionA, b: versionB },
+    }).then(r => r.data),
 }
 
 export const styleApi = {

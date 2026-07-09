@@ -1,5 +1,6 @@
 package com.resume.service;
 
+import com.resume.dto.*;
 import com.resume.entity.Resume;
 import com.resume.entity.ResumeVersion;
 import com.resume.repository.ResumeVersionRepository;
@@ -135,5 +136,185 @@ class ResumeVersionServiceTest {
         assertEquals(12f, result.getFontSize());
         assertEquals(1.5f, result.getLineHeight());
         assertEquals("compact", result.getSectionSpacing());
+    }
+
+    // ─── Diff tests ──────────────────────────────────────────────────────
+
+    @Test
+    void diff_identicalContent_allUnchanged() {
+        String content = "# Title\n\nSome body text.\n\nMore lines here.\n";
+        ResumeVersion vA = createVersion(1, "Title", content);
+        ResumeVersion vB = createVersion(2, "Title", content);
+
+        when(repository.findByResumeIdAndVersionNumber("r1", 1)).thenReturn(Optional.of(vA));
+        when(repository.findByResumeIdAndVersionNumber("r1", 2)).thenReturn(Optional.of(vB));
+
+        VersionDiffResponse result = service.getDiff("r1", 1, 2);
+
+        assertEquals(1, result.getVersionA().getVersionNumber());
+        assertEquals(2, result.getVersionB().getVersionNumber());
+        // When identical, no hunks (no changed regions)
+        assertTrue(result.getHunks().isEmpty(), "Identical content should produce no hunks");
+    }
+
+    @Test
+    void diff_allAdded_noOldContent() {
+        String newContent = "# Brand New\n\nJust created.\n";
+        ResumeVersion vA = createVersion(1, "Old", null);
+        ResumeVersion vB = createVersion(2, "New", newContent);
+
+        when(repository.findByResumeIdAndVersionNumber("r1", 1)).thenReturn(Optional.of(vA));
+        when(repository.findByResumeIdAndVersionNumber("r1", 2)).thenReturn(Optional.of(vB));
+
+        VersionDiffResponse result = service.getDiff("r1", 1, 2);
+
+        for (Hunk hunk : result.getHunks()) {
+            for (DiffLine line : hunk.getLines()) {
+                assertEquals(LineType.ADDED, line.getType());
+            }
+        }
+    }
+
+    @Test
+    void diff_allRemoved_noNewContent() {
+        String oldContent = "# Old Stuff\n\nGone.\n";
+        ResumeVersion vA = createVersion(1, "Old", oldContent);
+        ResumeVersion vB = createVersion(2, "New", null);
+
+        when(repository.findByResumeIdAndVersionNumber("r1", 1)).thenReturn(Optional.of(vA));
+        when(repository.findByResumeIdAndVersionNumber("r1", 2)).thenReturn(Optional.of(vB));
+
+        VersionDiffResponse result = service.getDiff("r1", 1, 2);
+
+        for (Hunk hunk : result.getHunks()) {
+            for (DiffLine line : hunk.getLines()) {
+                assertEquals(LineType.REMOVED, line.getType());
+            }
+        }
+    }
+
+    @Test
+    void diff_mixedChanges_correctHunks() {
+        ResumeVersion vA = createVersion(1, "V1", "Line A\nLine B\nLine C\nLine D\nLine E\n");
+        ResumeVersion vB = createVersion(2, "V2", "Line A\nLine X\nLine C\nLine D\nLine Y\n");
+
+        when(repository.findByResumeIdAndVersionNumber("r1", 1)).thenReturn(Optional.of(vA));
+        when(repository.findByResumeIdAndVersionNumber("r1", 2)).thenReturn(Optional.of(vB));
+
+        VersionDiffResponse result = service.getDiff("r1", 1, 2);
+
+        // Should have changes around lines 2 and 5
+        assertFalse(result.getHunks().isEmpty());
+    }
+
+    @Test
+    void diff_changedLine_asRemoveAddPair() {
+        ResumeVersion vA = createVersion(1, "V1", "Keep\nOldLine\nKeep2\n");
+        ResumeVersion vB = createVersion(2, "V2", "Keep\nNewLine\nKeep2\n");
+
+        when(repository.findByResumeIdAndVersionNumber("r1", 1)).thenReturn(Optional.of(vA));
+        when(repository.findByResumeIdAndVersionNumber("r1", 2)).thenReturn(Optional.of(vB));
+
+        VersionDiffResponse result = service.getDiff("r1", 1, 2);
+
+        // Find the hunk with changes
+        boolean foundRemoveAdd = false;
+        for (Hunk hunk : result.getHunks()) {
+            for (DiffLine line : hunk.getLines()) {
+                if (line.getType() == LineType.REMOVED && "OldLine".equals(line.getText())) {
+                    foundRemoveAdd = true;
+                }
+            }
+        }
+        assertTrue(foundRemoveAdd, "Should have a REMOVED line with 'OldLine'");
+    }
+
+    @Test
+    void diff_hunks_merge_whenGapLeq3() {
+        // Changes close together (gap ≤ 3) should merge into a single hunk
+        // Changes at lines 2 and 6, gap = 3 (lines 3-5 unchanged) → merge
+        ResumeVersion vA = createVersion(1, "V1", "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n");
+        ResumeVersion vB = createVersion(2, "V2", "1\nX\n3\n4\n5\nY\n7\n8\n9\n10\n");
+
+        when(repository.findByResumeIdAndVersionNumber("r1", 1)).thenReturn(Optional.of(vA));
+        when(repository.findByResumeIdAndVersionNumber("r1", 2)).thenReturn(Optional.of(vB));
+
+        VersionDiffResponse result = service.getDiff("r1", 1, 2);
+
+        assertEquals(1, result.getHunks().size(), "Gap ≤ 3 should merge into 1 hunk");
+    }
+
+    @Test
+    void diff_hunks_separate_whenGapGt3() {
+        // Changes far apart (gap > 3) should be separate hunks
+        // Changes at lines 2 and 7, gap = 4 (lines 3-6 unchanged) → separate
+        ResumeVersion vA = createVersion(1, "V1", "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n");
+        ResumeVersion vB = createVersion(2, "V2", "1\nX\n3\n4\n5\n6\nY\n8\n9\n10\n");
+
+        when(repository.findByResumeIdAndVersionNumber("r1", 1)).thenReturn(Optional.of(vA));
+        when(repository.findByResumeIdAndVersionNumber("r1", 2)).thenReturn(Optional.of(vB));
+
+        VersionDiffResponse result = service.getDiff("r1", 1, 2);
+
+        assertEquals(2, result.getHunks().size(), "Gap > 3 should produce 2 separate hunks");
+    }
+
+    @Test
+    void diff_hunkSeparate_gapGt3() {
+        // Changes far apart (gap > 3) should be separate hunks
+        ResumeVersion vA = createVersion(1, "V1", "A\nB\nC\nD\nE\nF\nG\nH\nI\nJ\n");
+        ResumeVersion vB = createVersion(2, "V2", "X\nB\nC\nD\nE\nF\nY\nH\nI\nJ\n");
+
+        when(repository.findByResumeIdAndVersionNumber("r1", 1)).thenReturn(Optional.of(vA));
+        when(repository.findByResumeIdAndVersionNumber("r1", 2)).thenReturn(Optional.of(vB));
+
+        VersionDiffResponse result = service.getDiff("r1", 1, 2);
+
+        // Changes at line 1 and 7 with gap > 3 -> 2 hunks expected
+        assertEquals(2, result.getHunks().size(), "Expected 2 separate hunks");
+    }
+
+    @Test
+    void diff_singleLineReplace_correctHunkHeader() {
+        // Single line replacement: verify hunk header line numbers
+        ResumeVersion vA = createVersion(1, "V1", "# Old Title");
+        ResumeVersion vB = createVersion(2, "V2", "# New Title");
+
+        when(repository.findByResumeIdAndVersionNumber("r1", 1)).thenReturn(Optional.of(vA));
+        when(repository.findByResumeIdAndVersionNumber("r1", 2)).thenReturn(Optional.of(vB));
+
+        VersionDiffResponse result = service.getDiff("r1", 1, 2);
+
+        assertEquals(1, result.getHunks().size());
+        Hunk hunk = result.getHunks().get(0);
+        assertEquals(1, hunk.getOldStart(), "oldStart should be 1");
+        assertEquals(1, hunk.getOldCount(), "oldCount should be 1");
+        assertEquals(1, hunk.getNewStart(), "newStart should be 1");
+        assertEquals(1, hunk.getNewCount(), "newCount should be 1");
+
+        List<DiffLine> lines = hunk.getLines();
+        boolean foundRemoved = false, foundAdded = false;
+        for (DiffLine dl : lines) {
+            if (dl.getType() == LineType.REMOVED && "# Old Title".equals(dl.getText())) foundRemoved = true;
+            if (dl.getType() == LineType.ADDED && "# New Title".equals(dl.getText())) foundAdded = true;
+        }
+        assertTrue(foundRemoved, "Should contain REMOVED '# Old Title'");
+        assertTrue(foundAdded, "Should contain ADDED '# New Title'");
+    }
+
+    @Test
+    void diff_versionNotFound_throws() {
+        when(repository.findByResumeIdAndVersionNumber("r1", 99)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> service.getDiff("r1", 99, 1));
+    }
+
+    private ResumeVersion createVersion(int versionNumber, String title, String content) {
+        ResumeVersion v = new ResumeVersion();
+        v.setResumeId("r1");
+        v.setVersionNumber(versionNumber);
+        v.setTitle(title);
+        v.setContent(content);
+        return v;
     }
 }
