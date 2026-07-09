@@ -70,20 +70,58 @@ class LayoutSplitterTest {
         String md = "Just some plain text\n\nMore text without headings";
         Map<String, String> result = splitter.split(md, "sidebar-left");
 
-        assertTrue(result.containsKey("main"));
-        assertTrue(result.get("main").contains("Just some plain text"));
+        assertTrue(result.containsKey("body"));
+        assertTrue(result.get("body").contains("Just some plain text"));
         assertFalse(result.containsKey("sidebar"));
+        assertFalse(result.containsKey("main"));
     }
 
     @Test
-    void sidebar_noKeywordMatch_putsAllInMain() {
+    void sidebar_noKeywordMatch_returnsBodyKey() {
         String md = "## Projects\nBuilt stuff\n## Awards\nWon things";
         Map<String, String> result = splitter.split(md, "sidebar-left");
 
-        assertTrue(result.containsKey("main"));
-        assertTrue(result.get("main").contains("Projects"));
-        assertTrue(result.get("main").contains("Awards"));
+        assertTrue(result.containsKey("body"));
+        assertTrue(result.get("body").contains("Projects"));
+        assertTrue(result.get("body").contains("Awards"));
         assertFalse(result.containsKey("sidebar"));
+        assertFalse(result.containsKey("main"));
+    }
+
+    @Test
+    void split_sidebarRight_noSidebarKeywords_returnsBodyKey() {
+        String md = "# Name\n## Experience\nfoo\n## Education\nbar";
+        Map<String, String> result = splitter.split(md, "sidebar-right");
+
+        assertTrue(result.containsKey("body"));
+        assertFalse(result.containsKey("sidebar"));
+        assertFalse(result.containsKey("main"));
+        assertTrue(result.get("body").contains("Experience"));
+        assertTrue(result.get("body").contains("Education"));
+    }
+
+    @Test
+    void split_sidebarLeft_noSidebarKeywords_returnsBodyKey() {
+        String md = "# Name\n## Experience\nfoo\n## Education\nbar";
+        Map<String, String> result = splitter.split(md, "sidebar-left");
+
+        assertTrue(result.containsKey("body"));
+        assertFalse(result.containsKey("sidebar"));
+        assertFalse(result.containsKey("main"));
+        assertTrue(result.get("body").contains("Experience"));
+        assertTrue(result.get("body").contains("Education"));
+    }
+
+    @Test
+    void split_sidebarRight_withSidebarKeywords_returnsSidebarAndMain() {
+        String md = "# Name\n## Skills\nfoo\n## Experience\nbar";
+        Map<String, String> result = splitter.split(md, "sidebar-right");
+
+        assertTrue(result.containsKey("sidebar"));
+        assertTrue(result.containsKey("main"));
+        assertFalse(result.containsKey("body"));
+        assertTrue(result.get("sidebar").contains("Skills"));
+        assertTrue(result.get("main").contains("Experience"));
     }
 
     @Test

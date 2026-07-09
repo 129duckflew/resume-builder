@@ -50,11 +50,12 @@ public class LayoutSplitter {
         }
 
         Map<String, String> result = new LinkedHashMap<>();
-        // Only include sidebar key if there's actually sidebar content
         if (sidebar.length() > 0) {
             result.put("sidebar", sidebar.toString().trim());
+            result.put("main", main.toString().trim());
+        } else {
+            result.put("body", main.toString().trim());
         }
-        result.put("main", main.toString().trim());
         return result;
     }
 
