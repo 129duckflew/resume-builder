@@ -50,8 +50,9 @@ export const resumeApi = {
 
   delete: (id: string) => http.delete(`/resumes/${id}`),
 
-  preview: (id: string, smartOnePage: boolean = false, desensitize: boolean = false) =>
-    http.post<string>(`/resumes/${id}/preview?smartOnePage=${smartOnePage}&desensitize=${desensitize}`).then(r => r.data),
+  preview: (id: string, smartOnePage: boolean = false, desensitize: boolean = false, content?: string) =>
+    http.post<string>(`/resumes/${id}/preview?smartOnePage=${smartOnePage}&desensitize=${desensitize}`,
+      content !== undefined ? { content } : undefined).then(r => r.data),
 
   exportHtml: (id: string, smartOnePage: boolean = false, desensitize: boolean = false) =>
     http.post(`/resumes/${id}/export/html?smartOnePage=${smartOnePage}&desensitize=${desensitize}`, null, { responseType: 'blob' })
