@@ -66,7 +66,7 @@ resume-builder/
 │   └── e2e/                                       # Playwright E2E tests (Docker)
 │       ├── Dockerfile, playwright.config.ts
 │       └── specs/core-flow.spec.ts
-├── themes/                             # 9 内置 CSS 主题（+ header-bar, sidebar-right）
+├── themes/                             # 13 内置主题: classic, modern, sidebar-right, header-bar, jake, academic, swiss, harvard
 ├── .opencode/                          # AI agent definition files
 ├── docker-compose.yml                  # PostgreSQL 16 + Backend(:8081) + Frontend(:3000)
 ├── AGENTS.md, ROADMAP.md, progress.md
@@ -79,7 +79,7 @@ resume-builder/
 | Backend | 196/196 |
 | Frontend | 92/92 |
 | **合计** | **288/288** ✅ |
-| E2E (Docker) | core-flow 3 specs ✅ |
+| E2E (Docker) | core-flow 2/3 ✅（register 用例因 RegisterPage input 缺 name 属性失败，遗留待修） |
 
 ## 已完成目标
 
@@ -97,12 +97,13 @@ resume-builder/
 | 10 | README 文档同步 (G16) | `0238e5c` | README.md (16 features, 28 endpoints, 189 tests) |
 | 11 | 主题变量化与样式配置扩展 (G19-A) | `c66c9d5` | Theme/ResumeStyle 变量字段, ExportService :root 注入, ThemeCustomizer, 7 主题 var() 化 |
 | 12 | 布局模板与自定义主题 (G19-B+C) | `206c1d5` + `4141d85` | LayoutSplitter, ExportService 重构, 2 新主题, Theme CRUD, CssSanitizer, ThemeSelector 分组 |
+| 13 | 集成 4 新内置简历主题 (Jake's, Academic, Swiss, Harvard) | `4b08e61` | themes/{jake,academic,swiss,harvard}/{theme.json,style.css}, ThemeService.java, ThemeCssCompletenessTest, ThemeServiceTest, ThemeServiceVariablesTest |
 
 ## 进行中
 
-- G19 主题系统增强已完成（A+B+C）— 待用户确认下一方向
 - G9 ATS 关键词评分 — 求职闭环第一层，高价值
 - G17 版本 diff 对比 — ROADMAP 4.5 遗留
+- 🔴 遗留：RegisterPage.tsx `<input>` 缺 `name` 属性 → e2e register 用例失败，需独立修复
 - 详见 ROADMAP.md
 
 ## 启动方式
