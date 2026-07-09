@@ -18,7 +18,7 @@ resume-builder/
 │       ├── controller/
 │       │   ├── AuthController.java               # /api/auth/login, /api/auth/register
 │       │   ├── ResumeController.java             # CRUD + preview + export + JSON import + styles
-│       │   ├── ThemeController.java
+│   │   ├── ThemeController.java            # CRUD + GET (自定义主题 owner 隔离)
 │       │   ├── SectionTemplateController.java
 │       │   ├── ResumeVersionController.java      # GET/POST version snapshots
 │       │   ├── ShareLinkController.java           # GET/POST share links
@@ -31,18 +31,17 @@ resume-builder/
 │       │   ├── ResumeVersion.java, ShareLink.java
 │       │   └── DesensitizeRule.java
 │       ├── repository/                           # 8 JpaRepository interfaces
-│       ├── service/
-│       │   ├── ResumeService.java, ThemeService.java
-│       │   ├── MarkdownService.java, ExportService.java
-│       │   ├── SmartOnePageService.java, PdfGenerationService.java
-│       │   ├── SectionTemplateService.java, ResumeStyleService.java
-│       │   ├── JsonResumeConverter.java
-│       │   ├── ResumeVersionService.java, ShareLinkService.java
-│       │   ├── AiService.java, DesensitizeService.java
-│       │   └── UserService.java
+│   │   ├── ResumeService.java, ThemeService.java
+│   │   ├── MarkdownService.java, ExportService.java, LayoutSplitter.java
+│   │   ├── SmartOnePageService.java, PdfGenerationService.java
+│   │   ├── SectionTemplateService.java, ResumeStyleService.java
+│   │   ├── JsonResumeConverter.java
+│   │   ├── ResumeVersionService.java, ShareLinkService.java
+│   │   ├── AiService.java, DesensitizeService.java, CssSanitizer.java
+│   │   └── UserService.java
 │       └── dto/
 │           ├── ResumeDTO.java, JsonResumeDTO.java
-│           ├── ResumeStyleDTO.java, VariableDeclaration.java
+│           ├── ResumeStyleDTO.java, VariableDeclaration.java, ThemeDTO.java
 ├── frontend/                         # React 18 + Vite + TypeScript
 │   ├── package.json, vite.config.ts, vitest.config.ts
 │   ├── tailwind.config.ts, nginx.conf, Dockerfile
@@ -54,8 +53,8 @@ resume-builder/
 │       │   ├── Layout.tsx
 │       │   ├── ui/                                # shadcn/ui: button, dialog, toast, dropdown-menu, confirm-dialog
 │       │   └── editor/
-│       │       ├── SectionDragList.tsx, SortableSection.tsx
-│       │       ├── SectionTemplatePicker.tsx, ThemeSelector.tsx
+│   │       ├── SectionDragList.tsx, SortableSection.tsx
+│       │       ├── SectionTemplatePicker.tsx, ThemeSelector.tsx  # 按 layout 分组+自定义主题
 │       │       ├── ThemeCustomizer.tsx
 │       │       ├── ExportPanel.tsx, VersionPanel.tsx
 │       │       ├── SharePanel.tsx, AiAssistant.tsx
@@ -67,7 +66,7 @@ resume-builder/
 │   └── e2e/                                       # Playwright E2E tests (Docker)
 │       ├── Dockerfile, playwright.config.ts
 │       └── specs/core-flow.spec.ts
-├── themes/                             # 7 内置 CSS 主题
+├── themes/                             # 9 内置 CSS 主题（+ header-bar, sidebar-right）
 ├── .opencode/                          # AI agent definition files
 ├── docker-compose.yml                  # PostgreSQL 16 + Backend(:8081) + Frontend(:3000)
 ├── AGENTS.md, ROADMAP.md, progress.md
@@ -77,9 +76,9 @@ resume-builder/
 
 | 模块 | 通过/总计 |
 |------|----------|
-| Backend | 144/144 |
-| Frontend | 84/84 |
-| **合计** | **228/228** ✅ |
+| Backend | 196/196 |
+| Frontend | 92/92 |
+| **合计** | **288/288** ✅ |
 | E2E (Docker) | core-flow 3 specs ✅ |
 
 ## 已完成目标
@@ -97,13 +96,14 @@ resume-builder/
 | 9 | CI GitHub Actions (G15) | `0313262` | .github/workflows/ci.yml (backend + frontend + Docker E2E) |
 | 10 | README 文档同步 (G16) | `0238e5c` | README.md (16 features, 28 endpoints, 189 tests) |
 | 11 | 主题变量化与样式配置扩展 (G19-A) | `c66c9d5` | Theme/ResumeStyle 变量字段, ExportService :root 注入, ThemeCustomizer, 7 主题 var() 化 |
+| 12 | 布局模板与自定义主题 (G19-B+C) | `206c1d5` + `4141d85` | LayoutSplitter, ExportService 重构, 2 新主题, Theme CRUD, CssSanitizer, ThemeSelector 分组 |
 
 ## 进行中
 
-- G19-B 布局模板与渲染重构 — 修复 sidebar 主题失效 + 支持多布局（下一候选）
-- G19-C 主题分类预览与自定义主题
+- G19 主题系统增强已完成（A+B+C）— 待用户确认下一方向
 - G9 ATS 关键词评分 — 求职闭环第一层，高价值
-- 详见 ROADMAP.md 三层规划
+- G17 版本 diff 对比 — ROADMAP 4.5 遗留
+- 详见 ROADMAP.md
 
 ## 启动方式
 
@@ -117,6 +117,6 @@ cd frontend && npm install && npm run dev            # :3000
 docker compose up --build
 
 # 测试
-cd backend && mvn test                               # 144 用例
-cd frontend && npm test                              # 84 用例
+cd backend && mvn test                               # 196 用例
+cd frontend && npm test                              # 92 用例
 ```
