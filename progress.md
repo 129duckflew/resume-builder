@@ -42,6 +42,7 @@ resume-builder/
 │       │   └── UserService.java
 │       └── dto/
 │           ├── ResumeDTO.java, JsonResumeDTO.java
+│           ├── ResumeStyleDTO.java, VariableDeclaration.java
 ├── frontend/                         # React 18 + Vite + TypeScript
 │   ├── package.json, vite.config.ts, vitest.config.ts
 │   ├── tailwind.config.ts, nginx.conf, Dockerfile
@@ -55,6 +56,7 @@ resume-builder/
 │       │   └── editor/
 │       │       ├── SectionDragList.tsx, SortableSection.tsx
 │       │       ├── SectionTemplatePicker.tsx, ThemeSelector.tsx
+│       │       ├── ThemeCustomizer.tsx
 │       │       ├── ExportPanel.tsx, VersionPanel.tsx
 │       │       ├── SharePanel.tsx, AiAssistant.tsx
 │       │       ├── DesensitizeSettings.tsx
@@ -75,9 +77,9 @@ resume-builder/
 
 | 模块 | 通过/总计 |
 |------|----------|
-| Backend | 117/117 |
-| Frontend | 72/72 |
-| **合计** | **189/189** ✅ |
+| Backend | 144/144 |
+| Frontend | 84/84 |
+| **合计** | **228/228** ✅ |
 | E2E (Docker) | core-flow 3 specs ✅ |
 
 ## 已完成目标
@@ -94,10 +96,12 @@ resume-builder/
 | 8 | 高级样式删除确认弹窗替代原生 confirm() | `bea7e30` | confirm-dialog.tsx, HomePage.tsx, tailwind.config.ts |
 | 9 | CI GitHub Actions (G15) | `0313262` | .github/workflows/ci.yml (backend + frontend + Docker E2E) |
 | 10 | README 文档同步 (G16) | `0238e5c` | README.md (16 features, 28 endpoints, 189 tests) |
+| 11 | 主题变量化与样式配置扩展 (G19-A) | `c66c9d5` | Theme/ResumeStyle 变量字段, ExportService :root 注入, ThemeCustomizer, 7 主题 var() 化 |
 
 ## 进行中
 
-- G17 版本 diff 对比（ROADMAP 4.5 遗留）— 下一候选
+- G19-B 布局模板与渲染重构 — 修复 sidebar 主题失效 + 支持多布局（下一候选）
+- G19-C 主题分类预览与自定义主题
 - G9 ATS 关键词评分 — 求职闭环第一层，高价值
 - 详见 ROADMAP.md 三层规划
 
@@ -113,6 +117,6 @@ cd frontend && npm install && npm run dev            # :3000
 docker compose up --build
 
 # 测试
-cd backend && mvn test                               # 117 用例
-cd frontend && npm test                              # 72 用例
+cd backend && mvn test                               # 144 用例
+cd frontend && npm test                              # 84 用例
 ```
