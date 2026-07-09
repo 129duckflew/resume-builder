@@ -108,6 +108,11 @@ describe('HomePage', () => {
     })
   })
 
+  it('loads resume list on mount', () => {
+    renderHomePage()
+    expect(mockFetchResumes).toHaveBeenCalled()
+  })
+
   it('shows error toast when deletion fails', async () => {
     mockDeleteResume.mockRejectedValueOnce(new Error('Network error'))
     renderHomePage()

@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Edit3, Trash2, Eye, FileText, Plus, Sparkles, Upload } from 'lucide-react'
 import { useResumeStore } from '@/stores/resumeStore'
@@ -14,6 +14,10 @@ export default function HomePage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const deleteButtonRef = useRef<HTMLButtonElement | null>(null)
+
+  useEffect(() => {
+    fetchResumes()
+  }, [fetchResumes])
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return
