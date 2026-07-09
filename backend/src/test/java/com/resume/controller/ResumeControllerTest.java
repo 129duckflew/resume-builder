@@ -2,11 +2,15 @@ package com.resume.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.resume.dto.ResumeDTO;
+import com.resume.dto.ResumeStyleDTO;
 import com.resume.entity.Resume;
+import com.resume.entity.ResumeStyle;
 import com.resume.service.ExportService;
 import com.resume.config.JwtUtil;
 import com.resume.service.PdfGenerationService;
 import com.resume.service.ResumeService;
+import com.resume.service.JsonResumeConverter;
+import com.resume.service.ResumeStyleService;
 import com.resume.service.SmartOnePageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +23,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -52,10 +57,10 @@ class ResumeControllerTest {
     private JwtUtil jwtUtil;
 
     @MockBean
-    private com.resume.service.JsonResumeConverter jsonResumeConverter;
+    private JsonResumeConverter jsonResumeConverter;
 
     @MockBean
-    private com.resume.service.ResumeStyleService resumeStyleService;
+    private ResumeStyleService resumeStyleService;
 
     private final Long userId = 1L;
 
@@ -335,5 +340,42 @@ class ResumeControllerTest {
 
         mockMvc.perform(get("/api/resumes/1/export/json"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void getStyle_returnsStyleWithCustomVariables() throws Exception {
+        var resume = new Resume();
+        resume.setId("1");
+        var style = new ResumeStyle();
+        style.setResumeId("1");
+        style.setThemeId("classic");
+        style.setCustomVariables("{\"--primary\":\"#000\"}");
+
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
+        when(resumeStyleService.getStyle("1", "classic")).thenReturn(Optional.of(style));
+
+        mockMvc.perform(get("/api/resumes/1/styles?themeId=classic"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.customVariables").isNotEmpty());
+    }
+
+    @Test
+    void saveStyle_acceptsDtoWithCustomVariables() throws Exception {
+        var resume = new Resume();
+        resume.setId("1");
+        var saved = new ResumeStyle();
+        saved.setResumeId("1");
+        saved.setThemeId("modern");
+        saved.setCustomVariables("{\"--color\":\"#ff0\"}");
+
+        when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
+        when(resumeStyleService.saveStyle(eq("1"), eq("modern"), any(ResumeStyleDTO.class)))
+                .thenReturn(saved);
+
+        mockMvc.perform(put("/api/resumes/1/styles?themeId=modern")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"fontSize\":12,\"customVariables\":{\"--color\":\"#ff0\"}}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.customVariables").isNotEmpty());
     }
 }

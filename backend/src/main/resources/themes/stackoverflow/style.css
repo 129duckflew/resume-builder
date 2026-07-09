@@ -4,8 +4,8 @@
 
 @page {
     size: A4;
-    margin: 15mm 18mm;
-    background-color: #ffffff;
+    margin: var(--page-margin, 15mm 18mm);
+    background-color: var(--background-color, #ffffff);
 }
 
 * {
@@ -15,11 +15,11 @@
 }
 
 body {
-    font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    color: #2f3337;
-    font-size: 10.5pt;
-    line-height: 1.5;
-    background: #ffffff;
+    font-family: var(--font-family, 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif);
+    color: var(--text-color, #2f3337);
+    font-size: var(--font-size, 10.5pt);
+    line-height: var(--line-height, 1.5);
+    background: var(--background-color, #ffffff);
 }
 
 .resume-page {
@@ -30,20 +30,20 @@ body {
 
 /* ----- Header ----- */
 h1 {
-    font-size: 20pt;
+    font-size: var(--heading-font-size, 20pt);
     font-weight: 700;
-    color: #2f3337;
+    color: var(--heading-color, #2f3337);
     margin-bottom: 2px;
 }
 
 .contact-info, .resume-contact {
     font-size: 9.5pt;
-    color: #6a737c;
+    color: var(--muted-color, #6a737c);
     margin-bottom: 2px;
 }
 
 .resume-contact a {
-    color: #0077cc;
+    color: var(--link-color, #0077cc);
 }
 
 /* ----- Summary / intro ----- */
@@ -51,21 +51,21 @@ h1 + p {
     margin-top: 8px;
     padding: 8px 12px;
     background: #f9f9f9;
-    border-left: 3px solid #f48024;
+    border-left: 3px solid var(--primary-color, #f48024);
     border-radius: 3px;
-    color: #3c4146;
+    color: var(--text-color, #3c4146);
     font-size: 10pt;
 }
 
 /* ----- Sections ----- */
 .resume-section {
-    margin-bottom: 10px;
+    margin-bottom: var(--section-spacing, 10px);
 }
 
 h2 {
-    font-size: 11pt;
+    font-size: var(--section-heading-size, 11pt);
     font-weight: 600;
-    color: #f48024;
+    color: var(--primary-color, #f48024);
     text-transform: uppercase;
     letter-spacing: 0.8px;
     border-bottom: 1px solid #e4e6e8;
@@ -74,14 +74,14 @@ h2 {
 }
 
 h3 {
-    font-size: 10.5pt;
+    font-size: var(--font-size, 10.5pt);
     font-weight: 600;
-    color: #2f3337;
+    color: var(--heading-color, #2f3337);
     margin-bottom: 2px;
 }
 
 p {
-    color: #3c4146;
+    color: var(--text-color, #3c4146);
     font-size: 10pt;
     margin-bottom: 4px;
     text-align: justify;
@@ -90,17 +90,17 @@ p {
 /* ----- Items ----- */
 .resume-item-title {
     font-weight: 600;
-    color: #2f3337;
+    color: var(--heading-color, #2f3337);
 }
 
 .resume-item-date {
     float: right;
-    color: #6a737c;
+    color: var(--muted-color, #6a737c);
     font-size: 9pt;
 }
 
 .resume-item-subtitle {
-    color: #6a737c;
+    color: var(--muted-color, #6a737c);
     font-size: 9.5pt;
     font-style: italic;
     margin-bottom: 3px;
@@ -121,7 +121,7 @@ li {
     margin-bottom: 2px;
     padding-left: 14px;
     position: relative;
-    color: #3c4146;
+    color: var(--text-color, #3c4146);
     font-size: 10pt;
 }
 
@@ -129,7 +129,7 @@ li::before {
     content: "•";
     position: absolute;
     left: 0;
-    color: #f48024;
+    color: var(--primary-color, #f48024);
     font-weight: bold;
 }
 
@@ -142,8 +142,8 @@ li::before {
 }
 
 .skills-tags li, .resume-skills li {
-    background: #e4e6e8;
-    color: #2f3337;
+    background: var(--tag-bg, #e4e6e8);
+    color: var(--heading-color, #2f3337);
     padding: 2px 6px;
     border-radius: 3px;
     font-size: 9pt;
@@ -156,23 +156,23 @@ li::before {
 }
 
 strong {
-    color: #2f3337;
+    color: var(--heading-color, #2f3337);
 }
 
 em {
-    color: #6a737c;
+    color: var(--muted-color, #6a737c);
 }
 
 /* ----- Links ----- */
 a {
-    color: #0077cc;
+    color: var(--link-color, #0077cc);
     text-decoration: none;
 }
 
 a:hover {
-    color: #f48024;
+    color: var(--primary-color, #f48024);
 }
 
 @media print {
-    body { background: #ffffff; }
+    body { background: var(--background-color, #ffffff); }
 }

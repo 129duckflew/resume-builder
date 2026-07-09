@@ -4,8 +4,8 @@
 
 @page {
     size: A4;
-    margin: 18mm 22mm;
-    background-color: #ffffff;
+    margin: var(--page-margin, 18mm 22mm);
+    background-color: var(--background-color, #ffffff);
 }
 
 * {
@@ -15,11 +15,11 @@
 }
 
 body {
-    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    color: #1a1a1a;
-    font-size: 10.5pt;
-    line-height: 1.5;
-    background: #ffffff;
+    font-family: var(--font-family, 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    color: var(--text-color, #1a1a1a);
+    font-size: var(--font-size, 10.5pt);
+    line-height: var(--line-height, 1.5);
+    background: var(--background-color, #ffffff);
 }
 
 .resume-page {
@@ -32,36 +32,36 @@ body {
 .resume-header {
     margin-bottom: 20px;
     padding-bottom: 14px;
-    border-bottom: 2px solid #2563eb;
+    border-bottom: 2px solid var(--primary-color, #2563eb);
 }
 
 h1 {
-    font-size: 22pt;
+    font-size: var(--heading-font-size, 22pt);
     font-weight: 700;
-    color: #111827;
+    color: var(--heading-color, #111827);
     margin-bottom: 4px;
     letter-spacing: -0.3px;
 }
 
 .contact-info, .resume-contact {
     font-size: 10pt;
-    color: #4b5563;
+    color: var(--text-color, #4b5563);
     margin-bottom: 2px;
 }
 
 .resume-contact a {
-    color: #2563eb;
+    color: var(--primary-color, #2563eb);
 }
 
 /* ----- Sections ----- */
 .resume-section {
-    margin-bottom: 14px;
+    margin-bottom: var(--section-spacing, 14px);
 }
 
 h2 {
-    font-size: 11pt;
+    font-size: var(--section-heading-size, 11pt);
     font-weight: 600;
-    color: #2563eb;
+    color: var(--primary-color, #2563eb);
     text-transform: uppercase;
     letter-spacing: 1px;
     border-bottom: 1px solid #e5e7eb;
@@ -72,38 +72,38 @@ h2 {
 h3 {
     font-size: 10.5pt;
     font-weight: 600;
-    color: #111827;
+    color: var(--heading-color, #111827);
     margin-bottom: 4px;
 }
 
 p {
     margin-bottom: 6px;
-    color: #374151;
+    color: var(--text-color, #374151);
     text-align: justify;
 }
 
 strong {
-    color: #111827;
+    color: var(--heading-color, #111827);
 }
 
 em {
-    color: #374151;
+    color: var(--text-color, #374151);
 }
 
 /* ----- Items ----- */
 .resume-item-title {
     font-weight: 600;
-    color: #111827;
+    color: var(--heading-color, #111827);
 }
 
 .resume-item-date {
     float: right;
-    color: #6b7280;
+    color: var(--text-color, #6b7280);
     font-size: 9.5pt;
 }
 
 .resume-item-subtitle {
-    color: #374151;
+    color: var(--text-color, #374151);
     margin-bottom: 4px;
 }
 
@@ -122,14 +122,14 @@ li {
     margin-bottom: 3px;
     padding-left: 14px;
     position: relative;
-    color: #374151;
+    color: var(--text-color, #374151);
 }
 
 li::before {
     content: "—";
     position: absolute;
     left: 0;
-    color: #2563eb;
+    color: var(--primary-color, #2563eb);
 }
 
 .project-block, .resume-project {
@@ -138,7 +138,7 @@ li::before {
 
 /* ----- Links ----- */
 a {
-    color: #2563eb;
+    color: var(--primary-color, #2563eb);
     text-decoration: none;
 }
 
@@ -147,6 +147,6 @@ a:hover {
 }
 
 @media print {
-    body { background: #ffffff; }
+    body { background: var(--background-color, #ffffff); }
     .resume-page { padding: 0; max-width: none; }
 }

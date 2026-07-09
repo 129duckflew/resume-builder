@@ -3,5 +3,18 @@
   "name": "Classic",
   "description": "Traditional corporate style with serif fonts, monochrome palette, uppercase headings",
   "builtIn": true,
-  "sortOrder": 1
+  "sortOrder": 1,
+  "variables": [
+    {"name": "--primary-color", "type": "color", "default": "#000000", "label": "Primary Color", "group": "Colors"},
+    {"name": "--text-color", "type": "color", "default": "#000000", "label": "Text Color", "group": "Colors"},
+    {"name": "--heading-color", "type": "color", "default": "#000000", "label": "Heading Color", "group": "Colors"},
+    {"name": "--background-color", "type": "color", "default": "#ffffff", "label": "Background", "group": "Colors"},
+    {"name": "--font-family", "type": "font", "default": "'Times New Roman', Times, serif", "label": "Font Family", "group": "Typography"},
+    {"name": "--font-size", "type": "size", "default": "11pt", "label": "Base Font Size", "group": "Typography"},
+    {"name": "--heading-font-size", "type": "size", "default": "20pt", "label": "Name/Title Size", "group": "Typography"},
+    {"name": "--section-heading-size", "type": "size", "default": "12pt", "label": "Section Heading Size", "group": "Typography"},
+    {"name": "--line-height", "type": "size", "default": "1.4", "label": "Line Height", "group": "Typography"},
+    {"name": "--page-margin", "type": "size", "default": "20mm 25mm", "label": "Page Margin", "group": "Layout"},
+    {"name": "--section-spacing", "type": "size", "default": "16px", "label": "Section Spacing", "group": "Layout"}
+  ]
 }

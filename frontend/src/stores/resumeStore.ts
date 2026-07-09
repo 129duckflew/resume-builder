@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Resume, Theme, ResumeStyle } from '@/types/resume'
+import type { Resume, Theme, ResumeStyle, VariableDeclaration } from '@/types/resume'
 import { resumeApi, themeApi, styleApi } from '@/lib/api'
 
 interface ResumeState {
@@ -7,6 +7,8 @@ interface ResumeState {
   currentResume: Resume | null
   themes: Theme[]
   currentThemeCss: string
+  currentThemeVariables: VariableDeclaration[]
+  customVariables: Record<string, string>
   loading: boolean
   error: string | null
 
@@ -20,13 +22,20 @@ interface ResumeState {
   setContent: (content: string) => void
   setTitle: (title: string) => void
   applyStyle: (style: ResumeStyle | null) => void
+  fetchThemeVariables: (themeId: string) => Promise<void>
+  updateCustomVariable: (name: string, value: string) => void
+  resetCustomVariables: () => void
 }
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null
 
 export const useResumeStore = create<ResumeState>((set, get) => ({
   resumes: [],
   currentResume: null,
   themes: [],
   currentThemeCss: '',
+  currentThemeVariables: [],
+  customVariables: {},
   loading: false,
   error: null,
 
@@ -47,6 +56,17 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
       set({ currentResume: resume, loading: false })
       const css = await themeApi.getCss(resume.themeId)
       set({ currentThemeCss: css })
+      // Load theme variables and saved style
+      const store = get()
+      await store.fetchThemeVariables(resume.themeId)
+      try {
+        const savedStyle = await styleApi.getStyle(id, resume.themeId)
+        if (savedStyle) {
+          store.applyStyle(savedStyle)
+        }
+      } catch {
+        // 204 No Content — no saved style, ignore
+      }
     } catch {
       set({ error: 'Failed to load resume', loading: false })
     }
@@ -82,20 +102,25 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
         fontSize: current.fontSize,
         lineHeight: current.lineHeight,
         sectionSpacing: current.sectionSpacing,
+        customVariables: get().customVariables,
       }).catch(() => {})
     }
     // Load new theme CSS
     const css = await themeApi.getCss(themeId)
     await get().updateResume(current.id, { themeId })
     set({ currentThemeCss: css })
+    // Load variables for new theme
+    await get().fetchThemeVariables(themeId)
     // Load saved style for new theme
     try {
       const saved = await styleApi.getStyle(current.id, themeId)
       if (saved) {
         get().applyStyle(saved)
+      } else {
+        set({ customVariables: {} })
       }
     } catch {
-      // 204 No Content — no saved style, ignore
+      set({ customVariables: {} })
     }
   },
 
@@ -122,5 +147,54 @@ export const useResumeStore = create<ResumeState>((set, get) => ({
         sectionSpacing: style.sectionSpacing ?? current.sectionSpacing,
       },
     })
+    // Parse customVariables string into map
+    if (style.customVariables) {
+      try {
+        const parsed = JSON.parse(style.customVariables) as Record<string, string>
+        set({ customVariables: parsed })
+      } catch {
+        set({ customVariables: {} })
+      }
+    } else {
+      set({ customVariables: {} })
+    }
+  },
+
+  fetchThemeVariables: async (themeId: string) => {
+    try {
+      const vars = await themeApi.getVariables(themeId)
+      set({ currentThemeVariables: vars || [] })
+    } catch {
+      set({ currentThemeVariables: [] })
+    }
+  },
+
+  updateCustomVariable: (name: string, value: string) => {
+    const { customVariables } = get()
+    const updated = { ...customVariables, [name]: value }
+    set({ customVariables: updated })
+
+    // Debounce auto-save
+    if (saveTimer) clearTimeout(saveTimer)
+    saveTimer = setTimeout(async () => {
+      const current = get().currentResume
+      if (!current) return
+      try {
+        await styleApi.saveStyle(current.id, current.themeId, {
+          customVariables: updated,
+        })
+      } catch {
+        // ignore save errors
+      }
+    }, 300)
+  },
+
+  resetCustomVariables: () => {
+    set({ customVariables: {} })
+    const current = get().currentResume
+    if (!current) return
+    styleApi.saveStyle(current.id, current.themeId, {
+      customVariables: {},
+    }).catch(() => {})
   },
 }))

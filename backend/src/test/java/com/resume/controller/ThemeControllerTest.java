@@ -1,6 +1,7 @@
 package com.resume.controller;
 
 import com.resume.config.JwtUtil;
+import com.resume.dto.VariableDeclaration;
 import com.resume.entity.Theme;
 import com.resume.service.ThemeService;
 import org.junit.jupiter.api.Test;
@@ -67,6 +68,20 @@ class ThemeControllerTest {
     }
 
     @Test
+    void get_withExistingId_returnsThemeWithVariablesSchema() throws Exception {
+        var theme = new Theme();
+        theme.setId("modern");
+        theme.setName("Modern");
+        theme.setVariablesSchema("[{\"name\":\"--primary-color\",\"type\":\"color\",\"defaultValue\":\"#2563eb\"}]");
+
+        when(themeService.findById("modern")).thenReturn(Optional.of(theme));
+
+        mockMvc.perform(get("/api/themes/modern"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.variablesSchema").isNotEmpty());
+    }
+
+    @Test
     void getCss_returnsCssContent() throws Exception {
         var theme = new Theme();
         theme.setId("classic");
@@ -85,6 +100,34 @@ class ThemeControllerTest {
         when(themeService.findById("missing")).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/themes/missing/css"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getVariables_withExistingId_returnsVariableDeclarations() throws Exception {
+        var var1 = new VariableDeclaration();
+        var1.setName("--primary-color");
+        var1.setType("color");
+        var1.setDefaultValue("#2563eb");
+        var1.setLabel("Primary Color");
+        var1.setGroup("Colors");
+
+        when(themeService.getVariables("modern")).thenReturn(List.of(var1));
+
+        mockMvc.perform(get("/api/themes/modern/variables"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("--primary-color"))
+                .andExpect(jsonPath("$[0].type").value("color"))
+                .andExpect(jsonPath("$[0].defaultValue").value("#2563eb"))
+                .andExpect(jsonPath("$[0].label").value("Primary Color"))
+                .andExpect(jsonPath("$[0].group").value("Colors"));
+    }
+
+    @Test
+    void getVariables_withNonExistingId_returns404() throws Exception {
+        when(themeService.getVariables("missing")).thenReturn(null);
+
+        mockMvc.perform(get("/api/themes/missing/variables"))
                 .andExpect(status().isNotFound());
     }
 }

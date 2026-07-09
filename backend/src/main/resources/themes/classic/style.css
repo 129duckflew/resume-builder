@@ -5,8 +5,8 @@
 
 @page {
     size: A4;
-    margin: 20mm 25mm;
-    background-color: #ffffff;
+    margin: var(--page-margin, 20mm 25mm);
+    background-color: var(--background-color, #ffffff);
 }
 
 * {
@@ -16,11 +16,11 @@
 }
 
 body {
-    font-family: 'Times New Roman', Times, serif;
-    color: #000000;
-    font-size: 11pt;
-    line-height: 1.4;
-    background: #ffffff;
+    font-family: var(--font-family, 'Times New Roman', Times, serif);
+    color: var(--text-color, #000000);
+    font-size: var(--font-size, 11pt);
+    line-height: var(--line-height, 1.4);
+    background: var(--background-color, #ffffff);
 }
 
 .resume-page {
@@ -36,7 +36,7 @@ header, .resume-header {
 }
 
 h1 {
-    font-size: 20pt;
+    font-size: var(--heading-font-size, 20pt);
     font-weight: bold;
     text-transform: uppercase;
     margin-bottom: 6px;
@@ -50,21 +50,21 @@ h1 {
 
 /* ----- Sections ----- */
 .section, .resume-section {
-    margin-bottom: 16px;
+    margin-bottom: var(--section-spacing, 16px);
 }
 
 h2 {
-    font-size: 12pt;
+    font-size: var(--section-heading-size, 12pt);
     font-weight: bold;
     text-transform: uppercase;
-    border-bottom: 1px solid #000000;
+    border-bottom: 1px solid var(--primary-color, #000000);
     padding-bottom: 2px;
     margin-bottom: 8px;
     letter-spacing: 0.5px;
 }
 
 h3 {
-    font-size: 11pt;
+    font-size: var(--font-size, 11pt);
     font-weight: bold;
     margin-bottom: 4px;
 }
@@ -122,7 +122,7 @@ li {
 
 /* ----- Links ----- */
 a {
-    color: #000000;
+    color: var(--primary-color, #000000);
     text-decoration: none;
 }
 
@@ -133,7 +133,7 @@ a:hover {
 /* ----- Print media query ----- */
 @media print {
     body {
-        background: #ffffff;
+        background: var(--background-color, #ffffff);
     }
     .resume-page {
         padding: 0;

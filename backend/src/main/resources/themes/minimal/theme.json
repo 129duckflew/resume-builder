@@ -3,5 +3,19 @@
   "name": "Minimal",
   "description": "Ultra-minimalist style with maximum whitespace, suitable for academic/research positions",
   "builtIn": true,
-  "sortOrder": 3
+  "sortOrder": 3,
+  "variables": [
+    {"name": "--primary-color", "type": "color", "default": "#222222", "label": "Primary Color", "group": "Colors"},
+    {"name": "--text-color", "type": "color", "default": "#222222", "label": "Text Color", "group": "Colors"},
+    {"name": "--heading-color", "type": "color", "default": "#000000", "label": "Heading Color", "group": "Colors"},
+    {"name": "--muted-color", "type": "color", "default": "#999999", "label": "Muted Color", "group": "Colors"},
+    {"name": "--background-color", "type": "color", "default": "#ffffff", "label": "Background", "group": "Colors"},
+    {"name": "--font-family", "type": "font", "default": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif", "label": "Font Family", "group": "Typography"},
+    {"name": "--font-size", "type": "size", "default": "10pt", "label": "Base Font Size", "group": "Typography"},
+    {"name": "--heading-font-size", "type": "size", "default": "18pt", "label": "Name/Title Size", "group": "Typography"},
+    {"name": "--section-heading-size", "type": "size", "default": "9pt", "label": "Section Heading Size", "group": "Typography"},
+    {"name": "--line-height", "type": "size", "default": "1.6", "label": "Line Height", "group": "Typography"},
+    {"name": "--page-margin", "type": "size", "default": "22mm 28mm", "label": "Page Margin", "group": "Layout"},
+    {"name": "--section-spacing", "type": "size", "default": "20px", "label": "Section Spacing", "group": "Layout"}
+  ]
 }

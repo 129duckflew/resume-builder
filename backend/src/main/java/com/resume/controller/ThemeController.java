@@ -1,5 +1,6 @@
 package com.resume.controller;
 
+import com.resume.dto.VariableDeclaration;
 import com.resume.entity.Theme;
 import com.resume.service.ThemeService;
 import org.springframework.http.ResponseEntity;
@@ -36,5 +37,12 @@ public class ThemeController {
                         .header("Content-Type", "text/css; charset=utf-8")
                         .body(theme.getCssContent()))
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}/variables")
+    public ResponseEntity<List<VariableDeclaration>> getVariables(@PathVariable String id) {
+        List<VariableDeclaration> vars = themeService.getVariables(id);
+        if (vars == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok(vars);
     }
 }
