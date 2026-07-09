@@ -92,10 +92,14 @@ resume-builder/
 | 6 | E2E 测试 (Playwright) | `0eacbb5` | frontend/e2e/, core-flow.spec.ts |
 | 7 | AI 助手（用户管理 API Key） | `c0ed1c7` | AiController/Service, AiAssistant, UserSettingsController |
 | 8 | 高级样式删除确认弹窗替代原生 confirm() | `bea7e30` | confirm-dialog.tsx, HomePage.tsx, tailwind.config.ts |
+| 9 | CI GitHub Actions (G15) | `0313262` | .github/workflows/ci.yml (backend + frontend + Docker E2E) |
+| 10 | README 文档同步 (G16) | `0238e5c` | README.md (16 features, 28 endpoints, 189 tests) |
 
 ## 进行中
 
-- Goal 9：待定 — 等待用户新需求
+- G17 版本 diff 对比（ROADMAP 4.5 遗留）— 下一候选
+- G9 ATS 关键词评分 — 求职闭环第一层，高价值
+- 详见 ROADMAP.md 三层规划
 
 ## 启动方式
 
