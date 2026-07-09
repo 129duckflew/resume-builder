@@ -14,6 +14,14 @@ A modern, privacy-first resume builder that separates content from design. Write
 | **Keyboard Shortcuts** | `Cmd+S` to save, `Cmd+Z` / `Cmd+Shift+Z` for undo/redo. Auto-save drafts to localStorage. |
 | **PDF & HTML Export** | Server-side PDF generation via Playwright (headless Chromium) for pixel-perfect output. Standalone HTML export also supported. |
 | **Docker Deploy** | One-command deployment with Docker Compose: PostgreSQL + Spring Boot + Nginx. |
+| **Version History** | Server-side snapshots on every save. Browse, restore previous versions (up to 50 retained). |
+| **Shareable Links** | Generate public read-only links with optional desensitization (hide name/phone/email/company). |
+| **Desensitized Export** | Configurable rules to redact sensitive fields in PDF/HTML export and shared links. |
+| **AI Assistant** | LLM-powered content rewrite and JD-based suggestions. Users manage their own API key. |
+| **Custom Section Templates** | Create reusable section templates with built-in presets (experience, education, skills, projects). |
+| **JSON Resume Import/Export** | Full round-trip support for the jsonresume.org schema. |
+| **Style Persistence** | Font size, line height, and spacing customizations preserved when switching themes. |
+| **Styled Delete Dialog** | Custom confirmation dialog replacing native `confirm()` for destructive actions. |
 
 ## Tech Stack
 
@@ -42,23 +50,39 @@ resume-builder/
 │   └── src/main/java/com/resume/
 │       ├── ResumeApplication.java
 │       ├── config/
+│       │   ├── SecurityConfig.java    # JWT + public path rules
+│       │   ├── JwtAuthFilter.java
+│       │   ├── JwtUtil.java
 │       │   ├── CorsConfig.java
 │       │   └── PlaywrightConfig.java  # Chromium singleton
 │       ├── controller/
-│       │   ├── ResumeController.java  # CRUD + preview + export
-│       │   └── ThemeController.java   # theme list + CSS
-│       ├── entity/
-│       │   ├── Resume.java
-│       │   └── Theme.java
-│       ├── repository/
+│       │   ├── AuthController.java             # /api/auth (register, login)
+│       │   ├── ResumeController.java           # CRUD + preview + export + import + styles
+│       │   ├── ThemeController.java            # theme list + CSS
+│       │   ├── SectionTemplateController.java  # section templates CRUD
+│       │   ├── ResumeVersionController.java    # version snapshots + restore
+│       │   ├── ShareLinkController.java        # share links + public /s/{token}
+│       │   ├── AiController.java               # AI rewrite + suggest
+│       │   ├── DesensitizeController.java      # desensitization rules
+│       │   └── UserSettingsController.java     # AI API key management
+│       ├── entity/                   # Resume, Theme, User, SectionTemplate, ResumeStyle, ResumeVersion, ShareLink, DesensitizeRule
+│       ├── repository/               # 8 JpaRepository interfaces
 │       ├── service/
 │       │   ├── ResumeService.java
-│       │   ├── MarkdownService.java   # md → HTML
-│       │   ├── ExportService.java     # HTML generation
-│       │   ├── SmartOnePageService.java  # Playwright auto-fit
-│       │   ├── PdfGenerationService.java # Playwright PDF
-│       │   └── ThemeService.java
-│       └── dto/
+│       │   ├── ThemeService.java
+│       │   ├── MarkdownService.java            # md → HTML
+│       │   ├── ExportService.java              # HTML generation
+│       │   ├── SmartOnePageService.java        # Playwright auto-fit
+│       │   ├── PdfGenerationService.java       # Playwright PDF
+│       │   ├── SectionTemplateService.java
+│       │   ├── ResumeStyleService.java
+│       │   ├── JsonResumeConverter.java
+│       │   ├── ResumeVersionService.java
+│       │   ├── ShareLinkService.java
+│       │   ├── AiService.java
+│       │   ├── DesensitizeService.java
+│       │   └── UserService.java
+│       └── dto/                      # ResumeDTO, JsonResumeDTO
 ├── frontend/                         # React 18 + Vite
 │   ├── package.json
 │   ├── vite.config.ts
@@ -69,17 +93,33 @@ resume-builder/
 │       ├── pages/
 │       │   ├── HomePage.tsx          # Resume list
 │       │   ├── EditorPage.tsx        # Three-column editor
-│       │   └── PreviewPage.tsx       # Full A4 preview
+│       │   ├── PreviewPage.tsx       # Full A4 preview
+│       │   ├── LoginPage.tsx
+│       │   └── RegisterPage.tsx
 │       ├── components/
-│       │   ├── ui/                   # shadcn components
-│       │   └── editor/               # Editor-specific
-│       ├── stores/resumeStore.ts     # Zustand
-│       ├── hooks/                    # useKeyboardShortcuts, useDraftBackup
-│       └── lib/                      # api.ts, markdown.ts
+│       │   ├── Layout.tsx
+│       │   ├── ui/                   # shadcn: button, dialog, toast, dropdown-menu, confirm-dialog
+│       │   └── editor/
+│       │       ├── SectionDragList.tsx
+│       │       ├── SortableSection.tsx
+│       │       ├── SectionTemplatePicker.tsx
+│       │       ├── ThemeSelector.tsx
+│       │       ├── ExportPanel.tsx
+│       │       ├── VersionPanel.tsx
+│       │       ├── SharePanel.tsx
+│       │       ├── AiAssistant.tsx
+│       │       └── DesensitizeSettings.tsx
+│       ├── stores/                   # authStore, resumeStore, historyStore
+│       ├── types/                    # resume.ts, sectionTemplate.ts, desensitize.ts
+│       ├── hooks/                    # useKeyboardShortcuts, useDraftBackup, use-toast
+│       ├── lib/                      # api.ts, markdown.ts, utils.ts
+│       └── e2e/                      # Playwright E2E tests (Docker, baseURL http://frontend:80)
 ├── docker-compose.yml                # PostgreSQL + Backend + Frontend
 ├── AGENTS.md                         # TDD development guidelines
-├── progress.md                       # Development roadmap
-└── .env.example
+├── ROADMAP.md                        # Project roadmap
+├── progress.md                       # Development progress
+├── .env.example
+└── LICENSE
 ```
 
 ## Quick Start (Local Development)
@@ -142,33 +182,71 @@ Add a new theme by creating a directory in `backend/src/main/resources/themes/{i
 ## Testing
 
 ```bash
-# Backend (54 tests)
+# Backend (117 tests)
 cd backend && mvn test
 
-# Frontend (44 tests)
+# Frontend (72 tests)
 cd frontend && npm test
 
-# Total: 98 tests
+# Total: 189 tests
+
+# E2E (Playwright, runs inside Docker)
+docker compose up --build -d
+cd frontend/e2e && npx playwright test
 ```
 
 Test stack:
 - Backend: JUnit 5, Mockito, Spring MockMvc, AssertJ
 - Frontend: Vitest, @testing-library/react, @testing-library/user-event
+- E2E: Playwright (headless Chromium, runs in Docker)
 
 ## API Overview
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/resumes` | List all resumes |
+| **AuthController** (`/api/auth`) — **public** | |
+| `POST` | `/api/auth/register` | Register a new user |
+| `POST` | `/api/auth/login` | Login, returns JWT |
+| **ResumeController** (`/api/resumes`) | |
+| `GET` | `/api/resumes` | List current user's resumes |
 | `POST` | `/api/resumes` | Create a new resume |
 | `GET` | `/api/resumes/{id}` | Get a single resume |
-| `PUT` | `/api/resumes/{id}` | Update resume (partial) |
+| `PUT` | `/api/resumes/{id}` | Update resume (partial, null fields ignored) |
 | `DELETE` | `/api/resumes/{id}` | Delete a resume |
 | `POST` | `/api/resumes/{id}/preview` | Get rendered HTML preview |
 | `POST` | `/api/resumes/{id}/export/html` | Download standalone HTML |
-| `POST` | `/api/resumes/{id}/export/pdf?smartOnePage=true` | Download PDF |
+| `POST` | `/api/resumes/{id}/export/pdf` | Download PDF (optional `?smartOnePage=true`) |
+| `POST` | `/api/resumes/import/json` | Import from JSON Resume format |
+| `GET` | `/api/resumes/{id}/export/json` | Export to JSON Resume format |
+| `GET` | `/api/resumes/{id}/styles` | Get custom style overrides |
+| `PUT` | `/api/resumes/{id}/styles` | Update style overrides (preserved across theme switches) |
+| **ThemeController** (`/api/themes`) — **public** | |
 | `GET` | `/api/themes` | List available themes |
+| `GET` | `/api/themes/{id}` | Get theme metadata |
 | `GET` | `/api/themes/{id}/css` | Get theme CSS content |
+| **SectionTemplateController** (`/api/section-templates`) | |
+| `GET` | `/api/section-templates` | List templates (built-in + user's custom) |
+| `POST` | `/api/section-templates` | Create custom template |
+| `PUT` | `/api/section-templates/{id}` | Update template |
+| `DELETE` | `/api/section-templates/{id}` | Delete template |
+| **ResumeVersionController** (`/api/resumes/{resumeId}/versions`) | |
+| `GET` | `/api/resumes/{resumeId}/versions` | List version snapshots |
+| `GET` | `/api/resumes/{resumeId}/versions/{version}` | Get a specific version |
+| `POST` | `/api/resumes/{resumeId}/versions/{version}/restore` | Restore a version |
+| **ShareLinkController** — **mixed** | |
+| `GET` | `/api/resumes/{resumeId}/shares` | List share links |
+| `POST` | `/api/resumes/{resumeId}/shares` | Create share link |
+| `DELETE` | `/api/shares/{linkId}` | Delete share link |
+| `GET` | `/s/{token}` | Public read-only access (no JWT) |
+| **AiController** (`/api/resumes/{resumeId}/ai`) | |
+| `POST` | `/api/resumes/{resumeId}/ai/rewrite` | AI rewrite current content |
+| `POST` | `/api/resumes/{resumeId}/ai/suggest` | AI suggestions based on JD |
+| **DesensitizeController** (`/api/users`) | |
+| `GET` | `/api/users/desensitize-rules` | Get desensitization rules |
+| `PUT` | `/api/users/desensitize-rules` | Update desensitization rules |
+| **UserSettingsController** (`/api/users`) | |
+| `GET` | `/api/users/api-key` | Check if AI API key is set |
+| `PUT` | `/api/users/api-key` | Set/update AI API key |
 
 ## License
 
