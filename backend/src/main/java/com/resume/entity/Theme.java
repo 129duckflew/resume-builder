@@ -24,6 +24,9 @@ public class Theme {
     @Column(name = "sort_order")
     private Integer sortOrder;
 
+    @Column(name = "variables_schema", columnDefinition = "TEXT")
+    private String variablesSchema;
+
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
     public String getName() { return name; }
@@ -36,4 +39,6 @@ public class Theme {
     public void setBuiltIn(boolean builtIn) { this.builtIn = builtIn; }
     public Integer getSortOrder() { return sortOrder; }
     public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
+    public String getVariablesSchema() { return variablesSchema; }
+    public void setVariablesSchema(String variablesSchema) { this.variablesSchema = variablesSchema; }
 }

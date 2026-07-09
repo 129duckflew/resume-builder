@@ -2,6 +2,7 @@ package com.resume.controller;
 
 import com.resume.dto.JsonResumeDTO;
 import com.resume.dto.ResumeDTO;
+import com.resume.dto.ResumeStyleDTO;
 import com.resume.entity.Resume;
 import com.resume.entity.ResumeStyle;
 import com.resume.service.ExportService;
@@ -192,10 +193,10 @@ public class ResumeController {
     @PutMapping("/{id}/styles")
     public ResumeStyle saveStyle(@PathVariable String id,
                                  @RequestParam String themeId,
-                                 @RequestBody ResumeStyle style) {
+                                 @RequestBody ResumeStyleDTO dto) {
         resumeService.findByIdAndUserId(id, currentUserId())
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
-        return resumeStyleService.saveStyle(id, themeId, style);
+        return resumeStyleService.saveStyle(id, themeId, dto);
     }
 
     private Long currentUserId() {

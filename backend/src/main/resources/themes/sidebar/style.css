@@ -5,7 +5,7 @@
 @page {
     size: A4;
     margin: 0;
-    background-color: #f8f9fa;
+    background-color: var(--background-color, #f8f9fa);
 }
 
 * {
@@ -15,11 +15,11 @@
 }
 
 body {
-    font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    color: #1a202c;
-    font-size: 10.5pt;
-    line-height: 1.5;
-    background: #f8f9fa;
+    font-family: var(--font-family, 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif);
+    color: var(--text-color, #1a202c);
+    font-size: var(--font-size, 10.5pt);
+    line-height: var(--line-height, 1.5);
+    background: var(--background-color, #f8f9fa);
 }
 
 .resume-page {
@@ -31,15 +31,15 @@ body {
 
 /* ----- Sidebar (left column) ----- */
 .resume-sidebar {
-    width: 35%;
-    background: #1a365d;
-    color: #e2e8f0;
+    width: var(--sidebar-width, 35%);
+    background: var(--sidebar-bg, #1a365d);
+    color: var(--sidebar-text, #e2e8f0);
     padding: 10mm 8mm;
     flex-shrink: 0;
 }
 
 .resume-sidebar h1 {
-    font-size: 16pt;
+    font-size: var(--heading-font-size, 16pt);
     font-weight: 700;
     color: #ffffff;
     margin-bottom: 4px;
@@ -49,14 +49,14 @@ body {
 .resume-sidebar .contact-info,
 .resume-sidebar .resume-contact {
     font-size: 9pt;
-    color: #a0aec0;
+    color: var(--sidebar-text, #a0aec0);
     margin-bottom: 2px;
 }
 
 .resume-sidebar h2 {
     font-size: 9pt;
     font-weight: 600;
-    color: #90cdf4;
+    color: var(--sidebar-heading, #90cdf4);
     text-transform: uppercase;
     letter-spacing: 1.5px;
     border-bottom: 1px solid #2d4a7a;
@@ -65,7 +65,7 @@ body {
 }
 
 .resume-sidebar p {
-    color: #cbd5e0;
+    color: var(--sidebar-text, #cbd5e0);
     font-size: 9pt;
     margin-bottom: 4px;
 }
@@ -77,14 +77,14 @@ body {
 }
 
 .resume-sidebar li {
-    color: #cbd5e0;
+    color: var(--sidebar-text, #cbd5e0);
     font-size: 9pt;
     margin-bottom: 2px;
     padding-left: 0;
 }
 
 .resume-sidebar a {
-    color: #90cdf4;
+    color: var(--sidebar-heading, #90cdf4);
     text-decoration: none;
 }
 
@@ -98,15 +98,15 @@ body {
 
 /* ----- Main content (right column) ----- */
 .resume-main {
-    width: 65%;
+    width: calc(100% - var(--sidebar-width, 35%));
     padding: 10mm 9mm;
     background: #ffffff;
 }
 
 .resume-main h1 {
-    font-size: 18pt;
+    font-size: var(--main-heading-font-size, 18pt);
     font-weight: 700;
-    color: #1a365d;
+    color: var(--heading-color, #1a365d);
     margin-bottom: 4px;
     letter-spacing: -0.3px;
 }
@@ -114,22 +114,22 @@ body {
 .resume-main .contact-info,
 .resume-main .resume-contact {
     font-size: 9.5pt;
-    color: #4a5568;
+    color: var(--text-color, #4a5568);
     margin-bottom: 3px;
 }
 
 .resume-main a {
-    color: #2b6cb0;
+    color: var(--primary-color, #2b6cb0);
     text-decoration: none;
 }
 
 .resume-main h2 {
-    font-size: 10.5pt;
+    font-size: var(--section-heading-size, 10.5pt);
     font-weight: 600;
-    color: #1a365d;
+    color: var(--heading-color, #1a365d);
     text-transform: uppercase;
     letter-spacing: 1px;
-    border-bottom: 1.5px solid #1a365d;
+    border-bottom: 1.5px solid var(--heading-color, #1a365d);
     padding-bottom: 2px;
     margin-bottom: 6px;
     margin-top: 10px;
@@ -138,12 +138,12 @@ body {
 .resume-main h3 {
     font-size: 10pt;
     font-weight: 600;
-    color: #2d3748;
+    color: var(--text-color, #2d3748);
     margin-bottom: 3px;
 }
 
 .resume-main p {
-    color: #4a5568;
+    color: var(--text-color, #4a5568);
     font-size: 9.5pt;
     margin-bottom: 4px;
     text-align: justify;
@@ -156,18 +156,18 @@ body {
 }
 
 .resume-main li {
-    color: #4a5568;
+    color: var(--text-color, #4a5568);
     font-size: 9.5pt;
     margin-bottom: 2px;
     text-align: justify;
 }
 
 .resume-main strong {
-    color: #2d3748;
+    color: var(--text-color, #2d3748);
 }
 
 .resume-main em {
-    color: #718096;
+    color: var(--text-color, #718096);
 }
 
 /* ----- Tear-off edge between columns ----- */
@@ -176,6 +176,6 @@ body {
 }
 
 @media print {
-    body { background: #ffffff; }
+    body { background: var(--background-color, #ffffff); }
     .resume-page { max-width: none; }
 }

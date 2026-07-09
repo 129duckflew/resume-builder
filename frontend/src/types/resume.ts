@@ -15,6 +15,16 @@ export interface Theme {
   name: string
   description: string
   builtIn: boolean
+  variablesSchema?: string
+}
+
+export interface VariableDeclaration {
+  name: string
+  type: string
+  defaultValue: string
+  label: string
+  group?: string
+  options?: { label: string; value: string }[]
 }
 
 export interface Section {
@@ -34,6 +44,7 @@ export interface ResumeStyle {
   fontSize: number | null
   lineHeight: number | null
   sectionSpacing: string | null
+  customVariables?: string
 }
 
 export interface ShareLink {

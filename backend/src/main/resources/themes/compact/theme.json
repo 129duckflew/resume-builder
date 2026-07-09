@@ -3,5 +3,19 @@
   "name": "Compact",
   "description": "Dense layout for experienced professionals — maximum content per page",
   "builtIn": true,
-  "sortOrder": 7
+  "sortOrder": 7,
+  "variables": [
+    {"name": "--primary-color", "type": "color", "default": "#1a1a1a", "label": "Primary Color", "group": "Colors"},
+    {"name": "--text-color", "type": "color", "default": "#1a1a1a", "label": "Text Color", "group": "Colors"},
+    {"name": "--heading-color", "type": "color", "default": "#000000", "label": "Heading Color", "group": "Colors"},
+    {"name": "--muted-color", "type": "color", "default": "#555555", "label": "Muted Color", "group": "Colors"},
+    {"name": "--background-color", "type": "color", "default": "#ffffff", "label": "Background", "group": "Colors"},
+    {"name": "--font-family", "type": "font", "default": "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif", "label": "Font Family", "group": "Typography"},
+    {"name": "--font-size", "type": "size", "default": "9.5pt", "label": "Base Font Size", "group": "Typography"},
+    {"name": "--heading-font-size", "type": "size", "default": "16pt", "label": "Name/Title Size", "group": "Typography"},
+    {"name": "--section-heading-size", "type": "size", "default": "9pt", "label": "Section Heading Size", "group": "Typography"},
+    {"name": "--line-height", "type": "size", "default": "1.35", "label": "Line Height", "group": "Typography"},
+    {"name": "--page-margin", "type": "size", "default": "12mm 16mm", "label": "Page Margin", "group": "Layout"},
+    {"name": "--section-spacing", "type": "size", "default": "6px", "label": "Section Spacing", "group": "Layout"}
+  ]
 }

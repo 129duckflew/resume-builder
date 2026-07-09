@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type { DesensitizeRule } from '@/types/desensitize'
-import type { Resume, ResumeStyle, ResumeVersion, ShareLink } from '@/types/resume'
+import type { Resume, ResumeStyle, ResumeVersion, ShareLink, VariableDeclaration } from '@/types/resume'
 import type { SectionTemplate } from '@/types/sectionTemplate'
 
 export const http = axios.create({
@@ -68,6 +68,9 @@ export const themeApi = {
 
   getCss: (id: string) =>
     http.get(`/themes/${id}/css`, { responseType: 'text' }).then(r => r.data),
+
+  getVariables: (id: string) =>
+    http.get<VariableDeclaration[]>(`/themes/${id}/variables`).then(r => r.data),
 }
 
 export const desensitizeApi = {
@@ -135,8 +138,13 @@ export const styleApi = {
     http.get<ResumeStyle>(`/resumes/${resumeId}/styles`, { params: { themeId } })
       .then(r => r.status === 204 ? null : r.data),
 
-  saveStyle: (resumeId: string, themeId: string, style: Partial<ResumeStyle>) =>
-    http.put<ResumeStyle>(`/resumes/${resumeId}/styles`, style, { params: { themeId } }).then(r => r.data),
+  saveStyle: (resumeId: string, themeId: string, data: {
+    fontSize?: number | null
+    lineHeight?: number | null
+    sectionSpacing?: string | null
+    customVariables?: Record<string, string>
+  }) =>
+    http.put<ResumeStyle>(`/resumes/${resumeId}/styles`, data, { params: { themeId } }).then(r => r.data),
 }
 
 export const jsonResumeApi = {

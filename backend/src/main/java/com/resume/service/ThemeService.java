@@ -1,5 +1,8 @@
 package com.resume.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.resume.dto.VariableDeclaration;
 import com.resume.entity.Theme;
 import com.resume.repository.ThemeRepository;
 import jakarta.annotation.PostConstruct;
@@ -11,7 +14,9 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -40,6 +45,8 @@ public class ThemeService {
         loadOrRefreshBuiltIn("compact", "Compact", "Dense layout for experienced professionals");
     }
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private void loadOrRefreshBuiltIn(String id, String name, String description) {
         Theme theme = themeRepository.findById(id).orElse(new Theme());
         theme.setId(id);
@@ -57,7 +64,39 @@ public class ThemeService {
             theme.setCssContent("/* Theme: " + id + " */");
         }
 
+        // Load variables from theme.json
+        try {
+            Resource jsonResource = resourceLoader.getResource(themesPath + id + "/theme.json");
+            String json = new BufferedReader(
+                    new InputStreamReader(jsonResource.getInputStream(), StandardCharsets.UTF_8))
+                    .lines().collect(Collectors.joining("\n"));
+            Map<String, Object> themeJson = objectMapper.readValue(json,
+                    new TypeReference<Map<String, Object>>() {});
+            Object variables = themeJson.get("variables");
+            if (variables != null) {
+                String variablesJson = objectMapper.writeValueAsString(variables);
+                theme.setVariablesSchema(variablesJson);
+            }
+        } catch (Exception e) {
+            // theme.json is optional; leave variablesSchema null
+        }
+
         themeRepository.save(theme);
+    }
+
+    public List<VariableDeclaration> getVariables(String themeId) {
+        return findById(themeId)
+                .map(theme -> {
+                    String schema = theme.getVariablesSchema();
+                    if (schema == null) return Collections.<VariableDeclaration>emptyList();
+                    try {
+                        return objectMapper.readValue(schema,
+                                new TypeReference<List<VariableDeclaration>>() {});
+                    } catch (Exception e) {
+                        return Collections.<VariableDeclaration>emptyList();
+                    }
+                })
+                .orElse(null);
     }
 
     public List<Theme> findAll() {
