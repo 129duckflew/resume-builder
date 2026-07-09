@@ -27,7 +27,7 @@ public class Theme {
     @Column(name = "variables_schema", columnDefinition = "TEXT")
     private String variablesSchema;
 
-    @Column(nullable = false, length = 20)
+    @Column(columnDefinition = "varchar(20) not null default 'single'")
     private String layout = "single";
 
     @Column(name = "user_id")
