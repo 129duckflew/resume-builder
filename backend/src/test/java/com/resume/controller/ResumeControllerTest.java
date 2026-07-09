@@ -125,14 +125,24 @@ class ResumeControllerTest {
     }
 
     @Test
-    void create_withBlankTitle_returns400() throws Exception {
+    void create_withBlankTitle_derivesFromContent() throws Exception {
         ResumeDTO dto = new ResumeDTO();
         dto.setTitle("");
+        dto.setContent("# Derived Title\n## Sub");
+
+        var created = new Resume();
+        created.setId("new-id");
+        created.setTitle("Derived Title");
+        created.setContent("# Derived Title\n## Sub");
+        created.setUserId(userId);
+
+        when(resumeService.create(any(), eq(userId))).thenReturn(created);
 
         mockMvc.perform(post("/api/resumes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Derived Title"));
     }
 
     @Test
