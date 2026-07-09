@@ -12,6 +12,8 @@
 | ✅ 6. E2E 测试 (Playwright) | 已完成 | `0eacbb5` |
 | ✅ 7. AI 助手（用户管理 API Key） | 已完成 | `c0ed1c7` |
 | ✅ 8. 高级样式删除确认弹窗 | 已完成 | `bea7e30` |
+| ✅ 9. CI GitHub Actions (G15) | 已完成 | `0313262` |
+| ✅ 10. README 文档同步 (G16) | 已完成 | `0238e5c` |
 
 > 已完成目标详情见 `progress.md`。测试基线 189/189 ✅，E2E core-flow 3 specs ✅。
 
