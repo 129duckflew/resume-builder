@@ -78,3 +78,30 @@ export interface ResumeVersion {
   sectionSpacing: string | null
   createdAt: string
 }
+
+export type LineType = 'UNCHANGED' | 'ADDED' | 'REMOVED'
+
+export interface DiffLine {
+  type: LineType
+  text: string
+}
+
+export interface Hunk {
+  oldStart: number
+  oldCount: number
+  newStart: number
+  newCount: number
+  lines: DiffLine[]
+}
+
+export interface VersionMeta {
+  versionNumber: number
+  title: string
+  createdAt: string
+}
+
+export interface VersionDiffResponse {
+  versionA: VersionMeta
+  versionB: VersionMeta
+  hunks: Hunk[]
+}
