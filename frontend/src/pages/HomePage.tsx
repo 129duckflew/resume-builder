@@ -34,8 +34,7 @@ export default function HomePage() {
   }, [deleteTarget, deleteResume])
 
   const handleCreate = async () => {
-    const title = `Resume ${new Date().toLocaleDateString()}`
-    const resume = await createResume(title)
+    const resume = await createResume("")
     navigate(`/editor/${resume.id}`)
   }
 

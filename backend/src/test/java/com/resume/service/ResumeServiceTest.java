@@ -157,4 +157,122 @@ class ResumeServiceTest {
 
         assertEquals(userId, orphan.getUserId());
     }
+
+    // ---- Issue 3: themeId / sectionSpacing reset on partial update ----
+
+    @Test
+    void update_preservesThemeIdWhenNotSent() {
+        var existing = new Resume();
+        existing.setId("1");
+        existing.setTitle("Title");
+        existing.setContent("# Content");
+        existing.setThemeId("modern");
+        existing.setSectionSpacing("compact");
+        existing.setUserId(userId);
+
+        ResumeDTO dto = new ResumeDTO();
+        dto.setTitle("New Title");
+        // themeId and sectionSpacing NOT set on DTO
+
+        when(repository.findByIdAndUserId("1", userId)).thenReturn(Optional.of(existing));
+        when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        Resume result = service.update("1", dto, userId);
+
+        assertEquals("modern", result.getThemeId());
+        assertEquals("compact", result.getSectionSpacing());
+    }
+
+    @Test
+    void update_preservesSectionSpacingWhenNotSent() {
+        var existing = new Resume();
+        existing.setId("1");
+        existing.setTitle("Title");
+        existing.setContent("# Content");
+        existing.setThemeId("modern");
+        existing.setSectionSpacing("compact");
+        existing.setUserId(userId);
+
+        ResumeDTO dto = new ResumeDTO();
+        dto.setTitle("New Title");
+        dto.setThemeId("modern");
+        // sectionSpacing NOT set
+
+        when(repository.findByIdAndUserId("1", userId)).thenReturn(Optional.of(existing));
+        when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        Resume result = service.update("1", dto, userId);
+
+        assertEquals("compact", result.getSectionSpacing());
+    }
+
+    // ---- Issue 1: title derivation from content H1 ----
+
+    @Test
+    void create_withBlankTitle_derivesFromH1() {
+        ResumeDTO dto = new ResumeDTO();
+        dto.setTitle("");
+        dto.setContent("# 李亮\n## Experience\nSome content");
+
+        when(repository.save(any())).thenAnswer(i -> {
+            Resume r = i.getArgument(0);
+            r.setId("new-id");
+            return r;
+        });
+
+        Resume result = service.create(dto, userId);
+
+        assertEquals("new-id", result.getId());
+        assertEquals("李亮", result.getTitle());
+    }
+
+    @Test
+    void create_withNullTitle_derivesFromH1() {
+        ResumeDTO dto = new ResumeDTO();
+        dto.setContent("# John Doe\n## Experience\nSome content");
+        // title is null
+
+        when(repository.save(any())).thenAnswer(i -> {
+            Resume r = i.getArgument(0);
+            r.setId("new-id");
+            return r;
+        });
+
+        Resume result = service.create(dto, userId);
+
+        assertEquals("John Doe", result.getTitle());
+    }
+
+    @Test
+    void create_withNoH1_returnsUntitled() {
+        ResumeDTO dto = new ResumeDTO();
+        dto.setContent("## only h2\nSome content");
+
+        when(repository.save(any())).thenAnswer(i -> {
+            Resume r = i.getArgument(0);
+            r.setId("new-id");
+            return r;
+        });
+
+        Resume result = service.create(dto, userId);
+
+        assertEquals("Untitled", result.getTitle());
+    }
+
+    @Test
+    void create_withExplicitTitle_keepsIt() {
+        ResumeDTO dto = new ResumeDTO();
+        dto.setTitle("My Custom");
+        dto.setContent("# H1 title\nshould be ignored");
+
+        when(repository.save(any())).thenAnswer(i -> {
+            Resume r = i.getArgument(0);
+            r.setId("new-id");
+            return r;
+        });
+
+        Resume result = service.create(dto, userId);
+
+        assertEquals("My Custom", result.getTitle());
+    }
 }

@@ -1,23 +1,20 @@
 package com.resume.dto;
 
-import jakarta.validation.constraints.NotBlank;
-
 public class ResumeDTO {
 
     private String id;
 
-    @NotBlank
     private String title;
 
     private String content;
 
-    private String themeId = "classic";
+    private String themeId;
 
     private Float fontSize;
 
     private Float lineHeight;
 
-    private String sectionSpacing = "normal";
+    private String sectionSpacing;
 
     private String createdAt;
 

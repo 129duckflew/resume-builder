@@ -38,13 +38,30 @@ public class ResumeService {
     public Resume create(ResumeDTO dto, Long userId) {
         Resume resume = new Resume();
         resume.setUserId(userId);
-        resume.setTitle(dto.getTitle());
-        resume.setContent(dto.getContent() != null ? dto.getContent() : DEFAULT_CONTENT);
+        String content = dto.getContent() != null ? dto.getContent() : DEFAULT_CONTENT;
+        String title = dto.getTitle();
+        if (title == null || title.isBlank()) {
+            title = deriveTitleFromContent(content);
+        }
+        resume.setTitle(title);
+        resume.setContent(content);
         resume.setThemeId(dto.getThemeId() != null ? dto.getThemeId() : "classic");
         resume.setFontSize(dto.getFontSize());
         resume.setLineHeight(dto.getLineHeight());
         resume.setSectionSpacing(dto.getSectionSpacing() != null ? dto.getSectionSpacing() : "normal");
         return resumeRepository.save(resume);
+    }
+
+    private String deriveTitleFromContent(String content) {
+        if (content == null || content.isBlank()) return "Untitled";
+        for (String line : content.split("\\n")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith("# ") && trimmed.length() > 2) {
+                String t = trimmed.substring(2).trim();
+                if (!t.isBlank()) return t;
+            }
+        }
+        return "Untitled";
     }
 
     private static final String DEFAULT_CONTENT = """
