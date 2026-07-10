@@ -77,9 +77,9 @@ resume-builder/
 
 | 模块 | 通过/总计 |
 |------|----------|
-| Backend | 221/221 |
+| Backend | 222/222 |
 | Frontend | 101/101 |
-| **合计** | **322/322** ✅ |
+| **合计** | **323/323** ✅ |
 | E2E (Docker) | core-flow 2/3 ✅（register 用例因 RegisterPage input 缺 name 属性失败，遗留待修） |
 
 ## 已完成目标
@@ -100,6 +100,7 @@ resume-builder/
 | 12 | 布局模板与自定义主题 (G19-B+C) | `206c1d5` + `4141d85` | LayoutSplitter, ExportService 重构, 2 新主题, Theme CRUD, CssSanitizer, ThemeSelector 分组 |
 | 13 | 集成 4 新内置简历主题 (Jake's, Academic, Swiss, Harvard) | `4b08e61` | themes/{jake,academic,swiss,harvard}/{theme.json,style.css}, ThemeService.java, ThemeCssCompletenessTest, ThemeServiceTest, ThemeServiceVariablesTest |
 | 14 | G17 版本 diff 对比 | `cd3c867` | DiffLine.java, Hunk.java, LineType.java, VersionDiffResponse.java, VersionMeta.java, ResumeVersionController.java, ResumeVersionService.java, VersionDiff.tsx, VersionPanel.tsx, api.ts, resume.ts |
+| 15 | bugfix: sidebar/sidebar-right 无章节时样式丢失 | `daba10e` | ExportService.java, sidebar/style.css, sidebar-right/style.css |
 
 ## 进行中
 
@@ -119,6 +120,6 @@ cd frontend && npm install && npm run dev            # :3000
 docker compose up --build
 
 # 测试
-cd backend && mvn test                               # 221 用例
+cd backend && mvn test                               # 222 用例
 cd frontend && npm test                              # 101 用例
 ```
