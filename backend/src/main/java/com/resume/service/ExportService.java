@@ -82,6 +82,14 @@ public class ExportService {
 
         Map<String, String> parts = layoutSplitter.split(markdown, layout);
 
+        boolean isSidebarLayout = "sidebar-left".equals(layout) || "sidebar-right".equals(layout);
+
+        // Sidebar layout but no sidebar sections → render main content only, wrapped in resume-main
+        if (isSidebarLayout && !parts.containsKey("sidebar")) {
+            String bodyHtml = markdownService.toHtml(parts.get("body"));
+            return "<div class=\"resume-page\">\n<main class=\"resume-main\">\n" + bodyHtml + "\n</main>\n</div>";
+        }
+
         // single / null → old path: whole body in one resume-page div
         if (!parts.containsKey("sidebar")) {
             String bodyHtml = markdownService.toHtml(parts.get("body"));

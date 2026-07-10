@@ -367,7 +367,27 @@ class ExportServiceTest {
 
         assertTrue(html.contains("Worked at ACME"));
         assertFalse(html.contains("resume-sidebar"));
-        assertFalse(html.contains("resume-main"));
+        assertTrue(html.contains("resume-main"));
+    }
+
+    @Test
+    void generateHtml_sidebarLeftNoSidebarKeywords_rendersMainContent() {
+        Resume resume = createResume("sidebar");
+        resume.setContent("# Name\n## Experience\nWorked at ACME");
+        when(markdownService.toHtml(resume.getContent())).thenReturn("<h1>Name</h1><h2>Experience</h2><p>Worked at ACME</p>");
+        Theme theme = new Theme();
+        theme.setCssContent("body { color: #000; }");
+        theme.setLayout("sidebar-left");
+        when(themeService.findById("sidebar")).thenReturn(Optional.of(theme));
+        when(layoutSplitter.split(anyString(), eq("sidebar-left")))
+                .thenReturn(java.util.Map.of("body", resume.getContent()));
+        when(resumeStyleService.getStyle("1", "sidebar")).thenReturn(Optional.empty());
+
+        String html = exportService.generateHtml(resume, false, 1L);
+
+        assertTrue(html.contains("Worked at ACME"));
+        assertFalse(html.contains("resume-sidebar"));
+        assertTrue(html.contains("resume-main"));
     }
 
     @Test
