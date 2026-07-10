@@ -22,3 +22,6 @@ frontend/vite.config.mjs
 
 # Env
 .env
+
+# CodeGraph
+.codegraph/

@@ -11,8 +11,22 @@
     "bash": "allow",
     "skill": "allow",
     "webfetch": "allow",
-    "websearch": "allow"
+    "websearch": "allow",
+    "lsp": "allow",
+    "mcp__codegraph": "allow"
   },
+  "mcp": {
+    "codegraph": {
+      "type": "local",
+      "command": [
+        "codegraph",
+        "serve",
+        "--mcp"
+      ],
+      "enabled": true
+    }
+  },
+  "lsp": true,
   "compaction": {
     "tail_turns": 20
   },
