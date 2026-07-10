@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Dialog,
   DialogContent,
@@ -50,8 +51,10 @@ export default function SectionTemplatePicker({ open, onOpenChange, onSelect }: 
           </DialogTitle>
         </DialogHeader>
         {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          <div className="grid grid-cols-2 gap-2 py-4">
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
+            <Skeleton className="h-14 w-full" />
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">

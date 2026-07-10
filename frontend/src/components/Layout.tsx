@@ -16,10 +16,10 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b bg-white px-6 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/80 backdrop-blur-md px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link to="/" className="flex items-center gap-2 font-semibold text-lg">
-            <FileText className="h-5 w-5" />
+            <FileText className="h-5 w-5 text-primary animate-icon-pulse motion-reduce:animate-none" />
             Resume Builder
           </Link>
         </div>

@@ -4,9 +4,11 @@ import { Edit3, Trash2, Eye, FileText, Plus, Sparkles, Upload } from 'lucide-rea
 import { useResumeStore } from '@/stores/resumeStore'
 import { jsonResumeApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ConfirmDialogAction } from '@/components/ui/confirm-dialog'
 import { GradientText } from '@/components/effects/GradientText'
 import { SpotlightCard } from '@/components/effects/SpotlightCard'
+import { FadeIn } from '@/components/effects/FadeIn'
 import { toast } from '@/hooks/use-toast'
 
 export default function HomePage() {
@@ -58,14 +60,15 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="flex items-center justify-center h-64 gap-3">
+        <Skeleton className="h-6 w-32" />
       </div>
     )
   }
 
   return (
     <>
+    <FadeIn>
     <div className="max-w-5xl mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold"><GradientText>My Resumes</GradientText></h1>
@@ -129,51 +132,51 @@ export default function HomePage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {resumes.map((resume) => (
-            <div
-              key={resume.id}
-              className="border rounded-lg p-4 hover:shadow-md transition-shadow bg-white"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="font-medium truncate flex-1">{resume.title}</h3>
-                <div className="flex gap-1 ml-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate(`/editor/${resume.id}`)}
-                    title="Edit"
-                  >
-                    <Edit3 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => navigate(`/preview/${resume.id}`)}
-                    title="Preview"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      deleteButtonRef.current = e.currentTarget
-                      setDeleteTarget(resume.id)
-                    }}
-                    title="Delete"
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+            <SpotlightCard key={resume.id} className="p-0">
+              <div className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="font-medium truncate flex-1">{resume.title}</h3>
+                  <div className="flex gap-1 ml-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/editor/${resume.id}`)}
+                      title="Edit"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/preview/${resume.id}`)}
+                      title="Preview"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        deleteButtonRef.current = e.currentTarget
+                        setDeleteTarget(resume.id)
+                      }}
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Theme: {resume.themeId} &middot; Updated:{' '}
+                  {new Date(resume.updatedAt).toLocaleDateString()}
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Theme: {resume.themeId} &middot; Updated:{' '}
-                {new Date(resume.updatedAt).toLocaleDateString()}
-              </p>
-            </div>
+            </SpotlightCard>
           ))}
         </div>
       )}
     </div>
+    </FadeIn>
       <ConfirmDialogAction
         open={deleteTarget !== null}
         onOpenChange={(open) => {

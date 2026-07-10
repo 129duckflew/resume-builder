@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Download, AlertTriangle, Shield, FileCode } from 'lucide-react'
 import { resumeApi, jsonResumeApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { FadeIn } from '@/components/effects/FadeIn'
 
 export default function PreviewPage() {
   const { id } = useParams<{ id: string }>()
@@ -41,13 +43,14 @@ export default function PreviewPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading preview...</p>
+      <div className="flex items-center justify-center h-64 gap-3">
+        <Skeleton className="h-6 w-48" />
       </div>
     )
   }
 
   return (
+    <FadeIn>
     <div className="h-[calc(100vh-57px)] flex flex-col">
       <div className="border-b px-4 py-2 flex items-center gap-3 bg-white">
         <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${id}`)}>
@@ -111,5 +114,6 @@ export default function PreviewPage() {
         </div>
       </div>
     </div>
+    </FadeIn>
   )
 }

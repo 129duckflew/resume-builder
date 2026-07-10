@@ -16,6 +16,8 @@ import VersionPanel from '@/components/editor/VersionPanel'
 import SharePanel from '@/components/editor/SharePanel'
 import AiAssistant from '@/components/editor/AiAssistant'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { FadeIn } from '@/components/effects/FadeIn'
 import {
   Dialog,
   DialogContent,
@@ -137,8 +139,8 @@ export default function EditorPage() {
 
   if (loading || !currentResume) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading...</p>
+      <div className="flex items-center justify-center h-64 gap-3">
+        <Skeleton className="h-6 w-48" />
       </div>
     )
   }
@@ -154,6 +156,7 @@ export default function EditorPage() {
   const displayHtml = previewHtml || clientPreview
 
   return (
+    <FadeIn>
     <div className="h-[calc(100vh-57px)] flex flex-col">
       {/* Toolbar */}
       <div className="border-b px-4 py-2 flex items-center gap-3 bg-white">
@@ -262,6 +265,7 @@ export default function EditorPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </FadeIn>
   )
 }
 

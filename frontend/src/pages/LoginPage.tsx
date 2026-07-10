@@ -4,6 +4,7 @@ import { FileText, Loader2 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { Button } from '@/components/ui/button'
 import { AuroraBackground } from '@/components/effects/AuroraBackground'
+import { FadeIn } from '@/components/effects/FadeIn'
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -28,6 +29,7 @@ export default function LoginPage() {
   }
 
   return (
+    <FadeIn>
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gray-50 px-4">
       <AuroraBackground />
       <div className="relative w-full max-w-sm">
@@ -84,5 +86,6 @@ export default function LoginPage() {
         </form>
       </div>
     </div>
+    </FadeIn>
   )
 }

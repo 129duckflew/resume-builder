@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { ConfirmDialogAction } from '@/components/ui/confirm-dialog'
 import { toast } from '@/hooks/use-toast'
 import { versionApi } from '@/lib/api'
@@ -83,8 +84,10 @@ export default function VersionPanel({ resumeId, open, onOpenChange, onRestore }
             </DialogTitle>
           </DialogHeader>
           {loading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <div className="space-y-2 py-4">
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-3/4" />
             </div>
           ) : versions.length === 0 ? (
             <p className="text-sm text-muted-foreground py-4 text-center">No versions yet. Save your resume to create a version.</p>
