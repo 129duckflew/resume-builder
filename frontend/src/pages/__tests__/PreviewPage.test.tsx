@@ -45,11 +45,11 @@ describe('PreviewPage', () => {
     expect(screen.getByText('Loading preview...')).toBeTruthy()
   })
 
-  it('calls preview API with smartOnePage=true and desensitize=false on mount', async () => {
+  it('calls preview API with smartOnePage=false and desensitize=false on mount', async () => {
     mockPreview.mockResolvedValue('<h1>Hello</h1>')
     render(<PreviewPageApp />)
     await vi.waitFor(() => {
-      expect(mockPreview).toHaveBeenCalledWith('test-id', true, false)
+      expect(mockPreview).toHaveBeenCalledWith('test-id', false, false)
     })
   })
 
@@ -117,11 +117,11 @@ describe('PreviewPage', () => {
     await userEvent.click(desensitizeCheckbox)
 
     await vi.waitFor(() => {
-      expect(mockPreview).toHaveBeenCalledWith('test-id', true, true)
+      expect(mockPreview).toHaveBeenCalledWith('test-id', false, true)
     })
   })
 
-  it('Download PDF button calls exportPdf with smartOnePage=true and desensitize=false', async () => {
+  it('Download PDF button calls exportPdf with smartOnePage=false and desensitize=false', async () => {
     mockPreview.mockResolvedValue('<h1>Hello</h1>')
     render(<PreviewPageApp />)
 
@@ -130,10 +130,10 @@ describe('PreviewPage', () => {
     })
 
     await userEvent.click(screen.getByText('Download PDF'))
-    expect(mockExportPdf).toHaveBeenCalledWith('test-id', true, false)
+    expect(mockExportPdf).toHaveBeenCalledWith('test-id', false, false)
   })
 
-  it('Download HTML button calls exportHtml with smartOnePage=true and desensitize=false', async () => {
+  it('Download HTML button calls exportHtml with smartOnePage=false and desensitize=false', async () => {
     mockPreview.mockResolvedValue('<h1>Hello</h1>')
     render(<PreviewPageApp />)
 
@@ -142,7 +142,7 @@ describe('PreviewPage', () => {
     })
 
     await userEvent.click(screen.getByText('Download HTML'))
-    expect(mockExportHtml).toHaveBeenCalledWith('test-id', true, false)
+    expect(mockExportHtml).toHaveBeenCalledWith('test-id', false, false)
   })
 
   it('renders Back to Editor button', async () => {
