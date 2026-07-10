@@ -170,6 +170,11 @@ body {
     color: var(--text-color, #718096);
 }
 
+/* When no sidebar sections are present, main content takes full width */
+.resume-page > .resume-main:only-child {
+    width: 100%;
+}
+
 @media print {
     body { background: var(--background-color, #ffffff); }
     .resume-page { max-width: none; }
