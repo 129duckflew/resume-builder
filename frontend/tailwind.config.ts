@@ -73,12 +73,20 @@ const config: Config = {
           '0%, 100%': { transform: 'scale(1)', opacity: '1' },
           '50%': { transform: 'scale(1.08)', opacity: '0.85' },
         },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        },
+        ripple: {
+          to: { transform: 'scale(4)', opacity: '0' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'gradient-shift': 'gradient-shift 3s ease infinite',
         'icon-pulse': 'icon-pulse 2s ease-in-out infinite',
+        shimmer: 'shimmer 1.2s ease-in-out',
+        ripple: 'ripple 0.6s ease-out',
       },
       backgroundSize: {
         '300%': '300%',

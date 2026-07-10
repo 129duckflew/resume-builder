@@ -81,7 +81,7 @@ export default function HomePage() {
             className="hidden"
             onChange={handleImportJson}
           />
-          <Button onClick={handleCreate}>
+          <Button onClick={handleCreate} variant="shimmer">
             <Plus className="h-4 w-4 mr-1" />
             New Resume
           </Button>
@@ -99,7 +99,7 @@ export default function HomePage() {
             and export as PDF or HTML — all in one place.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <Button size="lg" onClick={handleCreate}>
+            <Button size="lg" variant="shimmer" onClick={handleCreate}>
               <Sparkles className="h-5 w-5 mr-2" />
               Get Started
             </Button>
