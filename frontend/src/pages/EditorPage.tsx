@@ -36,7 +36,7 @@ export default function EditorPage() {
   const [previewHtml, setPreviewHtml] = useState('')
   const [showDraftDialog, setShowDraftDialog] = useState(false)
   const [draftContent, setDraftContent] = useState<string | null>(null)
-  const [smartOnePage, setSmartOnePage] = useState(true)
+  const [smartOnePage, setSmartOnePage] = useState(false)
   const [desensitize, setDesensitize] = useState(false)
   const [showVersions, setShowVersions] = useState(false)
   const [showShare, setShowShare] = useState(false)
