@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Palette, Check, ChevronDown, PanelLeft, PanelRight, Layout, Plus,
   Pencil, Trash2, X,
@@ -7,15 +7,6 @@ import { useResumeStore } from '@/stores/resumeStore'
 import type { Theme, ThemeDTO } from '@/types/resume'
 import { Button } from '@/components/ui/button'
 import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuGroup,
-} from '@/components/ui/dropdown-menu'
-import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -23,6 +14,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { ConfirmDialogAction } from '@/components/ui/confirm-dialog'
+import { SpotlightCard } from '@/components/effects/SpotlightCard'
 
 const THEME_DOT: Record<string, string> = {
   classic: '#000000',
@@ -41,9 +33,9 @@ function layoutGroup(layout: string): string {
 }
 
 function LayoutIcon({ layout }: { layout: string }) {
-  if (layout === 'sidebar-left') return <PanelLeft className="h-3.5 w-3.5 mr-2 shrink-0 text-muted-foreground" />
-  if (layout === 'sidebar-right') return <PanelRight className="h-3.5 w-3.5 mr-2 shrink-0 text-muted-foreground" />
-  if (layout === 'header-bar') return <Layout className="h-3.5 w-3.5 mr-2 shrink-0 text-muted-foreground" />
+  if (layout === 'sidebar-left') return <PanelLeft className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+  if (layout === 'sidebar-right') return <PanelRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+  if (layout === 'header-bar') return <Layout className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
   return null
 }
 
@@ -51,6 +43,7 @@ export default function ThemeSelector() {
   const { themes, currentResume, fetchThemes, setTheme, createTheme, updateTheme, deleteTheme } = useResumeStore()
   const currentName = themes.find((t) => t.id === currentResume?.themeId)?.name ?? 'Theme'
 
+  const [open, setOpen] = useState(false)
   const [showCreate, setShowCreate] = useState(false)
   const [editTheme, setEditTheme] = useState<Theme | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Theme | null>(null)
@@ -59,10 +52,22 @@ export default function ThemeSelector() {
   const [formLayout, setFormLayout] = useState('single')
   const [formCss, setFormCss] = useState('')
   const [saving, setSaving] = useState(false)
+  const popoverRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (themes.length === 0) fetchThemes()
   }, [themes.length, fetchThemes])
+
+  useEffect(() => {
+    if (!open) return
+
+    function onPointerDown(event: PointerEvent) {
+      if (!popoverRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+
+    document.addEventListener('pointerdown', onPointerDown)
+    return () => document.removeEventListener('pointerdown', onPointerDown)
+  }, [open])
 
   // Group themes by layout
   const grouped = themes.reduce<Record<string, Theme[]>>((acc, t) => {
@@ -73,6 +78,7 @@ export default function ThemeSelector() {
   }, {})
 
   function openCreate() {
+    setOpen(false)
     setEditTheme(null)
     setFormName('')
     setFormDescription('')
@@ -82,6 +88,7 @@ export default function ThemeSelector() {
   }
 
   function openEdit(theme: Theme) {
+    setOpen(false)
     setEditTheme(theme)
     setFormName(theme.name)
     setFormDescription(theme.description || '')
@@ -124,63 +131,111 @@ export default function ThemeSelector() {
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm">
-            <Palette className="h-4 w-4 mr-1.5" />
-            {currentName}
-            <ChevronDown className="h-3 w-3 ml-1 text-muted-foreground" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56">
+      <div className="relative" ref={popoverRef}>
+        <Button
+          variant="outline"
+          size="sm"
+          aria-expanded={open}
+          aria-haspopup="dialog"
+          onClick={() => setOpen((value) => !value)}
+        >
+          <Palette className="h-4 w-4 mr-1.5" />
+          {currentName}
+          <ChevronDown className="h-3 w-3 ml-1 text-muted-foreground" />
+        </Button>
+
+        {open && (
+          <div
+            role="dialog"
+            aria-label="Choose a theme"
+            className="absolute left-0 top-full z-50 mt-2 w-[22rem] max-w-[calc(100vw-2rem)] rounded-xl border bg-white p-3 shadow-lg"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold">Choose a theme</p>
+                <p className="text-xs text-muted-foreground">Preview layouts at a glance.</p>
+              </div>
+              <button
+                type="button"
+                className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                onClick={() => setOpen(false)}
+                aria-label="Close theme selector"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
           {groupOrders.map((group) => {
             const items = grouped[group]
             if (!items || items.length === 0) return null
             return (
-              <div key={group}>
-                <DropdownMenuLabel>{group}</DropdownMenuLabel>
-                <DropdownMenuGroup>
+              <div key={group} className="mb-3 last:mb-0">
+                <div className="mb-1.5 px-0.5 text-xs font-semibold text-muted-foreground">{group}</div>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {items.map((theme) => (
-                    <DropdownMenuItem key={theme.id} onClick={() => setTheme(theme.id)} className="pr-1">
-                      <LayoutIcon layout={theme.layout} />
-                      <span className="flex-1 truncate">
-                        {theme.name}
-                        {!theme.builtIn && <span className="text-xs text-muted-foreground ml-1">(Custom)</span>}
-                      </span>
-                      {currentResume?.themeId === theme.id && (
-                        <Check className="h-4 w-4 text-primary shrink-0" />
-                      )}
+                    <SpotlightCard key={theme.id} className="p-0">
+                      <button
+                        type="button"
+                        className="block w-full p-3 text-left"
+                        aria-label={`${theme.name}${currentResume?.themeId === theme.id ? ' selected' : ''}`}
+                        onClick={() => {
+                          setTheme(theme.id)
+                          setOpen(false)
+                        }}
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <span
+                            className="h-3 w-3 rounded-full border"
+                            style={{ backgroundColor: THEME_DOT[theme.id] || '#94a3b8' }}
+                          />
+                          <span className="flex items-center gap-1">
+                            <LayoutIcon layout={theme.layout} />
+                            {currentResume?.themeId === theme.id && <Check className="h-4 w-4 text-primary" />}
+                          </span>
+                        </div>
+                        <span className="block truncate text-sm font-medium">{theme.name}</span>
+                        <span className="mt-1 block text-xs text-muted-foreground">
+                          {theme.layout || 'single'}
+                          {!theme.builtIn && <span className="ml-1">(Custom)</span>}
+                        </span>
+                      </button>
                       {!theme.builtIn && (
-                        <span className="flex shrink-0 ml-1">
+                        <div className="absolute bottom-2 right-2 z-20 flex gap-1">
                           <button
-                            className="p-0.5 hover:text-primary rounded"
-                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); openEdit(theme) }}
+                            type="button"
+                            className="rounded bg-white/90 p-1 text-muted-foreground shadow-sm hover:text-primary"
+                            onClick={(e) => { e.stopPropagation(); openEdit(theme) }}
                             title="Edit"
                           >
                             <Pencil className="h-3 w-3" />
                           </button>
                           <button
-                            className="p-0.5 hover:text-destructive rounded ml-0.5"
-                            onClick={(e) => { e.stopPropagation(); e.preventDefault(); setDeleteTarget(theme) }}
+                            type="button"
+                            className="rounded bg-white/90 p-1 text-muted-foreground shadow-sm hover:text-destructive"
+                            onClick={(e) => { e.stopPropagation(); setOpen(false); setDeleteTarget(theme) }}
                             title="Delete"
                           >
                             <Trash2 className="h-3 w-3" />
                           </button>
-                        </span>
+                        </div>
                       )}
-                    </DropdownMenuItem>
+                    </SpotlightCard>
                   ))}
-                </DropdownMenuGroup>
-                <DropdownMenuSeparator />
+                </div>
               </div>
             )
           })}
-          <DropdownMenuItem onClick={openCreate}>
+          <button
+            type="button"
+            onClick={openCreate}
+            className="mt-2 flex w-full items-center rounded-lg border border-dashed px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+          >
             <Plus className="h-4 w-4 mr-2" />
             <span>Create Theme</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </button>
+          </div>
+        )}
+      </div>
 
       {/* Create/Edit Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>

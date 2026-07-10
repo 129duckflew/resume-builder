@@ -33,7 +33,7 @@ vi.mock('@/stores/resumeStore', () => ({
   }),
 }))
 
-describe('ThemeSelector dropdown', () => {
+describe('ThemeSelector card grid', () => {
   beforeEach(() => vi.clearAllMocks())
 
   it('shows current theme name in trigger button', () => {
@@ -47,9 +47,10 @@ describe('ThemeSelector dropdown', () => {
     expect(trigger.querySelector('svg')).toBeTruthy()
   })
 
-  it('shows themes grouped by layout when dropdown is opened', async () => {
+  it('shows themes grouped by layout when card grid is opened', async () => {
     render(<ThemeSelector />)
     await userEvent.click(screen.getByRole('button'))
+    expect(screen.getByRole('dialog', { name: 'Choose a theme' })).toBeTruthy()
     // Should show layout group labels
     expect(screen.getByText('Single')).toBeTruthy()
     expect(screen.getByText('Two-Column')).toBeTruthy()
@@ -85,9 +86,7 @@ describe('ThemeSelector dropdown', () => {
   it('shows check mark on current theme', async () => {
     render(<ThemeSelector />)
     await userEvent.click(screen.getByRole('button'))
-    // Classic is the current theme, should have check mark
-    const items = screen.getAllByText('Classic')
-    expect(items.length).toBeGreaterThanOrEqual(1)
+    expect(screen.getByRole('button', { name: /Classic selected/i })).toBeTruthy()
   })
 
   it('opens create dialog when Create Theme is clicked', async () => {

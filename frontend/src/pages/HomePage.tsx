@@ -5,6 +5,8 @@ import { useResumeStore } from '@/stores/resumeStore'
 import { jsonResumeApi } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialogAction } from '@/components/ui/confirm-dialog'
+import { GradientText } from '@/components/effects/GradientText'
+import { SpotlightCard } from '@/components/effects/SpotlightCard'
 import { toast } from '@/hooks/use-toast'
 
 export default function HomePage() {
@@ -66,7 +68,7 @@ export default function HomePage() {
     <>
     <div className="max-w-5xl mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold">My Resumes</h1>
+        <h1 className="text-2xl font-bold"><GradientText>My Resumes</GradientText></h1>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
             <Upload className="h-4 w-4 mr-1" />
@@ -104,24 +106,24 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
-            <div className="p-4 border rounded-lg bg-white">
+            <SpotlightCard className="p-4 text-left">
               <h3 className="font-medium mb-1">1. Write</h3>
               <p className="text-sm text-muted-foreground">
                 Use Markdown to focus on content. Sections are automatically parsed.
               </p>
-            </div>
-            <div className="p-4 border rounded-lg bg-white">
+            </SpotlightCard>
+            <SpotlightCard className="p-4 text-left">
               <h3 className="font-medium mb-1">2. Style</h3>
               <p className="text-sm text-muted-foreground">
                 Choose from curated themes. Preview instantly in A4 format.
               </p>
-            </div>
-            <div className="p-4 border rounded-lg bg-white">
+            </SpotlightCard>
+            <SpotlightCard className="p-4 text-left">
               <h3 className="font-medium mb-1">3. Export</h3>
               <p className="text-sm text-muted-foreground">
                 Download as PDF, HTML, or JSON. Smart one-page ensures a perfect fit.
               </p>
-            </div>
+            </SpotlightCard>
           </div>
         </div>
       ) : (
