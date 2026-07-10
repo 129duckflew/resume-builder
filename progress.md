@@ -78,8 +78,8 @@ resume-builder/
 | 模块 | 通过/总计 |
 |------|----------|
 | Backend | 222/222 |
-| Frontend | 101/101 |
-| **合计** | **323/323** ✅ |
+| Frontend | 105/105 |
+| **合计** | **327/327** ✅ |
 | E2E (Docker) | core-flow 2/3 ✅（register 用例因 RegisterPage input 缺 name 属性失败，遗留待修） |
 
 ## 已完成目标
@@ -121,5 +121,25 @@ docker compose up --build
 
 # 测试
 cd backend && mvn test                               # 222 用例
-cd frontend && npm test                              # 101 用例
+cd frontend && npm test                              # 105 用例
 ```
+
+## 迭代记录
+
+### 16 — 2026-07-10：401 超时提示与自动跳转修复
+| 目标 | 提交 | 核心文件 |
+|------|------|---------|
+| 401 响应拦截器增强：toast 提示 + 清 token + 跳转 /login | `2a5e594` | `api.ts`, `App.tsx`, `Layout.tsx`, `api.test.ts` |
+
+**测试基线**：前端 105/105（+4），TypeScript 零错误
+**E2E**：Docker 内 2 passed
+**待跟进**：RegisterPage `<input>` 缺 `name` 属性仍导致 e2e register 失败，G9 ATS 关键词评分待启动
+
+### 17 — 2026-07-10：清理 backend IDE 项目文件（.gitignore 修复）
+| 目标 | 提交 | 核心文件 |
+|------|------|---------|
+| 将误提交的 backend Eclipse/IDE 项目文件（`.classpath`, `.factorypath`, `.project`, `.settings/`）从 git 索引移除，并新增 `.gitignore` 规则防止再次误提交 | `fbfc11c` | `.gitignore` |
+
+**背景**：上一个提交 `2a5e594` 误将 backend IDE 项目文件纳入版本控制，本次修复将其移除并保留本地 IDE 文件。
+**测试基线**：无变动（纯配置修复）
+**E2E**：无影响
