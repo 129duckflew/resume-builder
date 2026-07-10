@@ -88,7 +88,7 @@ export default function RegisterPage() {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" variant="shimmer" disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : null}
             {loading ? 'Creating account...' : 'Create Account'}
           </Button>
