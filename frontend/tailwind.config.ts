@@ -79,6 +79,15 @@ const config: Config = {
         ripple: {
           to: { transform: 'scale(4)', opacity: '0' },
         },
+        'fade-in-up': {
+          from: { opacity: '0', transform: 'translateY(8px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'toast-enter': {
+          '0%': { opacity: '0', transform: 'translateX(100%) scale(0.95)' },
+          '60%': { opacity: '1', transform: 'translateX(-8px) scale(1.02)' },
+          '100%': { opacity: '1', transform: 'translateX(0) scale(1)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
@@ -87,6 +96,8 @@ const config: Config = {
         'icon-pulse': 'icon-pulse 2s ease-in-out infinite',
         shimmer: 'shimmer 1.2s ease-in-out',
         ripple: 'ripple 0.6s ease-out',
+        'fade-in-up': 'fade-in-up 0.35s ease-out',
+        'toast-enter': 'toast-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
       },
       backgroundSize: {
         '300%': '300%',

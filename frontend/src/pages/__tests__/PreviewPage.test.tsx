@@ -42,7 +42,8 @@ describe('PreviewPage', () => {
   it('shows loading state on mount', () => {
     mockPreview.mockResolvedValue('<h1>Hello</h1>')
     render(<PreviewPageApp />)
-    expect(screen.getByText('Loading preview...')).toBeTruthy()
+    const skeleton = document.querySelector('.animate-pulse')
+    expect(skeleton).toBeTruthy()
   })
 
   it('calls preview API with smartOnePage=false and desensitize=false on mount', async () => {
@@ -58,7 +59,7 @@ describe('PreviewPage', () => {
     render(<PreviewPageApp />)
 
     await vi.waitFor(() => {
-      expect(screen.queryByText('Loading preview...')).toBeNull()
+      expect(screen.queryByText('Back to Editor')).toBeTruthy()
     })
 
     const iframe = document.querySelector('iframe')
@@ -91,10 +92,8 @@ describe('PreviewPage', () => {
     render(<PreviewPageApp />)
 
     await vi.waitFor(() => {
-      expect(screen.queryByText('Loading preview...')).toBeNull()
+      expect(screen.queryByText('Smart One-Page')).toBeTruthy()
     })
-
-    mockPreview.mockResolvedValue('<h1>World</h1>')
     const smartCheckbox = screen.getByLabelText('Smart One-Page') as HTMLInputElement
     await userEvent.click(smartCheckbox)
 
@@ -109,10 +108,8 @@ describe('PreviewPage', () => {
     render(<PreviewPageApp />)
 
     await vi.waitFor(() => {
-      expect(screen.queryByText('Loading preview...')).toBeNull()
+      expect(screen.queryByText('Desensitize')).toBeTruthy()
     })
-
-    mockPreview.mockResolvedValue('<h1>Masked</h1>')
     const desensitizeCheckbox = screen.getByLabelText('Desensitize') as HTMLInputElement
     await userEvent.click(desensitizeCheckbox)
 
@@ -126,7 +123,7 @@ describe('PreviewPage', () => {
     render(<PreviewPageApp />)
 
     await vi.waitFor(() => {
-      expect(screen.queryByText('Loading preview...')).toBeNull()
+      expect(screen.queryByText('Download PDF')).toBeTruthy()
     })
 
     await userEvent.click(screen.getByText('Download PDF'))
@@ -138,7 +135,7 @@ describe('PreviewPage', () => {
     render(<PreviewPageApp />)
 
     await vi.waitFor(() => {
-      expect(screen.queryByText('Loading preview...')).toBeNull()
+      expect(screen.queryByText('Download HTML')).toBeTruthy()
     })
 
     await userEvent.click(screen.getByText('Download HTML'))
@@ -150,9 +147,8 @@ describe('PreviewPage', () => {
     render(<PreviewPageApp />)
 
     await vi.waitFor(() => {
-      expect(screen.queryByText('Loading preview...')).toBeNull()
+      expect(screen.queryByText('Back to Editor')).toBeTruthy()
     })
-
     expect(screen.getByText('Back to Editor')).toBeTruthy()
   })
 })

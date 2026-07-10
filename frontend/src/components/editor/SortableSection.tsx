@@ -29,12 +29,14 @@ export default function SortableSection({ section, index, onClick }: Props) {
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 px-2 py-1.5 rounded text-sm
-        ${isDragging ? 'bg-blue-50 border border-blue-200' : 'hover:bg-white'}`}
+      className={`group flex items-center gap-2 px-2 py-1.5 rounded text-sm border border-transparent transition-all duration-150
+        ${isDragging
+          ? 'bg-blue-50 border-blue-200 shadow-sm'
+          : 'hover:bg-white hover:border-blue-200/50 hover:shadow-sm'}`}
     >
       <button
         aria-label="drag-handle"
-        className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground"
+        className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground opacity-30 group-hover:opacity-100 transition-opacity"
         {...attributes}
         {...listeners}
       >
