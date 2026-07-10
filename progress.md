@@ -20,7 +20,7 @@ resume-builder/
 │       │   ├── ResumeController.java             # CRUD + preview + export + JSON import + styles
 │   │   ├── ThemeController.java            # CRUD + GET (自定义主题 owner 隔离)
 │       │   ├── SectionTemplateController.java
-│       │   ├── ResumeVersionController.java      # GET/POST version snapshots
+│       │   ├── ResumeVersionController.java      # GET/POST version snapshots + GET diff
 │       │   ├── ShareLinkController.java           # GET/POST share links
 │       │   ├── AiController.java                 # POST /api/ai/suggest
 │       │   ├── DesensitizeController.java        # GET/PUT desensitization rules
@@ -42,6 +42,7 @@ resume-builder/
 │       └── dto/
 │           ├── ResumeDTO.java, JsonResumeDTO.java
 │           ├── ResumeStyleDTO.java, VariableDeclaration.java, ThemeDTO.java
+│           ├── DiffLine.java, Hunk.java, LineType.java, VersionDiffResponse.java, VersionMeta.java
 ├── frontend/                         # React 18 + Vite + TypeScript
 │   ├── package.json, vite.config.ts, vitest.config.ts
 │   ├── tailwind.config.ts, nginx.conf, Dockerfile
@@ -56,7 +57,7 @@ resume-builder/
 │   │       ├── SectionDragList.tsx, SortableSection.tsx
 │       │       ├── SectionTemplatePicker.tsx, ThemeSelector.tsx  # 按 layout 分组+自定义主题
 │       │       ├── ThemeCustomizer.tsx
-│       │       ├── ExportPanel.tsx, VersionPanel.tsx
+│   │       ├── ExportPanel.tsx, VersionPanel.tsx, VersionDiff.tsx
 │       │       ├── SharePanel.tsx, AiAssistant.tsx
 │       │       ├── DesensitizeSettings.tsx
 │       ├── stores/                                # authStore, resumeStore, historyStore
@@ -76,9 +77,9 @@ resume-builder/
 
 | 模块 | 通过/总计 |
 |------|----------|
-| Backend | 196/196 |
-| Frontend | 92/92 |
-| **合计** | **288/288** ✅ |
+| Backend | 221/221 |
+| Frontend | 101/101 |
+| **合计** | **322/322** ✅ |
 | E2E (Docker) | core-flow 2/3 ✅（register 用例因 RegisterPage input 缺 name 属性失败，遗留待修） |
 
 ## 已完成目标
@@ -98,11 +99,11 @@ resume-builder/
 | 11 | 主题变量化与样式配置扩展 (G19-A) | `c66c9d5` | Theme/ResumeStyle 变量字段, ExportService :root 注入, ThemeCustomizer, 7 主题 var() 化 |
 | 12 | 布局模板与自定义主题 (G19-B+C) | `206c1d5` + `4141d85` | LayoutSplitter, ExportService 重构, 2 新主题, Theme CRUD, CssSanitizer, ThemeSelector 分组 |
 | 13 | 集成 4 新内置简历主题 (Jake's, Academic, Swiss, Harvard) | `4b08e61` | themes/{jake,academic,swiss,harvard}/{theme.json,style.css}, ThemeService.java, ThemeCssCompletenessTest, ThemeServiceTest, ThemeServiceVariablesTest |
+| 14 | G17 版本 diff 对比 | `cd3c867` | DiffLine.java, Hunk.java, LineType.java, VersionDiffResponse.java, VersionMeta.java, ResumeVersionController.java, ResumeVersionService.java, VersionDiff.tsx, VersionPanel.tsx, api.ts, resume.ts |
 
 ## 进行中
 
 - G9 ATS 关键词评分 — 求职闭环第一层，高价值
-- G17 版本 diff 对比 — ROADMAP 4.5 遗留
 - 🔴 遗留：RegisterPage.tsx `<input>` 缺 `name` 属性 → e2e register 用例失败，需独立修复
 - 详见 ROADMAP.md
 
@@ -118,6 +119,6 @@ cd frontend && npm install && npm run dev            # :3000
 docker compose up --build
 
 # 测试
-cd backend && mvn test                               # 196 用例
-cd frontend && npm test                              # 92 用例
+cd backend && mvn test                               # 221 用例
+cd frontend && npm test                              # 101 用例
 ```
