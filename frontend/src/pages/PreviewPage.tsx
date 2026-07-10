@@ -10,7 +10,7 @@ export default function PreviewPage() {
   const [html, setHtml] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [smartOnePage, setSmartOnePage] = useState(true)
+  const [smartOnePage, setSmartOnePage] = useState(false)
   const [desensitize, setDesensitize] = useState(false)
 
   useEffect(() => {
