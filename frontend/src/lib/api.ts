@@ -2,6 +2,7 @@ import axios from 'axios'
 import type { DesensitizeRule } from '@/types/desensitize'
 import type { Resume, ResumeStyle, ResumeVersion, ShareLink, VariableDeclaration, ThemeDTO, VersionDiffResponse } from '@/types/resume'
 import type { SectionTemplate } from '@/types/sectionTemplate'
+import { toast } from '@/hooks/use-toast'
 
 export const http = axios.create({
   baseURL: '/api',
@@ -18,8 +19,11 @@ http.interceptors.request.use((config) => {
 
 http.interceptors.response.use(
   (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
+  async (err) => {
+    if (err.response?.status === 401 && !err.config?.url?.startsWith('/auth/')) {
+      toast({ title: '登录已过期', description: '您的登录状态已失效，请重新登录', variant: 'destructive' })
+      const { useAuthStore } = await import('@/stores/authStore')
+      useAuthStore.getState().logout()
       localStorage.removeItem('token')
       localStorage.removeItem('username')
       window.location.href = '/login'

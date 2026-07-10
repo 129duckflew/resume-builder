@@ -1,5 +1,14 @@
 # Resume Builder — AI 开发指南
+<!-- CODEGRAPH_START -->
+## CodeGraph
 
+In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:
+
+- **MCP tool** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them, including dynamic-dispatch hops grep can't follow. Name a file or symbol in the query to read its current line-numbered source. If it's listed but deferred, load it by name via tool search.
+- **Shell** (always works): `codegraph explore "<symbol names or question>"` prints the same output.
+
+If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
+<!-- CODEGRAPH_END -->
 ## 角色
 
 主 agent = **编排者**，维护前后端分离的简历生成系统（Spring Boot 3.2 / Java 17 + React 18 / Vite + PostgreSQL 16 + Playwright）。
@@ -53,7 +62,6 @@ resume-builder/
 - **安全**：公开端点仅 `/api/auth/**`、`/api/themes/**`、`/s/**`，其余需 JWT。
   - JWT principal 格式为 `"userId:username"`，controller 用 `principal.split(":",2)[0]` 取 userId（见 `JwtAuthFilter`）。
   - BCrypt 加密；用户只能操作自己的数据。
-
 ## 主题
 
 新增主题：在 `backend/src/main/resources/themes/{id}/` 建 `theme.json` + `style.css`。Docker 已挂载该目录到容器 `/app/themes`，改主题无需重建镜像。
@@ -87,3 +95,5 @@ resume-builder/
 ## Skill 清单（实现阶段按需 `skill("xxx")`）
 
 `karpathy-guidelines` · `spring-data-jpa` · `rest-api` · `auth-security` · `react-component` · `docker-deploy` · `testing` · `tdd-protocol`
+
+
