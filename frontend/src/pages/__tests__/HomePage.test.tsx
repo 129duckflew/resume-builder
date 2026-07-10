@@ -4,11 +4,12 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import type { Resume } from '@/types/resume'
 
-const { mockToast, mockDeleteResume, mockCreateResume, mockFetchResumes } = vi.hoisted(() => ({
+const { mockToast, mockDeleteResume, mockCreateResume, mockFetchResumes, mockResumes } = vi.hoisted(() => ({
   mockToast: vi.fn(),
   mockDeleteResume: vi.fn().mockResolvedValue(undefined),
   mockCreateResume: vi.fn(),
   mockFetchResumes: vi.fn(),
+  mockResumes: [] as Resume[],
 }))
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -17,30 +18,7 @@ vi.mock('@/hooks/use-toast', () => ({
 
 vi.mock('@/stores/resumeStore', () => ({
   useResumeStore: () => ({
-    resumes: [
-      {
-        id: '1',
-        title: 'My Resume',
-        content: '# Hello',
-        themeId: 'classic',
-        fontSize: null,
-        lineHeight: null,
-        sectionSpacing: 'normal',
-        createdAt: '2024-01-01',
-        updatedAt: '2024-01-02',
-      },
-      {
-        id: '2',
-        title: 'Another Resume',
-        content: '# World',
-        themeId: 'modern',
-        fontSize: null,
-        lineHeight: null,
-        sectionSpacing: 'normal',
-        createdAt: '2024-02-01',
-        updatedAt: '2024-02-02',
-      },
-    ],
+    resumes: mockResumes,
     loading: false,
     fetchResumes: mockFetchResumes,
     deleteResume: mockDeleteResume,
@@ -65,6 +43,30 @@ function renderHomePage() {
 describe('HomePage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockResumes.splice(0, mockResumes.length,
+      {
+        id: '1',
+        title: 'My Resume',
+        content: '# Hello',
+        themeId: 'classic',
+        fontSize: null,
+        lineHeight: null,
+        sectionSpacing: 'normal',
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-02',
+      },
+      {
+        id: '2',
+        title: 'Another Resume',
+        content: '# World',
+        themeId: 'modern',
+        fontSize: null,
+        lineHeight: null,
+        sectionSpacing: 'normal',
+        createdAt: '2024-02-01',
+        updatedAt: '2024-02-02',
+      },
+    )
   })
 
   it('renders resume list', () => {
@@ -123,5 +125,15 @@ describe('HomePage', () => {
         expect.objectContaining({ title: 'Delete failed' }),
       )
     })
+  })
+
+  it('renders empty-state steps as spotlight cards', () => {
+    mockResumes.splice(0, mockResumes.length)
+
+    renderHomePage()
+
+    expect(screen.getByText('1. Write').closest('[data-slot="spotlight-card"]')).toBeTruthy()
+    expect(screen.getByText('2. Style').closest('[data-slot="spotlight-card"]')).toBeTruthy()
+    expect(screen.getByText('3. Export').closest('[data-slot="spotlight-card"]')).toBeTruthy()
   })
 })
