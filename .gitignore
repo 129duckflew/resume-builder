@@ -23,5 +23,11 @@ frontend/vite.config.mjs
 # Env
 .env
 
+# Backend Eclipse/IDE project files
+backend/.classpath
+backend/.factorypath
+backend/.project
+backend/.settings/
+
 # CodeGraph
 .codegraph/
