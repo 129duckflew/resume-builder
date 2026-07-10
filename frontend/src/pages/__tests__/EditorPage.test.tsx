@@ -128,10 +128,10 @@ describe('EditorPage preview refresh on theme change', () => {
     storeState = { ...initialStore, currentResume: { ...initialStore.currentResume } }
   })
 
-  it('calls preview API on initial render', async () => {
+  it('calls preview API with smartOnePage=false on initial render', async () => {
     render(<EditorPageApp />)
     await vi.waitFor(() => {
-      expect(mockPreview).toHaveBeenCalledWith('test-id', true, false, expect.any(String))
+      expect(mockPreview).toHaveBeenCalledWith('test-id', false, false, expect.any(String))
     })
   })
 
@@ -159,10 +159,10 @@ describe('EditorPage preview refresh on theme change', () => {
     })
   })
 
-  it('passes current content to preview API', async () => {
+  it('passes current content to preview API with smartOnePage=false', async () => {
     render(<EditorPageApp />)
     await vi.waitFor(() => {
-      expect(mockPreview).toHaveBeenCalledWith('test-id', true, false, '# Hello\n## Section\ncontent')
+      expect(mockPreview).toHaveBeenCalledWith('test-id', false, false, '# Hello\n## Section\ncontent')
     })
   })
 })
