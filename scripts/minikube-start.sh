@@ -10,6 +10,7 @@ minikube addons enable metrics-server
 minikube addons enable registry
 
 echo "Adding resume.local to /etc/hosts..."
+sudo sed -i '' '/resume.local/d' /etc/hosts
 echo "$(minikube ip) resume.local" | sudo tee -a /etc/hosts
 
 echo "minikube ready at http://resume.local"

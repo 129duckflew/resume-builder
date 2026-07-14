@@ -7,9 +7,6 @@ kubectl apply -f k8s/00-namespace/
 echo "Applying config..."
 kubectl apply -f k8s/01-config/ -n resume-builder
 
-echo "Applying storage..."
-kubectl apply -f k8s/02-storage/ -n resume-builder
-
 echo "Applying database..."
 kubectl apply -f k8s/03-database/ -n resume-builder
 
