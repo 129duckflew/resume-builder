@@ -165,7 +165,7 @@ Services:
 
 ## Kubernetes Deployment (minikube)
 
-Prerequisites: [minikube](https://minikube.sigs.k8s.io/docs/start/) with Docker driver, 4+ CPUs, 8GB RAM.
+Prerequisites: [minikube](https://minikube.sigs.k8s.io/docs/start/) with Docker driver, 4+ CPUs, 8GB RAM (colima or Docker Desktop must have sufficient memory).
 
 ```bash
 # 1. Start minikube with required addons
@@ -177,11 +177,13 @@ Prerequisites: [minikube](https://minikube.sigs.k8s.io/docs/start/) with Docker 
 # 3. Apply all K8s manifests
 ./scripts/k8s-apply.sh
 
-# 4. Verify deployment
-./scripts/k8s-smoke-test.sh
-
-# Access: http://resume.local
+# 4. Start minikube tunnel (keep terminal open)
+minikube tunnel
 ```
+
+Then open **http://resume.local** in your browser.
+
+> **Note:** On macOS with Docker driver, minikube cannot expose ports directly. `minikube tunnel` creates the necessary port forwarding. The `/etc/hosts` entry points to `127.0.0.1` to match the tunnel.
 
 Services:
 
@@ -198,6 +200,18 @@ Horizontal Pod Autoscaling:
 |---|---|---|---|
 | `resume-backend` | 2 | 5 | CPU 70%, Memory 80% |
 | `resume-frontend` | 2 | 5 | CPU 70% |
+
+Port-forward alternatives (when `minikube tunnel` cannot be used):
+
+```bash
+# Frontend
+kubectl port-forward -n resume-builder service/frontend-service 3000:80
+# Open http://127.0.0.1:3000
+
+# Backend API directly
+kubectl port-forward -n resume-builder service/backend-service 8081:8080
+# Open http://127.0.0.1:8081/api/themes
+```
 
 Tear down:
 

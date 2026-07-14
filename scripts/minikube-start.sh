@@ -9,8 +9,15 @@ minikube addons enable ingress
 minikube addons enable metrics-server
 minikube addons enable registry
 
-echo "Adding resume.local to /etc/hosts..."
+echo "Adding resume.local to /etc/hosts (127.0.0.1 for Docker driver)..."
 sudo sed -i '' '/resume.local/d' /etc/hosts
-echo "$(minikube ip) resume.local" | sudo tee -a /etc/hosts
+echo "127.0.0.1 resume.local" | sudo tee -a /etc/hosts
 
-echo "minikube ready at http://resume.local"
+echo "============================================"
+echo "minikube started. Run the following in a"
+echo "separate terminal to access the cluster:"
+echo ""
+echo "  minikube tunnel"
+echo ""
+echo "Then open http://resume.local in your browser"
+echo "============================================"

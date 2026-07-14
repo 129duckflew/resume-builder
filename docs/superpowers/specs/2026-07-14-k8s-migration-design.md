@@ -121,7 +121,7 @@ scripts/
 - Image: `localhost:5000/resume-builder-backend:latest`
 - Replicas: 2
 - EnvFrom: ConfigMap `app-config` + Secret `app-secrets`
-- Resources: requests `300m` CPU / `512Mi` mem; limits `1000m` CPU / `1.5Gi` mem
+- Resources: requests `200m` CPU / `256Mi` mem; limits `500m` CPU / `1Gi` mem
 - Liveness: `GET /actuator/health/liveness`
 - Readiness: `GET /actuator/health/readiness`
 - ImagePullPolicy: `Always`
@@ -143,12 +143,12 @@ scripts/
 **Deployment `resume-frontend`**
 - Image: `localhost:5000/resume-builder-frontend:latest`
 - Replicas: 2
-- Resources: requests `50m` CPU / `64Mi` mem; limits `200m` CPU / `128Mi` mem
+- Resources: requests `25m` CPU / `32Mi` mem; limits `100m` CPU / `64Mi` mem
 - Liveness: `wget -qO- http://127.0.0.1:80`
 - Readiness: `wget -qO- http://127.0.0.1:80`
 - ImagePullPolicy: `Always`
 
-> Nginx config change: remove `proxy_pass http://backend:8080` from `/api/` location. Frontend JS will call `/api/*` directly (spelled out in the Ingress). The healthcheck in Docker Compose is not needed in K8s.
+> Nginx config: the `/api/` proxy block is kept for Docker Compose compatibility. In K8s, the Ingress routes `/api/*` directly to `backend-service:8080` before reaching the frontend Pod, so the nginx proxy block is never triggered. In Docker Compose, it proxies `/api/*` to `backend:8080` as before.
 
 **Service `frontend-service`**
 - Type: ClusterIP
@@ -292,7 +292,7 @@ Pod CPU > 70% (60s sustained)
 | **Database** | Named volume `postgres_data` | PVC `postgres-data-pvc` bound to StatefulSet |
 | **Backend** | `ports: 8081:8080` at compose level | ClusterIP Service + HPA with resource requests/limits |
 | **Frontend** | `ports: 3000:80` + healthcheck | ClusterIP Service + HPA + health probes |
-| **Nginx proxy** | `proxy_pass http://backend:8080` inside nginx.conf | Removed — frontend JS calls `/api` via Ingress |
+| **Nginx proxy** | `proxy_pass http://backend:8080` inside nginx.conf | Kept for Docker Compose compat; Ingress routes `/api` in K8s before reaching nginx |
 | **Config** | Hardcoded in docker-compose env | ConfigMap + Secret |
 | **JWT secret** | Hardcoded `resume-builder-secret-for-dev` | Moved to Secret, read from env var |
 | **PDF engine** | Playwright in backend container | Same — no change needed |
@@ -359,7 +359,7 @@ kubectl rollout status deployment/resume-frontend -n resume-builder
 | `backend/pom.xml` | Add `spring-boot-starter-actuator` | Liveness/Readiness probes |
 | `backend/pom.xml` | Add `micrometer-registry-prometheus` (optional) | Prometheus metrics |
 | `backend/src/main/resources/application.yml` | `jwt.secret: ${JWT_SECRET:fallback-dev-secret}` | Read JWT secret from env |
-| `frontend/nginx.conf` | Remove `/api/` proxy_pass block | Let Ingress route /api/ |
+| `frontend/nginx.conf` | Keep `/api/` proxy_pass block (not changed) | Docker Compose compat; Ingress routes /api/ in K8s |
 | `docker-compose.yml` | Unchanged (still used for E2E CI) | Retain for CI compatibility |
 
 ## 10. Open Questions / Future Work
