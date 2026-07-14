@@ -28,5 +28,5 @@ app:
     pdf:
       timeout: 30000
   jwt:
-    secret: resume-builder-secret-for-dev-only-change-in-prod
+    secret: ${JWT_SECRET:resume-builder-secret-for-dev-only-change-in-prod}
     expiration-ms: 86400000
