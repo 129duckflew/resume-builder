@@ -163,6 +163,48 @@ Services:
 | `resume-backend` | resume-builder-backend | 8081 → 8080 |
 | `resume-frontend` | resume-builder-frontend | 3000 → 80 |
 
+## Kubernetes Deployment (minikube)
+
+Prerequisites: [minikube](https://minikube.sigs.k8s.io/docs/start/) with Docker driver, 4+ CPUs, 8GB RAM.
+
+```bash
+# 1. Start minikube with required addons
+./scripts/minikube-start.sh
+
+# 2. Build and push images to minikube registry
+./scripts/minikube-build-push.sh
+
+# 3. Apply all K8s manifests
+./scripts/k8s-apply.sh
+
+# 4. Verify deployment
+./scripts/k8s-smoke-test.sh
+
+# Access: http://resume.local
+```
+
+Services:
+
+| Resource | Type | Address |
+|---|---|---|
+| Frontend (SPA) | Ingress | `resume.local` → frontend-service:80 |
+| API | Ingress | `resume.local/api/*` → backend-service:8080 |
+| Shared links | Ingress | `resume.local/s/*` → backend-service:8080 |
+| Database | StatefulSet | postgres-service:5432 |
+
+Horizontal Pod Autoscaling:
+
+| Deployment | Min | Max | Metric |
+|---|---|---|---|
+| `resume-backend` | 2 | 5 | CPU 70%, Memory 80% |
+| `resume-frontend` | 2 | 5 | CPU 70% |
+
+Tear down:
+
+```bash
+./scripts/k8s-delete.sh
+```
+
 ## Themes
 
 | Theme | ID | Style | Colors |
