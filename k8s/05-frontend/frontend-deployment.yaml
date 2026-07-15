@@ -6,7 +6,7 @@ metadata:
   labels:
     app: resume-frontend
 spec:
-  replicas: 2
+  replicas: 0
   selector:
     matchLabels:
       app: resume-frontend

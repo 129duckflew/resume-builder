@@ -17,10 +17,14 @@ echo "Applying frontend..."
 kubectl apply -f k8s/05-frontend/ -n resume-builder
 
 echo "Applying ingress..."
-kubectl apply -f k8s/06-ingress/ -n resume-builder
+# IngressRoutes reference services in their own namespaces, so each resource carries its metadata.namespace.
+kubectl apply -f k8s/06-ingress/
 
 echo "Applying observability..."
 kubectl apply -f k8s/07-observability/ -n resume-builder
+
+echo "Applying scaling (KEDA)..."
+kubectl apply -f k8s/08-scaling/ -n resume-builder
 
 echo "Waiting for rollouts..."
 kubectl rollout status deployment/resume-backend -n resume-builder --timeout=120s

@@ -1,43 +1,29 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
 metadata:
   name: resume-ingress
-  namespace: resume-builder
-  annotations:
+  namespace: keda
 spec:
-  ingressClassName: traefik
-  rules:
-    - host: grafana.resume.local
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: grafana-service
-                port:
-                  number: 3000
-    - host: resume.local
-      http:
-        paths:
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: backend-service
-                port:
-                  number: 8080
-          - path: /s
-            pathType: Prefix
-            backend:
-              service:
-                name: backend-service
-                port:
-                  number: 8080
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: frontend-service
-                port:
-                  number: 80
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`resume.local`)
+      services:
+        - name: keda-add-ons-http-interceptor-proxy
+          port: 8080
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana-ingress
+  namespace: resume-builder
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`grafana.resume.local`)
+      services:
+        - name: grafana-service
+          port: 3000

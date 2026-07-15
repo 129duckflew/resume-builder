@@ -171,11 +171,17 @@ Prerequisites: [Colima](https://github.com/abiosoft/colima) with Kubernetes enab
 # 1. Ensure Colima k3s is running (enable k3s in ~/.colima/default/colima.yaml first)
 ./scripts/k8s-start.sh
 
-# 2. Build images (k3s shares Colima's Docker containerd — no registry needed)
+# 2. Install KEDA + HTTP Add-on (one-time cluster setup)
+./scripts/k8s-install-keda.sh
+
+# 3. Build images (k3s shares Colima's Docker containerd — no registry needed)
 ./scripts/k8s-build-push.sh
 
-# 3. Apply all K8s manifests
+# 4. Apply all K8s manifests
 ./scripts/k8s-apply.sh
+
+# 5. Verify scale-from-zero (cold start)
+./scripts/k8s-smoke-test.sh
 ```
 
 Then open the following in your browser:
@@ -187,23 +193,24 @@ Then open the following in your browser:
 | Grafana | http://grafana.resume.local |
 
 > **Note:** Traefik (k3s built-in) binds ports 80/443 inside the Colima VM and is automatically forwarded to `localhost`. The `/etc/hosts` entry points `resume.local` and `grafana.resume.local` to `127.0.0.1`.
+> On macOS, `.local` domains are resolved via mDNS first, which adds a 5s timeout before falling back to `/etc/hosts`. The smoke test bypasses this with `--resolve`; browser access will include the delay.
 
 Services:
 
 | Resource | Type | Address |
 |---|---|---|
-| Frontend (SPA) | Ingress (Traefik) | `resume.local` → frontend-service:80 |
-| API | Ingress (Traefik) | `resume.local/api/*` → backend-service:8080 |
-| Shared links | Ingress (Traefik) | `resume.local/s/*` → backend-service:8080 |
+| Frontend (SPA) | Ingress (Traefik) + KEDA HTTP interceptor | `resume.local` → KEDA interceptor → frontend-service:80 |
+| API | Ingress (Traefik) + KEDA HTTP interceptor | `resume.local/api/*` → KEDA interceptor → backend-service:8080 |
+| Shared links | Ingress (Traefik) + KEDA HTTP interceptor | `resume.local/s/*` → KEDA interceptor → backend-service:8080 |
 | Grafana | Ingress (Traefik) | `grafana.resume.local` → grafana-service:3000 |
 | Database | StatefulSet | postgres-service:5432 |
 
-Horizontal Pod Autoscaling:
+Scale-from-zero (KEDA HTTP Add-on):
 
-| Deployment | Min | Max | Metric |
-|---|---|---|---|
-| `resume-backend` | 2 | 5 | CPU 70%, Memory 80% |
-| `resume-frontend` | 2 | 5 | CPU 70% |
+| Deployment | Min | Max | Cold start | Scaledown |
+|---|---|---|---|---|
+| `resume-backend` | 0 | 3 | ~18s | 300s idle |
+| `resume-frontend` | 0 | 3 | ~8s | 300s idle |
 
 Port-forward alternatives:
 

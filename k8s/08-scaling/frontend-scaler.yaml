@@ -1,0 +1,19 @@
+apiVersion: http.keda.sh/v1alpha1
+kind: HTTPScaledObject
+metadata:
+  name: frontend-scaler
+  namespace: resume-builder
+spec:
+  hosts:
+    - resume.local
+  pathPrefixes:
+    - /
+  scaleTargetRef:
+    name: resume-frontend
+    service: frontend-service
+    port: 80
+  replicas:
+    min: 0
+    max: 3
+  targetPendingRequests: 1
+  scaledownPeriod: 300

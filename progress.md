@@ -78,8 +78,8 @@ resume-builder/
 | 模块 | 通过/总计 |
 |------|----------|
 | Backend | 222/222 |
-| Frontend | 105/105 |
-| **合计** | **327/327** ✅ |
+| Frontend | 117/117 |
+| **合计** | **339/339** ✅ |
 | E2E (Docker) | core-flow 2/3 ✅（register 用例因 RegisterPage input 缺 name 属性失败，遗留待修） |
 
 ## 已完成目标
@@ -101,6 +101,7 @@ resume-builder/
 | 13 | 集成 4 新内置简历主题 (Jake's, Academic, Swiss, Harvard) | `4b08e61` | themes/{jake,academic,swiss,harvard}/{theme.json,style.css}, ThemeService.java, ThemeCssCompletenessTest, ThemeServiceTest, ThemeServiceVariablesTest |
 | 14 | G17 版本 diff 对比 | `cd3c867` | DiffLine.java, Hunk.java, LineType.java, VersionDiffResponse.java, VersionMeta.java, ResumeVersionController.java, ResumeVersionService.java, VersionDiff.tsx, VersionPanel.tsx, api.ts, resume.ts |
 | 15 | bugfix: sidebar/sidebar-right 无章节时样式丢失 | `daba10e` | ExportService.java, sidebar/style.css, sidebar-right/style.css |
+| 16 | KEDA scale-from-zero 按需启动 | - | k8s/08-scaling/, k8s/06-ingress/ingress.yaml, scripts/k8s-{install-keda,apply,smoke-test}.sh, README.md |
 
 ## 进行中
 
@@ -121,7 +122,7 @@ docker compose up --build
 
 # 测试
 cd backend && mvn test                               # 222 用例
-cd frontend && npm test                              # 105 用例
+cd frontend && npm test                              # 117 用例
 ```
 
 ## 迭代记录
@@ -143,3 +144,16 @@ cd frontend && npm test                              # 105 用例
 **背景**：上一个提交 `2a5e594` 误将 backend IDE 项目文件纳入版本控制，本次修复将其移除并保留本地 IDE 文件。
 **测试基线**：无变动（纯配置修复）
 **E2E**：无影响
+
+### 18 — 2026-07-15：KEDA scale-from-zero 按需启动
+| 目标 | 提交 | 核心文件 |
+|------|------|---------|
+| 拆分 IngressRoute 到对应命名空间，修复 Traefik 跨命名空间服务引用 | - | `k8s/06-ingress/ingress.yaml`, `scripts/k8s-apply.sh` |
+| Deployment replicas 改为 0，删除手动 HPA | - | `k8s/04-backend/backend-deployment.yaml`, `k8s/05-frontend/frontend-deployment.yaml`, `k8s/04-backend/backend-hpa.yaml`, `k8s/05-frontend/frontend-hpa.yaml` |
+| 新增 KEDA 安装脚本，修复 ScaledJob CRD | - | `scripts/k8s-install-keda.sh` |
+| smoke-test 适配 scale-from-zero | - | `scripts/k8s-smoke-test.sh` |
+| README 与 design doc 同步 | - | `README.md`, `docs/superpowers/specs/2026-07-15-keda-scale-from-zero-fix-design.md` |
+
+**测试基线**：Backend 222/222，Frontend 117/117，K8s smoke-test 通过
+**冷启动实测**：前端 ~7.6s，后端 ~17.8s；热请求 < 100ms
+**待跟进**：G9 ATS 关键词评分，RegisterPage `<input>` 缺 `name` 属性
