@@ -65,7 +65,7 @@ spec:
     - metadata:
         name: postgres-storage
       spec:
-        storageClassName: standard
+        storageClassName: local-path
         accessModes:
           - ReadWriteOnce
         resources:

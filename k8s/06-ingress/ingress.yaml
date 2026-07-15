@@ -4,10 +4,19 @@ metadata:
   name: resume-ingress
   namespace: resume-builder
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
   rules:
+    - host: grafana.resume.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana-service
+                port:
+                  number: 3000
     - host: resume.local
       http:
         paths:
