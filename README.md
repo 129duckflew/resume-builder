@@ -163,35 +163,39 @@ Services:
 | `resume-backend` | resume-builder-backend | 8081 → 8080 |
 | `resume-frontend` | resume-builder-frontend | 3000 → 80 |
 
-## Kubernetes Deployment (minikube)
+## Kubernetes Deployment (Colima k3s)
 
-Prerequisites: [minikube](https://minikube.sigs.k8s.io/docs/start/) with Docker driver, 4+ CPUs, 8GB RAM (colima or Docker Desktop must have sufficient memory).
+Prerequisites: [Colima](https://github.com/abiosoft/colima) with Kubernetes enabled, 4+ CPUs, 8GB RAM.
 
 ```bash
-# 1. Start minikube with required addons
-./scripts/minikube-start.sh
+# 1. Ensure Colima k3s is running (enable k3s in ~/.colima/default/colima.yaml first)
+./scripts/k8s-start.sh
 
-# 2. Build and push images to minikube registry
-./scripts/minikube-build-push.sh
+# 2. Build images (k3s shares Colima's Docker containerd — no registry needed)
+./scripts/k8s-build-push.sh
 
 # 3. Apply all K8s manifests
 ./scripts/k8s-apply.sh
-
-# 4. Start minikube tunnel (keep terminal open)
-minikube tunnel
 ```
 
-Then open **http://resume.local** in your browser.
+Then open the following in your browser:
 
-> **Note:** On macOS with Docker driver, minikube cannot expose ports directly. `minikube tunnel` creates the necessary port forwarding. The `/etc/hosts` entry points to `127.0.0.1` to match the tunnel.
+| Service | URL |
+|---|---|
+| Frontend (SPA) | http://resume.local |
+| API | http://resume.local/api/* |
+| Grafana | http://grafana.resume.local |
+
+> **Note:** Traefik (k3s built-in) binds ports 80/443 inside the Colima VM and is automatically forwarded to `localhost`. The `/etc/hosts` entry points `resume.local` and `grafana.resume.local` to `127.0.0.1`.
 
 Services:
 
 | Resource | Type | Address |
 |---|---|---|
-| Frontend (SPA) | Ingress | `resume.local` → frontend-service:80 |
-| API | Ingress | `resume.local/api/*` → backend-service:8080 |
-| Shared links | Ingress | `resume.local/s/*` → backend-service:8080 |
+| Frontend (SPA) | Ingress (Traefik) | `resume.local` → frontend-service:80 |
+| API | Ingress (Traefik) | `resume.local/api/*` → backend-service:8080 |
+| Shared links | Ingress (Traefik) | `resume.local/s/*` → backend-service:8080 |
+| Grafana | Ingress (Traefik) | `grafana.resume.local` → grafana-service:3000 |
 | Database | StatefulSet | postgres-service:5432 |
 
 Horizontal Pod Autoscaling:
@@ -201,16 +205,17 @@ Horizontal Pod Autoscaling:
 | `resume-backend` | 2 | 5 | CPU 70%, Memory 80% |
 | `resume-frontend` | 2 | 5 | CPU 70% |
 
-Port-forward alternatives (when `minikube tunnel` cannot be used):
+Port-forward alternatives:
 
 ```bash
 # Frontend
 kubectl port-forward -n resume-builder service/frontend-service 3000:80
-# Open http://127.0.0.1:3000
 
 # Backend API directly
 kubectl port-forward -n resume-builder service/backend-service 8081:8080
-# Open http://127.0.0.1:8081/api/themes
+
+# Grafana
+kubectl port-forward -n resume-builder service/grafana-service 3000:3000
 ```
 
 Tear down:

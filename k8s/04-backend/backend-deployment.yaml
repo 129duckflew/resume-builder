@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
         - name: backend
-          image: localhost:5000/resume-builder-backend:latest
-          imagePullPolicy: Always
+          image: resume-builder-backend:latest
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: app-config

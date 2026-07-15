@@ -17,8 +17,8 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: localhost:5000/resume-builder-frontend:latest
-          imagePullPolicy: Always
+          image: resume-builder-frontend:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
           resources:
