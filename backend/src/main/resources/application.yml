@@ -2,6 +2,15 @@ server:
   port: 8080
 
 spring:
+  ai:
+    mcp:
+      server:
+        name: resume-mcp-server
+        version: 1.0.0
+        type: SYNC
+        stdio: true
+        sse-message-endpoint: /mcp/message
+        sse-endpoint: /mcp/sse
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:resume_db}
     username: ${DB_USER:resume}
@@ -30,3 +39,5 @@ app:
   jwt:
     secret: ${JWT_SECRET:resume-builder-secret-for-dev-only-change-in-prod}
     expiration-ms: 86400000
+  mcp:
+    api-key: ${MCP_API_KEY:}
