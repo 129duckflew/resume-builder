@@ -223,15 +223,19 @@ class ThemeControllerTest {
     }
 
     @Test
-    void updateTheme_builtIn_returns409() throws Exception {
+    void updateTheme_builtIn_succeeds() throws Exception {
         authenticateAs(1L);
+        Theme updated = new Theme();
+        updated.setId("classic");
+        updated.setName("Updated Classic");
+        updated.setBuiltIn(true);
         when(themeService.updateCustom(eq("classic"), any(ThemeDTO.class), eq(1L)))
-                .thenThrow(new IllegalStateException("Cannot modify a built-in theme"));
+                .thenReturn(updated);
 
         mockMvc.perform(put("/api/themes/classic")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"Updated\"}"))
-                .andExpect(status().isConflict());
+                .andExpect(status().isOk());
     }
 
     @Test

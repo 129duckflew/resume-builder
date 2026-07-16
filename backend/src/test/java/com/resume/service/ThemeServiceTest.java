@@ -7,16 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.ResourceLoader;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,14 +21,11 @@ class ThemeServiceTest {
     @Mock
     private ThemeRepository repository;
 
-    @Mock
-    private ResourceLoader resourceLoader;
-
     private ThemeService service;
 
     @BeforeEach
     void setUp() {
-        service = new ThemeService(repository, resourceLoader);
+        service = new ThemeService(repository);
     }
 
     @Test
@@ -67,33 +60,6 @@ class ThemeServiceTest {
         Optional<Theme> result = service.findById("nonexistent");
 
         assertFalse(result.isPresent());
-    }
-
-    @Test
-    void initBuiltInThemes_overwritesExistingThemes() {
-        for (String id : List.of("classic", "modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact", "sidebar-right", "header-bar", "jake", "academic", "swiss", "harvard")) {
-            when(repository.findById(id)).thenReturn(Optional.of(new Theme()));
-        }
-        when(resourceLoader.getResource(anyString()))
-                .thenReturn(new ByteArrayResource("css".getBytes()));
-
-        service.initBuiltInThemes();
-
-        verify(repository, times(13)).save(any());
-    }
-
-    @Test
-    void initBuiltInThemes_createsMissingTheme_withResourceFallback() {
-        when(repository.findById("classic")).thenReturn(Optional.empty());
-        for (String id : List.of("modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact", "sidebar-right", "header-bar", "jake", "academic", "swiss", "harvard")) {
-            when(repository.findById(id)).thenReturn(Optional.of(new Theme()));
-        }
-        when(resourceLoader.getResource(anyString()))
-                .thenReturn(new ByteArrayResource("body { color: black; }".getBytes()));
-
-        service.initBuiltInThemes();
-
-        verify(repository, times(13)).save(any());
     }
 
     @Test
@@ -201,15 +167,20 @@ class ThemeServiceTest {
     }
 
     @Test
-    void updateCustom_builtIn_throws() {
+    void updateCustom_builtIn_succeeds() {
         Theme existing = new Theme();
         existing.setId("classic");
         existing.setBuiltIn(true);
 
         when(repository.findById("classic")).thenReturn(Optional.of(existing));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
         com.resume.dto.ThemeDTO dto = new com.resume.dto.ThemeDTO();
-        assertThrows(IllegalStateException.class, () -> service.updateCustom("classic", dto, 1L));
+        dto.setName("Updated Classic");
+
+        Theme result = service.updateCustom("classic", dto, 1L);
+
+        assertEquals("Updated Classic", result.getName());
     }
 
     @Test
