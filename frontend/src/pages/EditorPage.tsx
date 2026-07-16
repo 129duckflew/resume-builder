@@ -222,7 +222,6 @@ export default function EditorPage() {
             <div className="shadow-lg bg-white w-[210mm] min-h-[297mm] self-start">
               {displayHtml ? (
                 <div
-                  className="resume-page"
                   dangerouslySetInnerHTML={{ __html: displayHtml }}
                 />
               ) : (

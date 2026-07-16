@@ -1,31 +1,11 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: resume-postgres
-    environment:
-      POSTGRES_DB: resume_db
-      POSTGRES_USER: resume
-      POSTGRES_PASSWORD: resume123
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U resume -d resume_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: resume-backend
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
-      DB_HOST: postgres
+      DB_HOST: ${DB_HOST:-host.docker.internal}
       DB_PORT: 5432
       DB_NAME: resume_db
       DB_USER: resume
@@ -56,8 +36,6 @@ services:
       dockerfile: Dockerfile
     container_name: resume-e2e
     depends_on:
-      postgres:
-        condition: service_healthy
       backend:
         condition: service_started
       frontend:
@@ -65,5 +43,4 @@ services:
     environment:
       BASE_URL: http://frontend:80
 
-volumes:
-  postgres_data:
+
