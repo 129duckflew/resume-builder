@@ -133,6 +133,20 @@ Write a brief 2-3 sentence professional summary that highlights your key qualifi
     }
 
     @Transactional
+    public Resume restoreFromVersionDirect(Resume restored) {
+        Resume resume = resumeRepository.findById(restored.getId())
+                .orElseThrow(() -> new RuntimeException("Resume not found"));
+        versionService.saveSnapshot(resume);
+        resume.setTitle(restored.getTitle());
+        resume.setContent(restored.getContent());
+        resume.setThemeId(restored.getThemeId());
+        resume.setFontSize(restored.getFontSize());
+        resume.setLineHeight(restored.getLineHeight());
+        resume.setSectionSpacing(restored.getSectionSpacing());
+        return resumeRepository.save(resume);
+    }
+
+    @Transactional
     public Resume restoreFromVersion(Resume restored, Long userId) {
         Resume resume = resumeRepository.findByIdAndUserId(restored.getId(), userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
