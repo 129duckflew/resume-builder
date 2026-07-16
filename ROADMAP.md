@@ -185,7 +185,7 @@ README 补齐 9 controller、189 测试、新功能；加截图。纯文档。
 
 | # | 子目标 | 状态 | 提交 |
 |---|---|---|---|
-| A | 主题变量化 — Theme/ResumeStyle 变量字段、ExportService :root 注入、ThemeCustomizer 组件、7 主题 var() 化 | ✅ 已完成 | `c66c9d5` |
+| A | 主题变量化 — Theme/ResumeStyle 变量字段、ExportService :root 注入、ThemeCustomizer 组件、13 主题 var() 化 | ✅ 已完成 | `c66c9d5` |
 | B | 布局模板与渲染重构 — 修复 sidebar 主题失效 + 支持多布局（双栏/侧栏） | ✅ 已完成 | `206c1d5` |
 | C | 主题分类预览与自定义主题 — 前端分类展示 + 用户自定义主题持久化 | ✅ 已完成 | `206c1d5` |
 
