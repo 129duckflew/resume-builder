@@ -9,6 +9,8 @@ import org.springframework.ai.mcp.server.autoconfigure.McpServerProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.function.RouterFunction;
+import org.springframework.web.servlet.function.ServerResponse;
 import java.util.List;
 import java.util.Map;
 
@@ -55,5 +57,10 @@ public class McpAuthConfig {
                 }
             })
             .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> mcpRouterFunction(WebMvcSseServerTransportProvider transportProvider) {
+        return transportProvider.getRouterFunction();
     }
 }
