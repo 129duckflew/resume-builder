@@ -192,6 +192,23 @@ public class ThemeService {
         return themeRepository.save(theme);
     }
 
+    public Theme updateDirect(String id, ThemeDTO dto) {
+        Theme theme = themeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Theme not found: " + id));
+        if (dto.getName() != null) theme.setName(dto.getName().trim());
+        if (dto.getDescription() != null) theme.setDescription(dto.getDescription());
+        if (dto.getLayout() != null) {
+            theme.setLayout(dto.getLayout());
+        }
+        if (dto.getCssContent() != null) {
+            theme.setCssContent(CssSanitizer.sanitize(dto.getCssContent()));
+        }
+        if (dto.getVariablesSchema() != null) {
+            theme.setVariablesSchema(dto.getVariablesSchema());
+        }
+        return themeRepository.save(theme);
+    }
+
     public void deleteCustom(String id, Long userId) {
         Theme theme = themeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Theme not found: " + id));

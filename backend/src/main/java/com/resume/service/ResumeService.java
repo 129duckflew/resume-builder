@@ -35,6 +35,10 @@ public class ResumeService {
         return resumeRepository.findById(id);
     }
 
+    public List<Resume> findAll() {
+        return resumeRepository.findAll();
+    }
+
     public Resume create(ResumeDTO dto, Long userId) {
         Resume resume = new Resume();
         resume.setUserId(userId);
@@ -115,6 +119,20 @@ Write a brief 2-3 sentence professional summary that highlights your key qualifi
     }
 
     @Transactional
+    public Resume updateDirect(String id, ResumeDTO dto) {
+        Resume resume = resumeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Resume not found: " + id));
+        versionService.saveSnapshot(resume);
+        if (dto.getTitle() != null) resume.setTitle(dto.getTitle());
+        if (dto.getContent() != null) resume.setContent(dto.getContent());
+        if (dto.getThemeId() != null) resume.setThemeId(dto.getThemeId());
+        if (dto.getFontSize() != null) resume.setFontSize(dto.getFontSize());
+        if (dto.getLineHeight() != null) resume.setLineHeight(dto.getLineHeight());
+        if (dto.getSectionSpacing() != null) resume.setSectionSpacing(dto.getSectionSpacing());
+        return resumeRepository.save(resume);
+    }
+
+    @Transactional
     public Resume restoreFromVersion(Resume restored, Long userId) {
         Resume resume = resumeRepository.findByIdAndUserId(restored.getId(), userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
@@ -130,6 +148,12 @@ Write a brief 2-3 sentence professional summary that highlights your key qualifi
 
     public void delete(String id, Long userId) {
         Resume resume = resumeRepository.findByIdAndUserId(id, userId)
+                .orElseThrow(() -> new RuntimeException("Resume not found: " + id));
+        resumeRepository.delete(resume);
+    }
+
+    public void deleteDirect(String id) {
+        Resume resume = resumeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Resume not found: " + id));
         resumeRepository.delete(resume);
     }
