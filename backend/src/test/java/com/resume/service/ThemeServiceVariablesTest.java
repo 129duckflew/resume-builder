@@ -8,15 +8,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.ResourceLoader;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -25,43 +21,11 @@ class ThemeServiceVariablesTest {
     @Mock
     private ThemeRepository repository;
 
-    @Mock
-    private ResourceLoader resourceLoader;
-
     private ThemeService service;
-
-    private static final List<String> ALL_THEMES = List.of(
-            "classic", "modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact",
-            "sidebar-right", "header-bar", "jake", "academic", "swiss", "harvard"
-    );
 
     @BeforeEach
     void setUp() {
-        service = new ThemeService(repository, resourceLoader);
-    }
-
-    @Test
-    void initBuiltInThemes_loadsVariablesSchema() {
-        for (String id : ALL_THEMES) {
-            when(repository.findById(id)).thenReturn(Optional.of(new Theme()));
-        }
-        for (String id : ALL_THEMES) {
-            when(resourceLoader.getResource("classpath:themes/" + id + "/style.css"))
-                    .thenReturn(new ByteArrayResource("body {}".getBytes(StandardCharsets.UTF_8)));
-        }
-        // Classic has variables, others don't
-        when(resourceLoader.getResource("classpath:themes/classic/theme.json"))
-                .thenReturn(new ByteArrayResource(
-                        ("{\"variables\":[{\"name\":\"--primary-color\",\"type\":\"color\",\"default\":\"#000\"}]}")
-                                .getBytes(StandardCharsets.UTF_8)));
-        for (String id : List.of("modern", "minimal", "sidebar", "stackoverflow", "elegant", "compact", "sidebar-right", "header-bar", "jake", "academic", "swiss", "harvard")) {
-            when(resourceLoader.getResource("classpath:themes/" + id + "/theme.json"))
-                    .thenReturn(new ByteArrayResource("{}".getBytes(StandardCharsets.UTF_8)));
-        }
-
-        service.initBuiltInThemes();
-
-        verify(repository, times(13)).save(any());
+        service = new ThemeService(repository);
     }
 
     @Test

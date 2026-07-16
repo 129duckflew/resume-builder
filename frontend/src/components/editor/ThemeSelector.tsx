@@ -196,10 +196,11 @@ export default function ThemeSelector() {
                         <span className="block truncate text-sm font-medium">{theme.name}</span>
                         <span className="mt-1 block text-xs text-muted-foreground">
                           {theme.layout || 'single'}
+                          {theme.builtIn && <span className="ml-1 text-muted-foreground">(Built-in)</span>}
                           {!theme.builtIn && <span className="ml-1">(Custom)</span>}
                         </span>
                       </button>
-                      {!theme.builtIn && (
+                      {(
                         <div className="absolute bottom-2 right-2 z-20 flex gap-1">
                           <button
                             type="button"
@@ -209,14 +210,16 @@ export default function ThemeSelector() {
                           >
                             <Pencil className="h-3 w-3" />
                           </button>
-                          <button
-                            type="button"
-                            className="rounded bg-white/90 p-1 text-muted-foreground shadow-sm hover:text-destructive"
-                            onClick={(e) => { e.stopPropagation(); setOpen(false); setDeleteTarget(theme) }}
-                            title="Delete"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
+                          {!theme.builtIn && (
+                            <button
+                              type="button"
+                              className="rounded bg-white/90 p-1 text-muted-foreground shadow-sm hover:text-destructive"
+                              onClick={(e) => { e.stopPropagation(); setOpen(false); setDeleteTarget(theme) }}
+                              title="Delete"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          )}
                         </div>
                       )}
                     </SpotlightCard>
@@ -241,9 +244,9 @@ export default function ThemeSelector() {
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editTheme ? 'Edit Theme' : 'Create Custom Theme'}</DialogTitle>
+            <DialogTitle>{editTheme ? 'Edit Theme' : 'Create Theme'}</DialogTitle>
             <DialogDescription>
-              {editTheme ? 'Modify your custom theme settings.' : 'Create a new custom theme with your own CSS.'}
+              {editTheme ? 'Modify theme settings.' : 'Create a new theme with your own CSS.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 mt-2">
