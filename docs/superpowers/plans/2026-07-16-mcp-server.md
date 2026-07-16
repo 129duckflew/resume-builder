@@ -178,23 +178,25 @@ git commit -m "feat: add direct-access service methods for MCP super admin"
 - Create: `backend/src/main/java/com/resume/mcp/McpAuthConfig.java`
 
 **Interfaces:**
-- Consumes: `environment.getProperty("app.mcp.api-key")`
-- Produces: `McpAuthConfig.isAuthorized(McpTransportContext)` and `McpAuthConfig.isAuthorized()` for STDIO
+- Consumes: `ObjectMapper`, `McpServerProperties` (from Spring AI auto-config)
+- Produces: `WebMvcSseServerTransportProvider` bean with `contextExtractor` + `securityValidator`
 
 - [ ] **Step 1: Create McpAuthConfig class**
 
 ```java
 package com.resume.mcp;
 
-import org.springframework.ai.mcp.server.transport.StreamableHttpServerTransport;
-import org.springframework.ai.mcp.spec.McpSchema;
-import org.springframework.ai.mcp.transport.McpTransportContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.modelcontextprotocol.common.McpTransportContext;
+import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper;
+import io.modelcontextprotocol.server.transport.ServerTransportSecurityException;
+import io.modelcontextprotocol.server.transport.WebMvcSseServerTransportProvider;
+import org.springframework.ai.mcp.server.autoconfigure.McpServerProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.web.servlet.function.RouterFunction;
-import org.springframework.web.servlet.function.ServerResponse;
+import java.util.List;
+import java.util.Map;
 
 @Configuration
 public class McpAuthConfig {
@@ -203,32 +205,42 @@ public class McpAuthConfig {
     private String mcpApiKey;
 
     @Bean
-    public StreamableHttpServerTransport.TransportContextExtractor transportContextExtractor() {
-        return serverRequest -> {
-            String auth = serverRequest.headers().firstHeader("Authorization");
-            return McpTransportContext.create(java.util.Map.of(
-                "authorization", auth
-            ));
-        };
-    }
-
-    public boolean isAuthorized(McpTransportContext context) {
-        if (mcpApiKey == null || mcpApiKey.isEmpty()) {
-            return true; // No key configured = allow all
-        }
-        String auth = (String) context.get("authorization");
-        if (auth == null) return false;
-        String token = auth.startsWith("Bearer ") ? auth.substring(7) : auth;
-        return mcpApiKey.equals(token);
-    }
-
-    public boolean isAuthorized() {
-        if (mcpApiKey == null || mcpApiKey.isEmpty()) {
-            return true;
-        }
-        // STDIO mode: check env var as fallback
-        String envKey = System.getenv("MCP_API_KEY");
-        return mcpApiKey.equals(envKey);
+    public WebMvcSseServerTransportProvider webMvcSseServerTransportProvider(
+            ObjectMapper objectMapper,
+            McpServerProperties properties) {
+        return WebMvcSseServerTransportProvider.builder()
+            .jsonMapper(new JacksonMcpJsonMapper(objectMapper))
+            .baseUrl(properties.getBaseUrl())
+            .sseEndpoint(properties.getSseEndpoint())
+            .messageEndpoint(properties.getSseMessageEndpoint())
+            .contextExtractor(serverRequest -> {
+                String auth = serverRequest.headers().firstHeader("Authorization");
+                return McpTransportContext.create(Map.of("authorization", auth != null ? auth : ""));
+            })
+            .securityValidator(headers -> {
+                if (mcpApiKey != null && !mcpApiKey.isEmpty()) {
+                    String token = null;
+                    for (var entry : headers.entrySet()) {
+                        if (entry.getKey().equalsIgnoreCase("Authorization")) {
+                            List<String> values = entry.getValue();
+                            if (values != null && !values.isEmpty()) {
+                                token = values.get(0);
+                            }
+                            break;
+                        }
+                    }
+                    if (token == null) {
+                        throw new ServerTransportSecurityException(401, "Missing Authorization header");
+                    }
+                    if (token.startsWith("Bearer ")) {
+                        token = token.substring(7);
+                    }
+                    if (!mcpApiKey.equals(token)) {
+                        throw new ServerTransportSecurityException(401, "Invalid API key");
+                    }
+                }
+            })
+            .build();
     }
 }
 ```
@@ -242,7 +254,7 @@ Expected: BUILD SUCCESS
 
 ```bash
 git add backend/src/main/java/com/resume/mcp/McpAuthConfig.java
-git commit -m "feat: add MCP auth config with transport context extractor"
+git commit -m "feat: add MCP auth config with SSE security validator"
 ```
 
 ---
@@ -278,17 +290,14 @@ public class McpResumeTools {
 
     private final ResumeService resumeService;
     private final ResumeVersionService versionService;
-    private final McpAuthConfig authConfig;
 
     public McpResumeTools(ResumeService resumeService,
-                          ResumeVersionService versionService,
-                          McpAuthConfig authConfig) {
+                          ResumeVersionService versionService) {
         this.resumeService = resumeService;
         this.versionService = versionService;
-        this.authConfig = authConfig;
     }
 
-    @Tool(description = "List all resumes, optionally filtered by user ID")
+    @Tool(name = "list_resumes", description = "List all resumes, optionally filtered by user ID")
     public List<Resume> listResumes(
             @ToolParam(description = "Optional user ID to filter resumes by") Long userId) {
         if (userId != null) {
@@ -297,14 +306,14 @@ public class McpResumeTools {
         return resumeService.findAll();
     }
 
-    @Tool(description = "Get a resume by its ID")
+    @Tool(name = "get_resume", description = "Get a resume by its ID")
     public Resume getResume(
             @ToolParam(description = "Resume ID") String id) {
         return resumeService.findById(id)
                 .orElseThrow(() -> new RuntimeException("Resume not found: " + id));
     }
 
-    @Tool(description = "Create a new resume for a user")
+    @Tool(name = "create_resume", description = "Create a new resume for a user")
     public Resume createResume(
             @ToolParam(description = "User ID who will own this resume") Long userId,
             @ToolParam(description = "Resume title", required = false) String title,
@@ -317,7 +326,7 @@ public class McpResumeTools {
         return resumeService.create(dto, userId);
     }
 
-    @Tool(description = "Update a resume partially. Only provided fields are changed.")
+    @Tool(name = "update_resume", description = "Update a resume partially. Only provided fields are changed.")
     public Resume updateResume(
             @ToolParam(description = "Resume ID") String id,
             @ToolParam(description = "New title", required = false) String title,
@@ -336,26 +345,26 @@ public class McpResumeTools {
         return resumeService.updateDirect(id, dto);
     }
 
-    @Tool(description = "Delete a resume permanently")
+    @Tool(name = "delete_resume", description = "Delete a resume permanently")
     public void deleteResume(
             @ToolParam(description = "Resume ID") String id) {
         resumeService.deleteDirect(id);
     }
 
-    @Tool(description = "List all version snapshots for a resume")
+    @Tool(name = "list_versions", description = "List all version snapshots for a resume")
     public List<ResumeVersion> listVersions(
             @ToolParam(description = "Resume ID") String resumeId) {
         return versionService.getVersions(resumeId);
     }
 
-    @Tool(description = "Get a specific version snapshot")
+    @Tool(name = "get_version", description = "Get a specific version snapshot")
     public ResumeVersion getVersion(
             @ToolParam(description = "Resume ID") String resumeId,
             @ToolParam(description = "Version number (1, 2, 3...)") int version) {
         return versionService.getVersion(resumeId, version);
     }
 
-    @Tool(description = "Restore a previous version as the current resume content")
+    @Tool(name = "restore_version", description = "Restore a previous version as the current resume content")
     public Resume restoreVersion(
             @ToolParam(description = "Resume ID") String resumeId,
             @ToolParam(description = "Version number to restore") int version) {
@@ -363,7 +372,7 @@ public class McpResumeTools {
         return resumeService.restoreFromVersionDirect(restored);
     }
 
-    @Tool(description = "Compare two versions and return a structured diff")
+    @Tool(name = "diff_versions", description = "Compare two versions and return a structured diff")
     public VersionDiffResponse diffVersions(
             @ToolParam(description = "Resume ID") String resumeId,
             @ToolParam(description = "First version number") int versionA,
@@ -439,19 +448,19 @@ public class McpThemeTools {
         this.themeService = themeService;
     }
 
-    @Tool(description = "List all themes (built-in and custom)")
+    @Tool(name = "list_themes", description = "List all themes (built-in and custom)")
     public List<Theme> listThemes() {
         return themeService.findAll();
     }
 
-    @Tool(description = "Get a theme by its ID with full details including CSS")
+    @Tool(name = "get_theme", description = "Get a theme by its ID with full details including CSS")
     public Theme getTheme(
             @ToolParam(description = "Theme ID (e.g. classic, modern, sidebar)") String id) {
         return themeService.findById(id)
                 .orElseThrow(() -> new RuntimeException("Theme not found: " + id));
     }
 
-    @Tool(description = "Update a theme (including built-in themes). Only provided fields are changed.")
+    @Tool(name = "update_theme", description = "Update a theme (including built-in themes). Only provided fields are changed.")
     public Theme updateTheme(
             @ToolParam(description = "Theme ID") String id,
             @ToolParam(description = "New theme name", required = false) String name,
@@ -526,14 +535,12 @@ class McpResumeToolsTest {
     private ResumeService resumeService;
     @Mock
     private ResumeVersionService versionService;
-    @Mock
-    private McpAuthConfig authConfig;
 
     private McpResumeTools tools;
 
     @BeforeEach
     void setUp() {
-        tools = new McpResumeTools(resumeService, versionService, authConfig);
+        tools = new McpResumeTools(resumeService, versionService);
     }
 
     @Test

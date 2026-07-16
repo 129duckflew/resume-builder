@@ -8,11 +8,11 @@ Build a Model Context Protocol (MCP) server as a Spring Boot module within the e
 
 - **SSE (Streamable-HTTP)**: Exposed at `/mcp/sse` with message endpoint `/mcp/message` for remote AI clients (e.g., OpenCode connecting over HTTP).
 - **STDIO**: Simultaneously enabled via `spring.ai.mcp.server.stdio=true` for local AI clients (e.g., OpenCode launching the server as a child process).
-- **Library**: `spring-ai-starter-mcp-server-webmvc` (Spring AI 1.1.x, compatible with Spring Boot 3.2.5).
+- **Library**: `spring-ai-starter-mcp-server-webmvc` (Spring AI 1.0.9, compatible with Spring Boot 3.2.5).
 
 ## Authentication
 
-- **SSE mode**: A `TransportContextExtractor` extracts the `Authorization` header from incoming HTTP requests. The token is validated against `app.mcp.api-key` configured in `application.yml` / env var `MCP_API_KEY`.
+- **SSE mode**: `McpAuthConfig` creates a `WebMvcSseServerTransportProvider` bean with a `contextExtractor` that extracts the `Authorization` header from incoming HTTP requests, and a `securityValidator` that validates the token against `app.mcp.api-key` configured in `application.yml` / env var `MCP_API_KEY`.
 - **STDIO mode**: The key is read from the `MCP_API_KEY` environment variable.
 - **Super admin bypass**: When authenticated, all tools skip `userId` ownership checks. Resume tools expose an optional `userId` parameter to scope the query.
 
@@ -55,7 +55,7 @@ backend/src/main/java/com/resume/mcp/
     <dependency>
       <groupId>org.springframework.ai</groupId>
       <artifactId>spring-ai-bom</artifactId>
-      <version>1.1.0</version>
+      <version>1.0.9</version>
       <type>pom</type>
       <scope>import</scope>
     </dependency>
