@@ -22,6 +22,7 @@ A modern, privacy-first resume builder that separates content from design. Write
 | **JSON Resume Import/Export** | Full round-trip support for the jsonresume.org schema. |
 | **Style Persistence** | Font size, line height, and spacing customizations preserved when switching themes. |
 | **Styled Delete Dialog** | Custom confirmation dialog replacing native `confirm()` for destructive actions. |
+| **MCP Server** | Model Context Protocol server enabling AI assistants to manage resumes and themes via SSE/STDIO. |
 
 ## Tech Stack
 
@@ -313,7 +314,60 @@ Test stack:
 | **UserSettingsController** (`/api/users`) | |
 | `GET` | `/api/users/api-key` | Check if AI API key is set |
 | `PUT` | `/api/users/api-key` | Set/update AI API key |
+| **MCP Server** (`/mcp`) — **public** (API key auth) | |
+| `GET` | `/mcp/sse` | SSE endpoint for MCP clients |
+| `POST` | `/mcp/message` | Message endpoint for MCP clients |
 
 ## License
 
 [MIT](LICENSE)
+
+## MCP Client Configuration
+
+### SSE (remote)
+
+```json
+{
+  "mcpServers": {
+    "resume-builder": {
+      "url": "http://localhost:8080/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer <MCP_API_KEY>"
+      }
+    }
+  }
+}
+```
+
+### STDIO (local)
+
+```json
+{
+  "mcpServers": {
+    "resume-builder": {
+      "command": "java",
+      "args": ["-jar", "backend/target/resume-builder.jar", "--spring.ai.mcp.server.stdio=true"],
+      "env": {
+        "MCP_API_KEY": "<your-key>"
+      }
+    }
+  }
+}
+```
+
+### Available MCP Tools
+
+| Tool | Description |
+|---|---|
+| `list_resumes` | List all resumes, optionally filtered by user ID |
+| `get_resume` | Get a resume by its ID |
+| `create_resume` | Create a new resume for a user |
+| `update_resume` | Update resume fields (partial) |
+| `delete_resume` | Delete a resume permanently |
+| `list_versions` | List version history for a resume |
+| `get_version` | Get a specific snapshot version |
+| `restore_version` | Restore a previous version |
+| `diff_versions` | Compare two versions and return a structured diff |
+| `list_themes` | List all themes (built-in and custom) |
+| `get_theme` | Get theme metadata, CSS, variables, and layout |
+| `update_theme` | Update any theme including built-in (super admin only) |

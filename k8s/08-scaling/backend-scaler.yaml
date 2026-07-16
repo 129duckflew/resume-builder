@@ -9,6 +9,7 @@ spec:
   pathPrefixes:
     - /api
     - /s
+    - /mcp
   scaleTargetRef:
     name: resume-backend
     service: backend-service

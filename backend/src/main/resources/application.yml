@@ -11,6 +11,7 @@ spring:
         stdio: true
         sse-message-endpoint: /mcp/message
         sse-endpoint: /mcp/sse
+        # base-url: http://localhost:8080  # Uncomment and set for production SSE access
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:resume_db}
     username: ${DB_USER:resume}

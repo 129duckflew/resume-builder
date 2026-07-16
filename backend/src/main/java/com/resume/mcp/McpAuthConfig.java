@@ -33,12 +33,20 @@ public class McpAuthConfig {
             })
             .securityValidator(headers -> {
                 if (mcpApiKey != null && !mcpApiKey.isEmpty()) {
-                    List<String> authHeaders = headers.get("Authorization");
-                    if (authHeaders == null || authHeaders.isEmpty()) {
+                    String token = null;
+                    for (var entry : headers.entrySet()) {
+                        if (entry.getKey().equalsIgnoreCase("Authorization")) {
+                            List<String> values = entry.getValue();
+                            if (values != null && !values.isEmpty()) {
+                                token = values.get(0);
+                            }
+                            break;
+                        }
+                    }
+                    if (token == null) {
                         throw new ServerTransportSecurityException(401, "Missing Authorization header");
                     }
-                    String token = authHeaders.get(0);
-                    if (token != null && token.startsWith("Bearer ")) {
+                    if (token.startsWith("Bearer ")) {
                         token = token.substring(7);
                     }
                     if (!mcpApiKey.equals(token)) {
