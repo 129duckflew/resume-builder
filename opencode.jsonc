@@ -9,6 +9,14 @@
         "--mcp"
       ],
       "enabled": true
+    },
+    "resume-builder": {
+      "type": "remote",
+      "url": "http://resume.local/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer resume-builder-mcp-key-change-in-prod"
+      },
+      "enabled": true
     }
   },
   "lsp": true
