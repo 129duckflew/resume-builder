@@ -4,14 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.modelcontextprotocol.common.McpTransportContext;
 import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.server.transport.ServerTransportSecurityException;
-import io.modelcontextprotocol.server.transport.ServerTransportSecurityValidator;
 import io.modelcontextprotocol.server.transport.WebMvcSseServerTransportProvider;
 import org.springframework.ai.mcp.server.autoconfigure.McpServerProperties;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.function.ServerRequest;
-
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +29,7 @@ public class McpAuthConfig {
             .messageEndpoint(properties.getSseMessageEndpoint())
             .contextExtractor(serverRequest -> {
                 String auth = serverRequest.headers().firstHeader("Authorization");
-                return McpTransportContext.create(Map.of("authorization", auth));
+                return McpTransportContext.create(Map.of("authorization", auth != null ? auth : ""));
             })
             .securityValidator(headers -> {
                 if (mcpApiKey != null && !mcpApiKey.isEmpty()) {
