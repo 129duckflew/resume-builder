@@ -80,7 +80,6 @@ scripts/
 | DB_HOST | postgres-service |
 | DB_PORT | 5432 |
 | DB_NAME | resume_db |
-| APP_THEMES_PATH | classpath:themes/ |
 | EXPORT_CHROME_PATH | /usr/bin/chromium |
 
 **Secret `app-secrets`** (base64)

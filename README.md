@@ -8,7 +8,7 @@ A modern, privacy-first resume builder that separates content from design. Write
 |---|---|
 | **Markdown Editor** | Write resumes in Markdown with live preview. Focus on content, not formatting. |
 | **Real-time A4 Preview** | See exactly how your resume looks on A4 paper as you type. Resizable three-column layout (editor / preview / sections). |
-| **7 Built-in Themes** | Classic, Modern, Minimal, Sidebar, Stack Overflow, Elegant, Compact — switch with one click. |
+| **13 Built-in Themes** | Classic, Modern, Minimal, Sidebar, Stack Overflow, Elegant, Compact, Sidebar Right, Header Bar, Jake's, Academic CV, Swiss, Harvard — switch with one click. |
 | **Smart One-Page PDF** | Automatically adjusts font size, line height, and spacing to fit your resume on one page during PDF export. Toggle on/off. |
 | **Section Drag & Drop** | Reorder sections (Experience, Education, etc.) by dragging in the sidebar. Click a section to jump the editor to it. |
 | **Keyboard Shortcuts** | `Cmd+S` to save, `Cmd+Z` / `Cmd+Shift+Z` for undo/redo. Auto-save drafts to localStorage. |
@@ -232,6 +232,8 @@ Tear down:
 
 ## Themes
 
+13 built-in themes are available. They are seeded into the database via Flyway migration on first startup and can be customized through the UI or MCP tools.
+
 | Theme | ID | Style | Colors |
 |---|---|---|---|
 | Classic | `classic` | Traditional corporate, serif | Black / White |
@@ -241,10 +243,12 @@ Tear down:
 | Stack Overflow | `stackoverflow` | Developer community style | Orange `#f48024` |
 | Elegant | `elegant` | Refined business, serif | Green `#1b4332` |
 | Compact | `compact` | Dense layout, experienced pros | Dark `#555` |
-
-Add a new theme by creating a directory in `backend/src/main/resources/themes/{id}/` with:
-- `theme.json` — name, description, sort order
-- `style.css` — CSS with selectors for `h1`, `h2`, `h3`, `p`, `ul`/`li`, `strong`, `em`, `a`, `@page`, `.resume-page`, `@media print`
+| Sidebar Right | `sidebar-right` | Two-column sidebar on right | Navy `#1a365d` |
+| Header Bar | `header-bar` | Top header with colored background | Navy `#1a365d` |
+| Jake's Resume | `jake` | ATS-optimized sans-serif | Navy `#1a3a5c` |
+| Academic CV | `academic` | Scholarly serif, hanging indent | Dark `#2d2d2d` |
+| Swiss | `swiss` | Swiss minimalist with grid | Red `#c8102e` |
+| Harvard | `harvard` | MBA-style with uppercase | Black |
 
 ## Testing
 
