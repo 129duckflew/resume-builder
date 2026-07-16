@@ -125,10 +125,10 @@ resume-builder/
 ## Quick Start (Local Development)
 
 ```bash
-# Prerequisites: Java 17+, Node.js 20+, Docker (for PostgreSQL)
+# Prerequisites: Java 17+, Node.js 20+, PostgreSQL 16 (via Homebrew)
 
-# 1. Start PostgreSQL
-docker compose up -d postgres
+# 1. Start PostgreSQL (macOS via Homebrew)
+brew services start postgresql@16
 
 # 2. Start backend (port 8080)
 cd backend && mvn spring-boot:run
@@ -159,7 +159,6 @@ Services:
 
 | Container | Image | Port |
 |---|---|---|
-| `resume-postgres` | postgres:16-alpine | 5432 |
 | `resume-backend` | resume-builder-backend | 8081 → 8080 |
 | `resume-frontend` | resume-builder-frontend | 3000 → 80 |
 
@@ -203,7 +202,6 @@ Services:
 | API | Ingress (Traefik) + KEDA HTTP interceptor | `resume.local/api/*` → KEDA interceptor → backend-service:8080 |
 | Shared links | Ingress (Traefik) + KEDA HTTP interceptor | `resume.local/s/*` → KEDA interceptor → backend-service:8080 |
 | Grafana | Ingress (Traefik) | `grafana.resume.local` → grafana-service:3000 |
-| Database | StatefulSet | postgres-service:5432 |
 
 Scale-from-zero (KEDA HTTP Add-on):
 

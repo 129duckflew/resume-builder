@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -192,12 +193,16 @@ public class ThemeService {
         return themeRepository.save(theme);
     }
 
+    @Transactional
     public Theme updateDirect(String id, ThemeDTO dto) {
         Theme theme = themeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Theme not found: " + id));
         if (dto.getName() != null) theme.setName(dto.getName().trim());
         if (dto.getDescription() != null) theme.setDescription(dto.getDescription());
         if (dto.getLayout() != null) {
+            if (!VALID_LAYOUTS.contains(dto.getLayout())) {
+                throw new IllegalArgumentException("Invalid layout: " + dto.getLayout());
+            }
             theme.setLayout(dto.getLayout());
         }
         if (dto.getCssContent() != null) {

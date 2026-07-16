@@ -113,7 +113,7 @@ resume-builder/
 
 ```bash
 # 开发模式
-docker compose up -d postgres
+brew services start postgresql@16
 cd backend && mvn spring-boot:run                    # :8081
 cd frontend && npm install && npm run dev            # :3000
 

@@ -48,11 +48,4 @@ public class McpAuthConfig {
             })
             .build();
     }
-
-    public boolean isAuthorized() {
-        if (mcpApiKey == null || mcpApiKey.isEmpty()) {
-            return true;
-        }
-        return mcpApiKey.equals(System.getenv("MCP_API_KEY"));
-    }
 }

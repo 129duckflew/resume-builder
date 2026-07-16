@@ -4,7 +4,7 @@ metadata:
   name: app-config
   namespace: resume-builder
 data:
-  DB_HOST: postgres-service
+  DB_HOST: host.docker.internal
   DB_PORT: "5432"
   DB_NAME: resume_db
   APP_THEMES_PATH: classpath:themes/
