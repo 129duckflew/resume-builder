@@ -259,7 +259,7 @@ describe('EditorPage preview race condition', () => {
     }, { timeout: 2000 })
 
     // Resolve stale response A first (should be discarded by seq check)
-    deferredResolve[1]('<h1>Version A html</h1>')
+    deferredResolve[1]('<div class="resume-page"><h1>Version A html</h1></div>')
     await new Promise(r => setTimeout(r, 100))
 
     // DOM should NOT show stale A content
@@ -267,7 +267,7 @@ describe('EditorPage preview race condition', () => {
     expect(previewDiv?.innerHTML).not.toContain('Version A html')
 
     // Resolve latest response B (should be applied)
-    deferredResolve[2]('<h1>Version B html</h1>')
+    deferredResolve[2]('<div class="resume-page"><h1>Version B html</h1></div>')
     await vi.waitFor(() => {
       expect(document.querySelector('.resume-page')?.innerHTML).toContain('Version B html')
     }, { timeout: 2000 })

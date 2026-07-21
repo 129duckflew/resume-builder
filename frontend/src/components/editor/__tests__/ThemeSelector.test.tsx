@@ -94,6 +94,6 @@ describe('ThemeSelector card grid', () => {
     await userEvent.click(screen.getByRole('button'))
     await userEvent.click(screen.getByText('Create Theme'))
     // Dialog should open with title
-    expect(screen.getByText('Create Custom Theme')).toBeTruthy()
+    expect(screen.getByText('Create Theme')).toBeTruthy()
   })
 })
