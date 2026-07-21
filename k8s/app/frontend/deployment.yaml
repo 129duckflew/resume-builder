@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/__GITHUB_REPO_OWNER__/resume-builder/frontend:latest
+          image: ghcr.io/129duckflew/resume-builder/frontend:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
