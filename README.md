@@ -163,71 +163,123 @@ Services:
 | `resume-backend` | resume-builder-backend | 8081 → 8080 |
 | `resume-frontend` | resume-builder-frontend | 3000 → 80 |
 
-## Kubernetes Deployment (Colima k3s)
+## Kubernetes Deployment (Colima k3s — GitOps)
 
-Prerequisites: [Colima](https://github.com/abiosoft/colima) with Kubernetes enabled, 4+ CPUs, 8GB RAM.
+Prerequisites: [Colima](https://github.com/abiosoft/colima) with Kubernetes enabled, 4+ CPUs, 8GB RAM, Terraform CLI, ArgoCD CLI.
+
+### Architecture
+
+```
+GitHub (CI) → ghcr.io (images) → ArgoCD (GitOps CD) → k3s cluster
+                                     ↑
+                  Terraform (infra) ──┘  Vault (secrets)
+```
+
+| Layer | Tool | Purpose |
+|---|---|---|
+| CI | GitHub Actions | Test → build images → push to ghcr.io → update manifests |
+| CD | ArgoCD | Auto-sync K8s resources from Git |
+| Infrastructure | Terraform + Helm | KEDA, Prometheus, Grafana, ArgoCD, Vault |
+| Secrets | Vault | All application secrets (DB, JWT, API keys) |
+| Images | ghcr.io | Container image registry |
+
+### Quick Start
 
 ```bash
-# 1. Ensure Colima k3s is running (enable k3s in ~/.colima/default/colima.yaml first)
+# 1. Start k3s
 ./scripts/k8s-start.sh
 
-# 2. Install KEDA + HTTP Add-on (one-time cluster setup)
-./scripts/k8s-install-keda.sh
+# 2. Provision infrastructure (KEDA, Prometheus, Grafana, ArgoCD, Vault)
+./scripts/k8s-terraform-init.sh
 
-# 3. Build images (k3s shares Colima's Docker containerd — no registry needed)
-./scripts/k8s-build-push.sh
+# 3. Initialize Vault secrets
+./scripts/k8s-vault-init.sh
 
-# 4. Apply all K8s manifests
-./scripts/k8s-apply.sh
+# 4. Bootstrap ArgoCD (auto-sync from Git)
+./scripts/k8s-argocd-bootstrap.sh
 
-# 5. Verify scale-from-zero (cold start)
+# 5. Verify
 ./scripts/k8s-smoke-test.sh
 ```
 
-Then open the following in your browser:
+### End-to-End Flow
+
+1. `git push main` → GitHub Actions runs tests
+2. Tests pass → build backend/frontend images → push to ghcr.io
+3. CI updates image tags in `k8s/app/` → commits back to repo
+4. ArgoCD detects changes → auto-syncs to k3s
+5. Vault Agent Injector injects secrets into pods
+
+### Services
 
 | Service | URL |
 |---|---|
 | Frontend (SPA) | http://resume.local |
 | API | http://resume.local/api/* |
-| Grafana | http://grafana.resume.local |
+| Grafana | http://localhost:30000 |
+| ArgoCD UI | http://localhost:30080 |
+| Vault | `kubectl port-forward -n vault svc/vault 8200:8200` |
 
-> **Note:** Traefik (k3s built-in) binds ports 80/443 inside the Colima VM and is automatically forwarded to `localhost`. The `/etc/hosts` entry points `resume.local` and `grafana.resume.local` to `127.0.0.1`.
-> On macOS, `.local` domains are resolved via mDNS first, which adds a 5s timeout before falling back to `/etc/hosts`. The smoke test bypasses this with `--resolve`; browser access will include the delay.
+### Directory Structure
 
-Services:
+```
+infra/
+├── terraform/          # Infrastructure as Code (Helm releases)
+│   ├── main.tf         # Provider config
+│   ├── keda.tf         # KEDA + HTTP Add-on
+│   ├── monitoring.tf   # kube-prometheus-stack
+│   ├── argocd.tf       # ArgoCD
+│   ├── vault.tf        # HashiCorp Vault
+│   └── vault-auth.tf   # Vault K8s auth
+└── argocd/             # ArgoCD Application manifests
+    ├── app-of-apps.yaml
+    └── applications/   # Per-component Application CRDs
 
-| Resource | Type | Address |
+k8s/app/                # ArgoCD-managed K8s manifests
+├── backend/            # Deployment + Service
+├── frontend/           # Deployment + Service
+├── config/             # ConfigMap + Secret (placeholder)
+├── ingress/            # Traefik IngressRoute
+└── scaling/            # KEDA HTTPScaledObjects
+```
+
+### Scripts
+
+| Script | Purpose | Status |
 |---|---|---|
-| Frontend (SPA) | Ingress (Traefik) + KEDA HTTP interceptor | `resume.local` → KEDA interceptor → frontend-service:80 |
-| API | Ingress (Traefik) + KEDA HTTP interceptor | `resume.local/api/*` → KEDA interceptor → backend-service:8080 |
-| Shared links | Ingress (Traefik) + KEDA HTTP interceptor | `resume.local/s/*` → KEDA interceptor → backend-service:8080 |
-| Grafana | Ingress (Traefik) | `grafana.resume.local` → grafana-service:3000 |
+| `k8s-start.sh` | Start Colima k3s | Active |
+| `k8s-terraform-init.sh` | `terraform init + apply` | **New** |
+| `k8s-vault-init.sh` | Initialize Vault secrets | **New** |
+| `k8s-argocd-bootstrap.sh` | Deploy ArgoCD app-of-apps | **New** |
+| `k8s-smoke-test.sh` | Verify scale-from-zero | Active |
+| `k8s-delete.sh` | Delete application resources | Active |
+| `k8s-apply.sh` | Manual kubectl apply | Deprecated (ArgoCD) |
+| `k8s-build-push.sh` | Build images locally | Deprecated (CI) |
+| `k8s-install-keda.sh` | Install KEDA | Deprecated (Terraform) |
 
-Scale-from-zero (KEDA HTTP Add-on):
+### Scale-from-zero (KEDA HTTP Add-on)
 
 | Deployment | Min | Max | Cold start | Scaledown |
 |---|---|---|---|---|
 | `resume-backend` | 0 | 3 | ~18s | 300s idle |
 | `resume-frontend` | 0 | 3 | ~8s | 300s idle |
 
-Port-forward alternatives:
+### Infrastructure Management
 
 ```bash
-# Frontend
-kubectl port-forward -n resume-builder service/frontend-service 3000:80
+# Update infrastructure (KEDA, Prometheus, etc.)
+cd infra/terraform
+terraform plan
+terraform apply
 
-# Backend API directly
-kubectl port-forward -n resume-builder service/backend-service 8081:8080
+# Destroy infrastructure
+terraform destroy
 
-# Grafana
-kubectl port-forward -n resume-builder service/grafana-service 3000:3000
-```
+# Update Vault secrets
+kubectl exec -n vault vault-0 -- vault kv put secret/resume-builder DB_USER=resume DB_PASS=newpass
 
-Tear down:
-
-```bash
-./scripts/k8s-delete.sh
+# Force ArgoCD sync
+argocd app sync resume-backend
 ```
 
 ## Themes
