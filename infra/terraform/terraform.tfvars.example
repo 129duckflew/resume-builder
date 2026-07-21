@@ -1,0 +1,4 @@
+kubeconfig_path    = "~/.kube/config"
+kubeconfig_context = "colima"
+grafana_admin_password = "change-me-in-production"
+prometheus_retention = "15d"

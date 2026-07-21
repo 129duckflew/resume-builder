@@ -14,16 +14,29 @@ spec:
     metadata:
       labels:
         app: resume-backend
+      annotations:
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "resume-builder"
+        vault.hashicorp.com/agent-inject-secret-db-creds: "secret/data/resume-builder"
+        vault.hashicorp.com/agent-inject-template-db-creds: |
+          {{- with secret "secret/data/resume-builder" -}}
+          export DB_USER="{{ .Data.data.DB_USER }}"
+          export DB_PASS="{{ .Data.data.DB_PASS }}"
+          export JWT_SECRET="{{ .Data.data.JWT_SECRET }}"
+          {{- end }}
     spec:
       containers:
         - name: backend
-          image: resume-builder-backend:latest
+          image: ghcr.io/__GITHUB_REPO_OWNER__/resume-builder/backend:latest
           imagePullPolicy: IfNotPresent
+          command: ["sh", "-c"]
+          args:
+            - |
+              source /vault/secrets/db-creds
+              exec java -jar app.jar
           envFrom:
             - configMapRef:
                 name: app-config
-            - secretRef:
-                name: app-secrets
           ports:
             - containerPort: 8080
           resources:
