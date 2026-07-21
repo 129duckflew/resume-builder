@@ -29,7 +29,7 @@ spec:
         - name: ghcr-pull-secret
       containers:
         - name: backend
-          image: ghcr.io/129duckflew/resume-builder/backend:ed0c8684e59da2031373fa166044c5998aaeeca1
+          image: ghcr.io/129duckflew/resume-builder/backend:8e20ecedbb326b5bfb4507102b000f3ca1cd231f
           imagePullPolicy: IfNotPresent
           command: ["sh", "-c"]
           args:
