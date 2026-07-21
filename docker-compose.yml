@@ -14,6 +14,12 @@ services:
       - "8081:8080"
     volumes:
       - ./backend/src/main/resources/themes:/app/themes
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://127.0.0.1:8080/api/themes"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
 
   frontend:
     build:
@@ -37,7 +43,7 @@ services:
     container_name: resume-e2e
     depends_on:
       backend:
-        condition: service_started
+        condition: service_healthy
       frontend:
         condition: service_healthy
     environment:
