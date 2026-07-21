@@ -34,7 +34,7 @@ spec:
           command: ["sh", "-c"]
           args:
             - |
-              source /vault/secrets/db-creds
+              . /vault/secrets/db-creds
               exec java -jar app.jar
           envFrom:
             - configMapRef:

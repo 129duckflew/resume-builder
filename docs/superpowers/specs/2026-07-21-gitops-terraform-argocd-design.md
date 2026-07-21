@@ -290,7 +290,7 @@ spec:
     spec:
       containers:
         - name: backend
-          command: ["sh", "-c", "source /vault/secrets/db-creds && java -jar app.jar"]
+          command: ["sh", "-c", ". /vault/secrets/db-creds && java -jar app.jar"]
 ```
 
 **Secret 分层:**
