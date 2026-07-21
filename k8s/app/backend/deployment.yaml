@@ -25,6 +25,8 @@ spec:
           export JWT_SECRET="{{ .Data.data.JWT_SECRET }}"
           {{- end }}
     spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
       containers:
         - name: backend
           image: ghcr.io/129duckflew/resume-builder/backend:f21b80a349c2658fa86c079a3a91fcf448521c56
