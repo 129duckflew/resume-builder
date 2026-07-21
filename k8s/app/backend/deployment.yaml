@@ -27,7 +27,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/129duckflew/resume-builder/backend:latest
+          image: ghcr.io/129duckflew/resume-builder/backend:f21b80a349c2658fa86c079a3a91fcf448521c56
           imagePullPolicy: IfNotPresent
           command: ["sh", "-c"]
           args:

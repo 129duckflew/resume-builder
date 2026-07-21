@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/129duckflew/resume-builder/frontend:latest
+          image: ghcr.io/129duckflew/resume-builder/frontend:f21b80a349c2658fa86c079a3a91fcf448521c56
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
