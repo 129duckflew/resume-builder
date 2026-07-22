@@ -1,5 +1,5 @@
-# Build stage
-FROM node:20-alpine AS build
+# Build stage（固定构建机原生架构，避免多架构构建时 npm 在 QEMU 下运行）
+FROM --platform=$BUILDPLATFORM node:20-alpine AS build
 
 WORKDIR /app
 COPY package.json package-lock.json ./

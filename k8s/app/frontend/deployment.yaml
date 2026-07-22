@@ -6,7 +6,8 @@ metadata:
   labels:
     app: resume-frontend
 spec:
-  replicas: 0
+  # 不写 replicas：由 KEDA (HTTPScaledObject) 管理副本数，
+  # 避免 ArgoCD 与 KEDA 互相拉扯导致启动中的 Pod 被杀。
   selector:
     matchLabels:
       app: resume-frontend
