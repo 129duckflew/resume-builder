@@ -26,6 +26,12 @@ spec:
           export JWT_SECRET="{{ .Data.data.JWT_SECRET }}"
           {{- end }}
     spec:
+      # host.docker.internal 走 8.8.8.8 解析会被宿主机代理 fake-ip 污染，
+      # 直接钉到 lima 宿主机网关（等同 Mac 的 localhost），绕过 DNS。
+      hostAliases:
+        - ip: "192.168.5.2"
+          hostnames:
+            - host.docker.internal
       imagePullSecrets:
         - name: ghcr-pull-secret
       containers:
