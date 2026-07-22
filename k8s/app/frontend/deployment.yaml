@@ -20,7 +20,7 @@ spec:
         - name: ghcr-pull-secret
       containers:
         - name: frontend
-          image: ghcr.io/129duckflew/resume-builder/frontend:2e936bff5f569d0f90171445545a692c0585dc63
+          image: ghcr.io/129duckflew/resume-builder/frontend:cf02b73932b25da7f673d911aa960f5e4be3c575
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
