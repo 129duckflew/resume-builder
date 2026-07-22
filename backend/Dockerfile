@@ -1,4 +1,6 @@
-FROM maven:3.9-eclipse-temurin-17 AS build
+# 构建阶段固定跑在构建机原生架构（Java 字节码与架构无关），
+# 避免多架构构建时 Maven 在 QEMU 模拟下运行。
+FROM --platform=$BUILDPLATFORM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
