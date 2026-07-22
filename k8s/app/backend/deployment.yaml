@@ -48,15 +48,22 @@ spec:
             limits:
               cpu: 500m
               memory: 1Gi
+          # Spring Boot 冷启动约需 100-120s（受限 CPU 下）。
+          # startupProbe 成功前，liveness/readiness 均不生效，避免启动期被误杀。
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 30 # 最长容忍 300s 启动时间
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8080
-            initialDelaySeconds: 30
             periodSeconds: 15
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8080
-            initialDelaySeconds: 15
             periodSeconds: 5
