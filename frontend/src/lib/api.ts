@@ -20,7 +20,7 @@ http.interceptors.request.use((config) => {
 http.interceptors.response.use(
   (res) => res,
   async (err) => {
-    if (err.response?.status === 401 && !err.config?.url?.startsWith('/auth/')) {
+    if ((err.response?.status === 401 || err.response?.status === 403) && !err.config?.url?.startsWith('/auth/')) {
       toast({ title: '登录已过期', description: '您的登录状态已失效，请重新登录', variant: 'destructive' })
       const { useAuthStore } = await import('@/stores/authStore')
       useAuthStore.getState().logout()
