@@ -1,7 +1,8 @@
 package com.resume.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.resume.dto.ThemeDTO;
 import com.resume.dto.VariableDeclaration;
 import com.resume.entity.Theme;
@@ -23,7 +24,7 @@ public class ThemeService {
 
     private final ThemeRepository themeRepository;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new tools.jackson.databind.json.JsonMapper();
 
     public ThemeService(ThemeRepository themeRepository) {
         this.themeRepository = themeRepository;

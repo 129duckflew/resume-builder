@@ -3,7 +3,8 @@ package com.resume.service;
 import com.resume.entity.Resume;
 import com.resume.entity.User;
 import com.resume.repository.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -105,7 +106,7 @@ public class AiService {
         }
     }
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new tools.jackson.databind.json.JsonMapper();
 
     private String escapeJson(String s) {
         try {

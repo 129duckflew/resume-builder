@@ -1,7 +1,8 @@
 package com.resume.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.resume.dto.ResumeStyleDTO;
 import com.resume.entity.ResumeStyle;
 import com.resume.repository.ResumeStyleRepository;
@@ -15,7 +16,7 @@ import java.util.Optional;
 public class ResumeStyleService {
 
     private final ResumeStyleRepository repository;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new tools.jackson.databind.json.JsonMapper();
 
     public ResumeStyleService(ResumeStyleRepository repository) {
         this.repository = repository;
