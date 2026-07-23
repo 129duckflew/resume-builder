@@ -4,7 +4,7 @@
 
 ```
 resume-builder/
-├── backend/                          # Spring Boot 3.2 + Java 17
+├── backend/                          # Spring Boot 4.1 + Java 25
 │   ├── pom.xml
 │   ├── Dockerfile
 │   └── src/main/java/com/resume/

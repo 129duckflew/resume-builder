@@ -1,11 +1,9 @@
 package com.resume.mcp;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.modelcontextprotocol.common.McpTransportContext;
-import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapper;
+import tools.jackson.databind.json.JsonMapper;
+import io.modelcontextprotocol.json.jackson3.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.server.transport.ServerTransportSecurityException;
-import io.modelcontextprotocol.server.transport.WebMvcSseServerTransportProvider;
-import org.springframework.ai.mcp.server.autoconfigure.McpServerProperties;
+import org.springframework.ai.mcp.server.webmvc.transport.WebMvcStreamableServerTransportProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,23 +19,17 @@ public class McpAuthConfig {
     private String mcpApiKey;
 
     @Bean
-    public WebMvcSseServerTransportProvider webMvcSseServerTransportProvider(
-            ObjectMapper objectMapper,
-            McpServerProperties properties) {
-        return WebMvcSseServerTransportProvider.builder()
-            .jsonMapper(new JacksonMcpJsonMapper(objectMapper))
-            .baseUrl(properties.getBaseUrl())
-            .sseEndpoint(properties.getSseEndpoint())
-            .messageEndpoint(properties.getSseMessageEndpoint())
-            .contextExtractor(serverRequest -> {
-                String auth = serverRequest.headers().firstHeader("Authorization");
-                return McpTransportContext.create(Map.of("authorization", auth != null ? auth : ""));
-            })
+    public WebMvcStreamableServerTransportProvider webMvcStreamableServerTransportProvider(
+            @Value("${spring.ai.mcp.server.streamable-http.mcp-endpoint:/mcp}") String mcpEndpoint,
+            JsonMapper jsonMapper) {
+        return WebMvcStreamableServerTransportProvider.builder()
+            .jsonMapper(new JacksonMcpJsonMapper(jsonMapper))
+            .mcpEndpoint(mcpEndpoint)
             .securityValidator(headers -> {
                 if (mcpApiKey != null && !mcpApiKey.isEmpty()) {
                     String token = null;
                     for (var entry : headers.entrySet()) {
-                        if (entry.getKey().equalsIgnoreCase("Authorization")) {
+                        if (entry.getKey().equalsIgnoreCase("authorization")) {
                             List<String> values = entry.getValue();
                             if (values != null && !values.isEmpty()) {
                                 token = values.get(0);
@@ -60,7 +52,7 @@ public class McpAuthConfig {
     }
 
     @Bean
-    public RouterFunction<ServerResponse> mcpRouterFunction(WebMvcSseServerTransportProvider transportProvider) {
+    public RouterFunction<ServerResponse> mcpRouterFunction(WebMvcStreamableServerTransportProvider transportProvider) {
         return transportProvider.getRouterFunction();
     }
 }

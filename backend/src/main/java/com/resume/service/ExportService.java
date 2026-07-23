@@ -1,7 +1,8 @@
 package com.resume.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.resume.entity.Resume;
 import com.resume.entity.ResumeStyle;
 import com.resume.entity.Theme;
@@ -19,7 +20,7 @@ public class ExportService {
     private final DesensitizeService desensitizeService;
     private final ResumeStyleService resumeStyleService;
     private final LayoutSplitter layoutSplitter;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new tools.jackson.databind.json.JsonMapper();
 
     public ExportService(MarkdownService markdownService, ThemeService themeService,
                          DesensitizeService desensitizeService,

@@ -28,7 +28,7 @@ A modern, privacy-first resume builder that separates content from design. Write
 
 | Layer | Technology |
 |---|---|
-| **Backend** | Spring Boot 3.2 / Java 17 |
+| **Backend** | Spring Boot 4.1 / Java 25 |
 | **API** | REST (Spring MVC) |
 | **ORM** | Spring Data JPA + Hibernate |
 | **Database** | PostgreSQL 16 |
@@ -126,7 +126,7 @@ resume-builder/
 ## Quick Start (Local Development)
 
 ```bash
-# Prerequisites: Java 17+, Node.js 20+, PostgreSQL 16 (via Homebrew)
+# Prerequisites: Java 25+, Node.js 20+, PostgreSQL 16 (via Homebrew)
 
 # 1. Start PostgreSQL (macOS via Homebrew)
 brew services start postgresql@16
