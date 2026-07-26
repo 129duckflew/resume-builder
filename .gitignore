@@ -38,3 +38,9 @@ infra/terraform/*.tfstate
 infra/terraform/*.tfstate.*
 infra/terraform/.terraform.lock.hcl
 infra/terraform/terraform.tfvars
+pdf-service/.classpath
+pdf-service/.project
+pdf-service/.settings/
+pdf-service/target/
+.serena/
+build-test.sh

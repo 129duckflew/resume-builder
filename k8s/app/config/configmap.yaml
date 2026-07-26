@@ -7,5 +7,8 @@ data:
   DB_HOST: host.docker.internal
   DB_PORT: "5432"
   DB_NAME: resume_db
-  EXPORT_CHROME_PATH: /usr/bin/chromium
   MCP_API_KEY: "resume-builder-mcp-key-change-in-prod"
+  # backend → pdf-service 内网地址
+  PDF_SERVICE_URL: http://pdf-service:8090
+  # 加载 Vault agent 注入的 /vault/secrets/application-secret.yml（优先级高于打包配置）
+  SPRING_CONFIG_ADDITIONAL_LOCATION: optional:file:/vault/secrets/
