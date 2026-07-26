@@ -36,8 +36,8 @@ if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
   terraform apply tfplan
   echo ""
   echo "=== Infrastructure provisioned ==="
-  echo "ArgoCD:  http://localhost:30080"
-  echo "Grafana: http://localhost:30000 (admin / see terraform.tfvars)"
+  echo "ArgoCD:  http://argocd.resume.local"
+  echo "Grafana: http://grafana.resume.local"
   echo "Vault:   kubectl port-forward -n vault svc/vault 8200:8200"
 else
   echo "Aborted."
