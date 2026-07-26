@@ -1,8 +1,5 @@
 package com.resume.service;
 
-import com.microsoft.playwright.Browser;
-import com.microsoft.playwright.BrowserContext;
-import com.microsoft.playwright.Page;
 import com.resume.entity.Resume;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +10,6 @@ public class SmartOnePageService {
 
     private static final Logger log = LoggerFactory.getLogger(SmartOnePageService.class);
 
-    private static final int A4_WIDTH_PX = 794;
     private static final int A4_HEIGHT_PX = 1123;
     private static final float MIN_FONT_SIZE = 8f;
     private static final float MIN_LINE_HEIGHT = 1.2f;
@@ -23,12 +19,10 @@ public class SmartOnePageService {
     private static final float INITIAL_SECTION_MARGIN = 16f;
     private static final int MAX_ITERATIONS = 20;
 
-    private final Browser browser;
-    private final boolean available;
+    private final PdfServiceClient pdfServiceClient;
 
-    public SmartOnePageService(java.util.Optional<Browser> browser) {
-        this.browser = browser.orElse(null);
-        this.available = this.browser != null;
+    public SmartOnePageService(PdfServiceClient pdfServiceClient) {
+        this.pdfServiceClient = pdfServiceClient;
     }
 
     public static class AdjustmentResult {
@@ -49,66 +43,53 @@ public class SmartOnePageService {
             result.lineHeight = resume.getLineHeight();
         }
 
-        if (!available) {
-            log.warn("Playwright not available, using estimation fallback");
+        try {
+            measureAndAdjust(htmlContent, result);
+        } catch (Exception e) {
+            log.warn("pdf-service measurement failed ({}), using estimation fallback", e.getMessage());
             estimateFromContent(htmlContent, result);
-            return result;
         }
-
-        measureAndAdjust(htmlContent, result);
         return result;
     }
 
     private void measureAndAdjust(String html, AdjustmentResult result) {
-        try (BrowserContext ctx = browser.newContext(
-                new Browser.NewContextOptions()
-                        .setViewportSize(A4_WIDTH_PX, A4_HEIGHT_PX)
-                        .setDeviceScaleFactor(1.0)
-        )) {
-            Page page = ctx.newPage();
+        for (int i = 0; i < MAX_ITERATIONS; i++) {
+            String styledHtml = injectCssVariables(html, result);
+            double scrollHeight = pdfServiceClient.measureHeight(styledHtml);
 
-            for (int i = 0; i < MAX_ITERATIONS; i++) {
-                String styledHtml = injectCssVariables(html, result);
-                page.setContent(styledHtml);
-                page.waitForLoadState();
-
-                double scrollHeight = ((Number) page.evaluate(
-                        "document.body.scrollHeight")).doubleValue();
-
-                if (scrollHeight <= A4_HEIGHT_PX + 5) {
-                    log.info("Content fits after {} adjustments (fontSize={}, lineHeight={})",
-                            i, result.fontSize, result.lineHeight);
-                    return;
-                }
-
-                boolean adjusted = false;
-
-                if (result.fontSize > MIN_FONT_SIZE) {
-                    result.fontSize = Math.max(MIN_FONT_SIZE, result.fontSize - 0.5f);
-                    adjusted = true;
-                }
-                if (result.lineHeight > MIN_LINE_HEIGHT && !adjusted) {
-                    result.lineHeight = Math.max(MIN_LINE_HEIGHT, result.lineHeight - 0.05f);
-                    adjusted = true;
-                }
-                if (result.sectionMargin > MIN_SECTION_MARGIN && !adjusted) {
-                    result.sectionMargin = Math.max(MIN_SECTION_MARGIN, result.sectionMargin - 2f);
-                    adjusted = true;
-                }
-
-                if (!adjusted) {
-                    result.fitsOnOnePage = false;
-                    result.warning = "Content too long for one page. " +
-                            "Consider trimming or reducing font size manually.";
-                    log.warn("Content still exceeds one page after max compression");
-                    return;
-                }
+            if (scrollHeight <= A4_HEIGHT_PX + 5) {
+                log.info("Content fits after {} adjustments (fontSize={}, lineHeight={})",
+                        i, result.fontSize, result.lineHeight);
+                return;
             }
 
-            result.fitsOnOnePage = false;
-            result.warning = "Could not fit content to one page after " +
-                    MAX_ITERATIONS + " attempts. Try trimming your content.";
+            boolean adjusted = false;
+
+            if (result.fontSize > MIN_FONT_SIZE) {
+                result.fontSize = Math.max(MIN_FONT_SIZE, result.fontSize - 0.5f);
+                adjusted = true;
+            }
+            if (result.lineHeight > MIN_LINE_HEIGHT && !adjusted) {
+                result.lineHeight = Math.max(MIN_LINE_HEIGHT, result.lineHeight - 0.05f);
+                adjusted = true;
+            }
+            if (result.sectionMargin > MIN_SECTION_MARGIN && !adjusted) {
+                result.sectionMargin = Math.max(MIN_SECTION_MARGIN, result.sectionMargin - 2f);
+                adjusted = true;
+            }
+
+            if (!adjusted) {
+                result.fitsOnOnePage = false;
+                result.warning = "Content too long for one page. " +
+                        "Consider trimming or reducing font size manually.";
+                log.warn("Content still exceeds one page after max compression");
+                return;
+            }
         }
+
+        result.fitsOnOnePage = false;
+        result.warning = "Could not fit content to one page after " +
+                MAX_ITERATIONS + " attempts. Try trimming your content.";
     }
 
     public static String injectCssVariables(String html, AdjustmentResult result) {

@@ -151,7 +151,7 @@ public class ResumeController {
         if (!pdfGenerationService.isAvailable()) {
             return ResponseEntity.status(503)
                     .body(java.util.Map.of("error",
-                            "PDF generation is not available. Playwright/Chromium not installed."));
+                            "PDF service is unavailable. Please try again later."));
         }
 
         try {

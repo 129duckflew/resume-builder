@@ -18,4 +18,5 @@ spec:
     min: 0
     max: 3
   targetPendingRequests: 1
-  scaledownPeriod: 300
+  # native 冷启动 ~1s，可以更激进缩容释放节点资源（如需回退改回 300 即可）。
+  scaledownPeriod: 60

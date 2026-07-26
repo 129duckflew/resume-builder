@@ -5,9 +5,10 @@ import com.resume.service.SmartOnePageService.AdjustmentResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class SmartOnePageServiceTest {
 
@@ -15,8 +16,11 @@ class SmartOnePageServiceTest {
 
     @BeforeEach
     void setUp() {
-        // empty browser → falls back to estimation
-        service = new SmartOnePageService(Optional.empty());
+        // pdf-service unreachable → falls back to estimation
+        PdfServiceClient unavailable = mock(PdfServiceClient.class);
+        when(unavailable.measureHeight(anyString()))
+                .thenThrow(new IllegalStateException("connection refused"));
+        service = new SmartOnePageService(unavailable);
     }
 
     @Test

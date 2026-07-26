@@ -1,45 +1,44 @@
 package com.resume.service;
 
-import com.microsoft.playwright.Browser;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PdfGenerationServiceTest {
 
+    @Mock
+    private PdfServiceClient pdfServiceClient;
+
     @Test
-    void constructor_withEmptyBrowser_marksAsUnavailable() {
-        PdfGenerationService service = new PdfGenerationService(Optional.empty());
+    void isAvailable_delegatesToClient() {
+        when(pdfServiceClient.isAvailable()).thenReturn(false);
+        PdfGenerationService service = new PdfGenerationService(pdfServiceClient);
         assertFalse(service.isAvailable());
-    }
 
-    @Test
-    void constructor_withPresentBrowser_marksAsAvailable() {
-        Browser browser = org.mockito.Mockito.mock(Browser.class);
-        PdfGenerationService service = new PdfGenerationService(Optional.of(browser));
+        when(pdfServiceClient.isAvailable()).thenReturn(true);
         assertTrue(service.isAvailable());
     }
 
     @Test
-    void generatePdf_whenNotAvailable_throws() {
-        PdfGenerationService service = new PdfGenerationService(Optional.empty());
-        IllegalStateException ex = assertThrows(IllegalStateException.class,
+    void generatePdf_delegatesToClient() {
+        byte[] pdf = "PDF DATA".getBytes();
+        when(pdfServiceClient.generatePdf("<html></html>")).thenReturn(pdf);
+        PdfGenerationService service = new PdfGenerationService(pdfServiceClient);
+        assertArrayEquals(pdf, service.generatePdf("<html></html>"));
+    }
+
+    @Test
+    void generatePdf_whenClientFails_throwsRuntimeException() {
+        when(pdfServiceClient.generatePdf("<html></html>"))
+                .thenThrow(new IllegalStateException("connection refused"));
+        PdfGenerationService service = new PdfGenerationService(pdfServiceClient);
+        RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> service.generatePdf("<html></html>"));
-        assertTrue(ex.getMessage().contains("not available"));
-    }
-
-    @Test
-    void generatePdf_withMockBrowser_returnsBytes() {
-        Browser browser = org.mockito.Mockito.mock(Browser.class);
-        PdfGenerationService service = new PdfGenerationService(Optional.of(browser));
-
-        // Note: full Playwright mock would require mocking BrowserContext, Page, etc.
-        // This test validates the service wiring without actual Playwright
-        assertTrue(service.isAvailable());
+        assertTrue(ex.getMessage().contains("Failed to generate PDF"));
     }
 }
