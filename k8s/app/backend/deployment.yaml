@@ -62,7 +62,7 @@ spec:
               memory: 64Mi
       containers:
         - name: backend
-          image: ghcr.io/129duckflew/resume-builder/backend:9a599165c38532cb8e850a2706da874fd1c1b42a
+          image: ghcr.io/129duckflew/resume-builder/backend:69cc2a91c81b43624e4810ed44522ef6c053f7b2
           imagePullPolicy: IfNotPresent
           # GraalVM native 二进制，distroless 无 shell；ENTRYPOINT 已固化在镜像内。
           env:
