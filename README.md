@@ -216,9 +216,13 @@ GitHub (CI) → ghcr.io (images) → ArgoCD (GitOps CD) → k3s cluster
 |---|---|
 | Frontend (SPA) | http://resume.local |
 | API | http://resume.local/api/* |
-| Grafana | http://localhost:30000 |
-| ArgoCD UI | http://localhost:30080 |
+| Grafana | http://grafana.resume.local |
+| ArgoCD UI | http://argocd.resume.local |
 | Vault | `kubectl port-forward -n vault svc/vault 8200:8200` |
+
+`resume.local` 访问依赖 `k8s-start.sh` 建立的 `sudo kubectl port-forward svc/traefik 80:80`（后台进程），
+将 macOS 发出的 80 端口流量转发到 k3s 内的 Traefik。
+VM 内同步运行 `lb-port-forwarder` DaemonSet 作为备用转发通道。
 
 ### Directory Structure
 
@@ -239,8 +243,9 @@ k8s/app/                # ArgoCD-managed K8s manifests
 ├── backend/            # Deployment + Service
 ├── frontend/           # Deployment + Service
 ├── config/             # ConfigMap + Secret (placeholder)
-├── ingress/            # Traefik IngressRoute
-└── scaling/            # KEDA HTTPScaledObjects
+├── ingress/            # Traefik IngressRoute + lb-port-forwarder DaemonSet
+├── scaling/            # KEDA HTTPScaledObjects
+└── pdf-service/        # PDF render service (Chromium/Playwright)
 ```
 
 ### Scripts
