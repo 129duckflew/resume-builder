@@ -16,10 +16,16 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn -Pnative native:compile -DskipTests -B
 
+# 提取 zlib（distroless base 不包含 libz，但 native-image 编译出的二进制可能动态链接它）。
+FROM debian:bookworm-slim AS zlib
+RUN apt-get update && apt-get install -y --no-install-recommends zlib1g \
+    && rm -rf /var/lib/apt/lists/*
+
 # 运行时：distroless base（含 glibc，native-image 默认动态链接 glibc），无 shell。
 # Vault agent 注入的 application-secret.yml 通过 spring.config.import 读取（见 application.yml），
 # 不依赖 shell source。
 FROM gcr.io/distroless/base-debian12:nonroot
+COPY --from=zlib /usr/lib/aarch64-linux-gnu/libz.so.1* /usr/lib/aarch64-linux-gnu/
 WORKDIR /app
 COPY --from=build /app/target/resume-builder /app/application
 EXPOSE 8080
