@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: lb-port-forwarder
+  namespace: resume-builder
+  labels:
+    app: lb-port-forwarder
+spec:
+  selector:
+    matchLabels:
+      app: lb-port-forwarder
+  template:
+    metadata:
+      labels:
+        app: lb-port-forwarder
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+        - name: socat
+          image: alpine/socat:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+            - |
+              socat TCP-LISTEN:80,fork,reuseaddr,bind=0.0.0.0 TCP:traefik.kube-system.svc.cluster.local:80 &
+              socat TCP-LISTEN:443,fork,reuseaddr,bind=0.0.0.0 TCP:traefik.kube-system.svc.cluster.local:443 &
+              wait -n
+          resources:
+            requests:
+              cpu: 5m
+              memory: 8Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
