@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: resume-pdf-service
+  namespace: resume-builder
+  labels:
+    app: resume-pdf-service
+spec:
+  # 常驻 1 副本：Chromium 渲染是 CPU 密集操作，单实例足够；不接 KEDA。
+  replicas: 1
+  selector:
+    matchLabels:
+      app: resume-pdf-service
+  template:
+    metadata:
+      labels:
+        app: resume-pdf-service
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: pdf-service
+          image: ghcr.io/129duckflew/resume-builder/pdf-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8090
+          resources:
+            requests:
+              cpu: 500m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1536Mi
+          # JVM + Chromium 启动约 10-30s。
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8090
+            periodSeconds: 5
+            failureThreshold: 24 # 最长容忍 120s 启动时间
+            timeoutSeconds: 5
+          # liveness 只看进程活；browser 断开由 readiness 摘流。
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8090
+            periodSeconds: 15
+          # readiness 包含 browser 连接状态（BrowserHealthIndicator）。
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8090
+            periodSeconds: 5

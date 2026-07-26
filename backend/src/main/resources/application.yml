@@ -28,12 +28,12 @@ spring:
     baseline-version: 1
 
 app:
-  export:
-    chrome-path: /usr/bin/chromium
-    pdf:
-      timeout: 30000
   jwt:
     secret: ${JWT_SECRET:resume-builder-secret-for-dev-only-change-in-prod}
     expiration-ms: 86400000
   mcp:
     api-key: ${MCP_API_KEY:}
+
+pdf:
+  service:
+    url: ${PDF_SERVICE_URL:http://localhost:8090}

@@ -92,7 +92,9 @@ jobs:
 
   build-and-push:
     name: Build & Push Images
-    runs-on: ubuntu-latest
+    # arm64 单架构（集群跑在 lima/arm64）：整个 job 在 arm runner 上原生构建，
+    # backend 走 GraalVM native（Dockerfile.native），无 QEMU、无交叉编译。
+    runs-on: ubuntu-24.04-arm
     needs: [e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
@@ -111,24 +113,35 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build & push backend
+      - name: Build & push backend (GraalVM native)
         uses: docker/build-push-action@v6
         with:
           context: ./backend
+          file: ./backend/Dockerfile.native
           push: true
           provenance: false
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           tags: |
             ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
             ghcr.io/${{ github.repository }}/backend:latest
           cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/backend:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ github.repository }}/backend:buildcache,mode=max
+
+      - name: Build & push pdf-service
+        uses: docker/build-push-action@v6
+        with:
+          context: ./pdf-service
+          push: true
+          provenance: false
+          platforms: linux/arm64
+          tags: |
+            ghcr.io/${{ github.repository }}/pdf-service:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/pdf-service:latest
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository }}/pdf-service:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository }}/pdf-service:buildcache,mode=max
 
       - name: Build & push frontend
         uses: docker/build-push-action@v6
@@ -136,7 +149,7 @@ jobs:
           context: ./frontend
           push: true
           provenance: false
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/arm64
           tags: |
             ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}
             ghcr.io/${{ github.repository }}/frontend:latest
@@ -149,6 +162,8 @@ jobs:
             k8s/app/backend/deployment.yaml
           sed -i "s|image: ghcr.io/.*/resume-builder/frontend:.*|image: ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}|" \
             k8s/app/frontend/deployment.yaml
+          sed -i "s|image: ghcr.io/.*/resume-builder/pdf-service:.*|image: ghcr.io/${{ github.repository }}/pdf-service:${{ github.sha }}|" \
+            k8s/app/pdf-service/deployment.yaml
 
       - name: Commit & push updated manifests
         uses: stefanzweifel/git-auto-commit-action@v5

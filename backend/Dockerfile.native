@@ -1,0 +1,26 @@
+# Native 构建：GraalVM 编译阶段 + distroless 运行时（无 shell）。
+# 只在 arm64 runner 上构建（决策：单架构 arm64，无 QEMU、无交叉编译）。
+# native-image 编译需要 8GB+ 内存，不要在小内存 colima/docker 实例里构建。
+
+# 编译阶段：Maven + GraalVM（native-image 已内置于 GraalVM 发行版）
+FROM ghcr.io/graalvm/graalvm-community:25 AS build
+WORKDIR /app
+# 利用 Guice/microdnf 装 Maven 太啰嗦，直接用官方 maven 镜像里的 mvn 不可用（JDK 不匹配），
+# 这里下载 Maven 二进制。
+ARG MAVEN_VERSION=3.9.11
+RUN curl -fsSL "https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz" \
+      | tar -xz -C /opt \
+    && ln -s "/opt/apache-maven-${MAVEN_VERSION}/bin/mvn" /usr/local/bin/mvn
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY src ./src
+RUN mvn -Pnative native:compile -DskipTests -B
+
+# 运行时：distroless base（含 glibc，native-image 默认动态链接 glibc），无 shell。
+# Vault agent 注入的 application-secret.yml 通过 spring.config.import 读取（见 application.yml），
+# 不依赖 shell source。
+FROM gcr.io/distroless/base-debian12:nonroot
+WORKDIR /app
+COPY --from=build /app/target/resume-builder /app/application
+EXPOSE 8080
+ENTRYPOINT ["/app/application"]
