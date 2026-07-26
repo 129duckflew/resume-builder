@@ -20,7 +20,7 @@ spec:
         - name: ghcr-pull-secret
       containers:
         - name: pdf-service
-          image: ghcr.io/129duckflew/resume-builder/pdf-service:c4516b6cb76539e77fb04ce387c3a415bde1007c
+          image: ghcr.io/129duckflew/resume-builder/pdf-service:9a599165c38532cb8e850a2706da874fd1c1b42a
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8090
