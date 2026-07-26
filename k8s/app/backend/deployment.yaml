@@ -42,7 +42,7 @@ spec:
         - name: ghcr-pull-secret
       containers:
         - name: backend
-          image: ghcr.io/129duckflew/resume-builder/backend:69cc2a91c81b43624e4810ed44522ef6c053f7b2
+          image: ghcr.io/129duckflew/resume-builder/backend:ccf6867e50d2fda627c49499873a8574a8cd7b10
           imagePullPolicy: IfNotPresent
           # GraalVM native 二进制，distroless 无 shell；ENTRYPOINT 已固化在镜像内。
           envFrom:
