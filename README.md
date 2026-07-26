@@ -45,83 +45,44 @@ A modern, privacy-first resume builder that separates content from design. Write
 
 ```
 resume-builder/
-├── backend/                          # Spring Boot 4.1 / Java 25
-│   ├── pom.xml
-│   ├── Dockerfile                    # JVM image (compose/e2e)
-│   ├── Dockerfile.native             # GraalVM native image (k8s)
+├── backend/                     # Spring Boot 4.1 / Java 25
+│   ├── Dockerfile               # JVM image (compose/e2e)
+│   ├── Dockerfile.native        # GraalVM native image (k8s cold start < 1s)
 │   └── src/main/java/com/resume/
-│       ├── ResumeApplication.java
-│       ├── config/
-│       │   ├── SecurityConfig.java    # JWT + public path rules
-│       │   ├── JwtAuthFilter.java
-│       │   ├── JwtUtil.java
-│       │   ├── CorsConfig.java
-│       │   └── PlaywrightConfig.java  # Chromium singleton
-│       ├── controller/
-│       │   ├── AuthController.java             # /api/auth (register, login)
-│       │   ├── ResumeController.java           # CRUD + preview + export + import + styles
-│       │   ├── ThemeController.java            # theme list + CSS
-│       │   ├── SectionTemplateController.java  # section templates CRUD
-│       │   ├── ResumeVersionController.java    # version snapshots + restore
-│       │   ├── ShareLinkController.java        # share links + public /s/{token}
-│       │   ├── AiController.java               # AI rewrite + suggest
-│       │   ├── DesensitizeController.java      # desensitization rules
-│       │   └── UserSettingsController.java     # AI API key management
-│       ├── entity/                   # Resume, Theme, User, SectionTemplate, ResumeStyle, ResumeVersion, ShareLink, DesensitizeRule
-│       ├── repository/               # 8 JpaRepository interfaces
-│       ├── service/
-│       │   ├── ResumeService.java
-│       │   ├── ThemeService.java
-│       │   ├── MarkdownService.java            # md → HTML
-│       │   ├── ExportService.java              # HTML generation
-│       │   ├── SmartOnePageService.java        # Playwright auto-fit
-│       │   ├── PdfGenerationService.java       # Playwright PDF
-│       │   ├── SectionTemplateService.java
-│       │   ├── ResumeStyleService.java
-│       │   ├── JsonResumeConverter.java
-│       │   ├── ResumeVersionService.java
-│       │   ├── ShareLinkService.java
-│       │   ├── AiService.java
-│       │   ├── DesensitizeService.java
-│       │   └── UserService.java
-│       └── dto/                      # ResumeDTO, JsonResumeDTO
-├── frontend/                         # React 18 + Vite
-│   ├── package.json
-│   ├── vite.config.ts
-│   ├── tailwind.config.ts
-│   ├── nginx.conf                    # SPA + API proxy
-│   ├── Dockerfile                    # Node build → Nginx serve
+│       ├── config/              # Security (JWT), CORS, Playwright
+│       ├── controller/          # REST API: auth, resume, theme, AI, share, etc.
+│       ├── entity/              # JPA entities (8 domain classes)
+│       ├── repository/          # Spring Data JPA repositories
+│       ├── service/             # Business logic: resume, theme, PDF, AI, etc.
+│       ├── dto/                 # Data transfer objects (ResumeDTO, JsonResumeDTO)
+│       └── mcp/                 # MCP server (SSE + STDIO transports)
+├── frontend/                    # React 18 + TypeScript + Vite
+│   ├── nginx.conf               # SPA routing + /api proxy
+│   ├── Dockerfile               # Node build → Nginx serve
 │   └── src/
-│       ├── pages/
-│       │   ├── HomePage.tsx          # Resume list
-│       │   ├── EditorPage.tsx        # Three-column editor
-│       │   ├── PreviewPage.tsx       # Full A4 preview
-│       │   ├── LoginPage.tsx
-│       │   └── RegisterPage.tsx
-│       ├── components/
-│       │   ├── Layout.tsx
-│       │   ├── ui/                   # shadcn: button, dialog, toast, dropdown-menu, confirm-dialog
-│       │   └── editor/
-│       │       ├── SectionDragList.tsx
-│       │       ├── SortableSection.tsx
-│       │       ├── SectionTemplatePicker.tsx
-│       │       ├── ThemeSelector.tsx
-│       │       ├── ExportPanel.tsx
-│       │       ├── VersionPanel.tsx
-│       │       ├── SharePanel.tsx
-│       │       ├── AiAssistant.tsx
-│       │       └── DesensitizeSettings.tsx
-│       ├── stores/                   # authStore, resumeStore, historyStore
-│       ├── types/                    # resume.ts, sectionTemplate.ts, desensitize.ts
-│       ├── hooks/                    # useKeyboardShortcuts, useDraftBackup, use-toast
-│       ├── lib/                      # api.ts, markdown.ts, utils.ts
-│       └── e2e/                      # Playwright E2E tests (Docker, baseURL http://frontend:80)
-├── docker-compose.yml                # PostgreSQL + Backend + Frontend
-├── AGENTS.md                         # TDD development guidelines
-├── ROADMAP.md                        # Project roadmap
-├── progress.md                       # Development progress
+│       ├── pages/               # HomePage, EditorPage, PreviewPage, Login, Register
+│       ├── components/          # ui/ (shadcn), editor/ (drag-drop, panels, AI)
+│       ├── stores/              # Zustand: auth, resume, history
+│       ├── hooks/               # Keyboard shortcuts, draft backup, toast
+│       └── lib/                 # API client, markdown parser, utils
+├── pdf-service/                 # PDF render (Java + Playwright/Chromium)
+│   ├── Dockerfile               # GraalVM native image
+│   └── src/                     # Playwright config, HTML→PDF service
+├── k8s/app/                     # Kubernetes manifests (ArgoCD-managed)
+│   ├── backend/                 # Deployment + Service + Vault annotations
+│   ├── frontend/                # Deployment + Service
+│   ├── pdf-service/             # Deployment + Service
+│   ├── config/                  # ConfigMap (Spring config)
+│   ├── ingress/                 # Traefik IngressRoute + lb-port-forwarder DaemonSet
+│   └── scaling/                 # KEDA HTTPScaledObjects (scale-from-zero)
+├── infra/                       # Infrastructure as Code
+│   ├── terraform/               # Helm: KEDA, Vault, ArgoCD, Prometheus/Grafana
+│   └── argocd/                  # ArgoCD app-of-apps + per-component Applications
+├── scripts/                     # Automation: start, init, smoke-test, apply, delete
+├── docs/                        # Design specs and implementation plans
+├── docker-compose.yml           # Local dev (PostgreSQL + Backend + Frontend)
 ├── .env.example
-└── LICENSE
+└── AGENTS.md / ROADMAP.md / progress.md
 ```
 
 ## Quick Start (Local Development)
