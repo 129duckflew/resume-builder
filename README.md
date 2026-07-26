@@ -45,9 +45,10 @@ A modern, privacy-first resume builder that separates content from design. Write
 
 ```
 resume-builder/
-├── backend/                          # Spring Boot 3.2
+├── backend/                          # Spring Boot 4.1 / Java 25
 │   ├── pom.xml
-│   ├── Dockerfile                    # Playwright Java base image
+│   ├── Dockerfile                    # JVM image (compose/e2e)
+│   ├── Dockerfile.native             # GraalVM native image (k8s)
 │   └── src/main/java/com/resume/
 │       ├── ResumeApplication.java
 │       ├── config/
@@ -233,8 +234,7 @@ infra/
 │   ├── keda.tf         # KEDA + HTTP Add-on
 │   ├── monitoring.tf   # kube-prometheus-stack
 │   ├── argocd.tf       # ArgoCD
-│   ├── vault.tf        # HashiCorp Vault
-│   └── vault-auth.tf   # Vault K8s auth
+│   ├── vault.tf        # HashiCorp Vault (standalone + file storage + PVC)
 └── argocd/             # ArgoCD Application manifests
     ├── app-of-apps.yaml
     └── applications/   # Per-component Application CRDs
@@ -266,7 +266,7 @@ k8s/app/                # ArgoCD-managed K8s manifests
 
 | Deployment | Min | Max | Cold start | Scaledown |
 |---|---|---|---|---|
-| `resume-backend` | 0 | 3 | ~18s | 300s idle |
+| `resume-backend` | 0 | 3 | ~1s (GraalVM native) | 60s idle |
 | `resume-frontend` | 0 | 3 | ~8s | 300s idle |
 
 ### Infrastructure Management
