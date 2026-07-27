@@ -30,7 +30,7 @@ export default function EditorPage() {
   const { id } = useParams<{ id: string }>()
   const timerRef = useRef<ReturnType<typeof setTimeout>>()
   const previewSeqRef = useRef(0)
-  const { currentResume, currentThemeCss, loading, fetchResume, updateResume, setContent } =
+  const { currentResume, loading, fetchResume, updateResume, setContent } =
     useResumeStore()
   const pushState = useHistoryStore((s) => s.pushState)
   const reset = useHistoryStore((s) => s.reset)
@@ -145,15 +145,8 @@ export default function EditorPage() {
     )
   }
 
-  const previewContent = desensitize
-    ? applyDesensitize(currentResume.content)
-    : currentResume.content
-
-  const clientPreview = currentResume.content
-    ? `<style>${currentThemeCss}</style><div class="resume-page">${renderMarkdown(previewContent)}</div>`
-    : ''
-
-  const displayHtml = previewHtml || clientPreview
+	  const previewLoading = !currentResume.content || (currentResume.content && !previewHtml)
+	  const displayHtml = previewHtml
 
   return (
     <FadeIn>
@@ -220,15 +213,15 @@ export default function EditorPage() {
         <Panel defaultSize={35} minSize={15} data-panel>
           <div className="h-full bg-gray-100 overflow-y-auto flex justify-center p-2">
             <div className="shadow-lg bg-white w-[210mm] min-h-[297mm] self-start">
-              {displayHtml ? (
-                <div
-                  dangerouslySetInnerHTML={{ __html: displayHtml }}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground text-sm p-8">
-                  Start typing markdown to see preview
-                </div>
-              )}
+	              {previewLoading ? (
+	                <div className="flex items-center justify-center h-full p-8">
+	                  <Skeleton className="h-6 w-48" />
+	                </div>
+	              ) : (
+	                <div
+	                  dangerouslySetInnerHTML={{ __html: displayHtml }}
+	                />
+	              )}
             </div>
           </div>
         </Panel>
@@ -268,33 +261,3 @@ export default function EditorPage() {
   )
 }
 
-const DESENSITIZE_RULES: { pattern: RegExp; replacement: string }[] = [
-  { pattern: /(1[3-9]\d)\d{4}(\d{4})/g, replacement: '$1****$2' },
-  { pattern: /(\w)[^@\s]*@/g, replacement: '$1***@' },
-]
-
-function applyDesensitize(content: string): string {
-  let result = content
-  for (const rule of DESENSITIZE_RULES) {
-    result = result.replace(rule.pattern, rule.replacement)
-  }
-  return result
-}
-
-function renderMarkdown(md: string): string {
-  let html = md
-    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^- (.+)$/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
-    .replace(/\|/g, '<span class="separator">|</span>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/^(.+)$/gm, (match) => {
-      if (match.startsWith('<')) return match
-      return `<p>${match}</p>`
-    })
-  return html
-}

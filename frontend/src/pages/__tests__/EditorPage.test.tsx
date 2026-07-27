@@ -262,9 +262,8 @@ describe('EditorPage preview race condition', () => {
     deferredResolve[1]('<div class="resume-page"><h1>Version A html</h1></div>')
     await new Promise(r => setTimeout(r, 100))
 
-    // DOM should NOT show stale A content
-    const previewDiv = document.querySelector('.resume-page')
-    expect(previewDiv?.innerHTML).not.toContain('Version A html')
+    // DOM should NOT show stale A content — no preview rendered yet
+    expect(document.querySelector('.resume-page')).toBeNull()
 
     // Resolve latest response B (should be applied)
     deferredResolve[2]('<div class="resume-page"><h1>Version B html</h1></div>')
