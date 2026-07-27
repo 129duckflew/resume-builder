@@ -28,7 +28,7 @@ Domain glossary for the resume-builder project. Defines the ubiquitous language 
 
 **Export** — The pipeline that converts a Resume into a rendered output format: HTML preview, HTML download, or PDF. Orchestrated by ExportService.
 
-**Preview** — A live, A4-sized rendering of the current Resume shown in the editor's right panel. Generated server-side via `POST /api/resumes/{id}/preview` and displayed in an iframe. Falls back to client-side regex Markdown rendering if the server is slow.
+**Preview** — A live, A4-sized rendering of the current Resume shown in the editor's right panel. Generated exclusively server-side via `POST /api/resumes/{id}/preview`. The frontend shows a loading skeleton while the server response is pending — no client-side Markdown rendering.
 
 **Smart One-Page** — An iterative algorithm (SmartOnePageService) that measures a preview's scroll height (via the PDF service) and progressively reduces fontSize/lineHeight/spacing until the content fits within one A4 page. Used in both preview and export flows.
 
@@ -47,6 +47,10 @@ Domain glossary for the resume-builder project. Defines the ubiquitous language 
 **CssSanitizer** — Strips dangerous CSS constructs from user-submitted theme CSS: `@import`, `expression()`, `javascript:` URIs, and escape sequences.
 
 **VariableDeclaration** — A descriptor for a customizable CSS property within a Theme. Has name, type (color|select|slider|text), defaultValue, label, group, and optional options array for select-type variables. Stored as JSON in the Theme's `variablesSchema` column.
+
+**base.css** — A shared structural CSS template (`backend/src/main/resources/templates/base.css`) used by all built-in themes. Contains the full set of resume layout selectors, each referencing CSS custom properties via `var()`. At render time, ExportService injects per-theme `variablesSchema` defaults as a `:root {}` block, then appends base.css. Custom (user-created) themes may still supply their own `css_content`.
+
+**Store Architecture** — Frontend state is split into two Zustand stores: `resumeStore` (resume list, currentResume, CRUD, setContent/setTitle) and `themeStore` (themes, theme CSS, variables, custom style overrides, theme CRUD). `resumeStore.fetchResume` bridges into `themeStore` to load theme CSS and saved style on resume load; `themeStore.setTheme` bridges into `resumeStore` to update the resume's themeId.
 
 ---
 
