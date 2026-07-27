@@ -1,4 +1,4 @@
-import { useResumeStore } from '@/stores/resumeStore'
+import { useThemeStore } from '@/stores/themeStore'
 import { Button } from '@/components/ui/button'
 
 const FONT_OPTIONS = [
@@ -23,7 +23,7 @@ export default function ThemeCustomizer() {
     customVariables,
     updateCustomVariable,
     resetCustomVariables,
-  } = useResumeStore()
+  } = useThemeStore()
 
   if (!currentThemeVariables || currentThemeVariables.length === 0) return null
 

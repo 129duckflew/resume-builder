@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ThemeCustomizer from '@/components/editor/ThemeCustomizer'
 
 const mockUpdateCustomVariable = vi.fn()
 const mockResetCustomVariables = vi.fn()
 
-vi.mock('@/stores/resumeStore', () => ({
-  useResumeStore: vi.fn((selector?: any) => {
+vi.mock('@/stores/themeStore', () => ({
+  useThemeStore: vi.fn((selector?: any) => {
     const state = {
       currentThemeVariables: [
         { name: '--primary-color', type: 'color', defaultValue: '#2563eb', label: 'Primary Color', group: 'Colors' },
@@ -60,7 +60,6 @@ describe('ThemeCustomizer', () => {
 
   it('calls updateCustomVariable when typing a new value', async () => {
     render(<ThemeCustomizer />)
-    // Find the color text input for text-color (default, no override)
     const sizeInputs = screen.getAllByDisplayValue('10.5pt')
     expect(sizeInputs.length).toBeGreaterThanOrEqual(1)
     const input = sizeInputs[0]

@@ -9,8 +9,8 @@ const mockCreateTheme = vi.fn()
 const mockUpdateTheme = vi.fn()
 const mockDeleteTheme = vi.fn()
 
-vi.mock('@/stores/resumeStore', () => ({
-  useResumeStore: vi.fn((selector?: any) => {
+vi.mock('@/stores/themeStore', () => ({
+  useThemeStore: vi.fn((selector?: any) => {
     const state = {
       themes: [
         { id: 'classic', name: 'Classic', description: '', builtIn: true, layout: 'single' },
@@ -22,13 +22,19 @@ vi.mock('@/stores/resumeStore', () => ({
         { id: 'compact', name: 'Compact', description: '', builtIn: true, layout: 'single' },
         { id: 'user-1-custom', name: 'My Custom', description: '', builtIn: false, layout: 'sidebar-right', userId: 1 },
       ],
-      currentResume: { id: '1', themeId: 'classic' },
       fetchThemes: mockFetchThemes,
       setTheme: mockSetTheme,
       createTheme: mockCreateTheme,
       updateTheme: mockUpdateTheme,
       deleteTheme: mockDeleteTheme,
     }
+    return selector ? selector(state) : state
+  }),
+}))
+
+vi.mock('@/stores/resumeStore', () => ({
+  useResumeStore: vi.fn((selector?: any) => {
+    const state = { currentResume: { id: '1', themeId: 'classic' } }
     return selector ? selector(state) : state
   }),
 }))
@@ -51,10 +57,8 @@ describe('ThemeSelector card grid', () => {
     render(<ThemeSelector />)
     await userEvent.click(screen.getByRole('button'))
     expect(screen.getByRole('dialog', { name: 'Choose a theme' })).toBeTruthy()
-    // Should show layout group labels
     expect(screen.getByText('Single')).toBeTruthy()
     expect(screen.getByText('Two-Column')).toBeTruthy()
-    // Should show theme names
     expect(screen.getByText('Modern')).toBeTruthy()
     expect(screen.getByText('Sidebar')).toBeTruthy()
     expect(screen.getByText('Stack Overflow')).toBeTruthy()
@@ -93,7 +97,6 @@ describe('ThemeSelector card grid', () => {
     render(<ThemeSelector />)
     await userEvent.click(screen.getByRole('button'))
     await userEvent.click(screen.getByText('Create Theme'))
-    // Dialog should open with title
     expect(screen.getByText('Create Theme')).toBeTruthy()
   })
 })

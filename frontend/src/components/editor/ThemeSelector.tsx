@@ -4,6 +4,7 @@ import {
   Pencil, Trash2, X,
 } from 'lucide-react'
 import { useResumeStore } from '@/stores/resumeStore'
+import { useThemeStore } from '@/stores/themeStore'
 import type { Theme, ThemeDTO } from '@/types/resume'
 import { Button } from '@/components/ui/button'
 import {
@@ -40,7 +41,8 @@ function LayoutIcon({ layout }: { layout: string }) {
 }
 
 export default function ThemeSelector() {
-  const { themes, currentResume, fetchThemes, setTheme, createTheme, updateTheme, deleteTheme } = useResumeStore()
+  const { currentResume } = useResumeStore()
+  const { themes, fetchThemes, setTheme, createTheme, updateTheme, deleteTheme } = useThemeStore()
   const currentName = themes.find((t) => t.id === currentResume?.themeId)?.name ?? 'Theme'
 
   const [open, setOpen] = useState(false)

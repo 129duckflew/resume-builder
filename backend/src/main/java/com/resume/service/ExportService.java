@@ -8,7 +8,10 @@ import com.resume.entity.ResumeStyle;
 import com.resume.entity.Theme;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -21,6 +24,8 @@ public class ExportService {
     private final ResumeStyleService resumeStyleService;
     private final LayoutSplitter layoutSplitter;
     private final ObjectMapper objectMapper = new tools.jackson.databind.json.JsonMapper();
+
+    private volatile String baseCssCache;
 
     public ExportService(MarkdownService markdownService, ThemeService themeService,
                          DesensitizeService desensitizeService,
@@ -44,13 +49,22 @@ public class ExportService {
         }
         Theme theme = themeService.findById(resume.getThemeId())
                 .orElse(themeService.findById("classic").orElse(null));
-        String css = theme != null ? theme.getCssContent() : "";
         String layout = theme != null && theme.getLayout() != null ? theme.getLayout() : "single";
 
-        // Build :root CSS variables block
         String rootVars = buildRootVariablesBlock(resume);
+        String themeDefaults = buildThemeDefaultsBlock(theme);
 
-        String cssBlock = rootVars != null ? rootVars + "\n" + css : css;
+        String css;
+        if (theme != null && theme.getCssContent() != null && !theme.getCssContent().isBlank()) {
+            css = theme.getCssContent();
+        } else {
+            css = getBaseCss();
+        }
+
+        StringBuilder cssBlock = new StringBuilder();
+        if (rootVars != null) cssBlock.append(rootVars).append("\n");
+        if (themeDefaults != null) cssBlock.append(themeDefaults).append("\n");
+        cssBlock.append(css);
 
         String bodyHtml = buildLayoutHtml(content, layout);
 
@@ -69,7 +83,7 @@ public class ExportService {
 %s
 </body>
 </html>
-""".formatted(escapeHtml(resume.getTitle()), cssBlock, bodyHtml);
+""".formatted(escapeHtml(resume.getTitle()), cssBlock.toString(), bodyHtml);
     }
 
     /**
@@ -212,6 +226,47 @@ public class ExportService {
      */
     private boolean isValidCssVarName(String key) {
         return key != null && key.matches("--[a-zA-Z0-9_-]+");
+    }
+
+    /**
+     * Build a :root {} block from the theme's variables_schema defaults.
+     * These provide the base values for CSS custom properties before user overrides.
+     */
+    private String buildThemeDefaultsBlock(Theme theme) {
+        if (theme == null || theme.getVariablesSchema() == null) return null;
+        try {
+            List<Map<String, Object>> vars = objectMapper.readValue(
+                    theme.getVariablesSchema(),
+                    new TypeReference<List<Map<String, Object>>>() {});
+            if (vars == null || vars.isEmpty()) return null;
+            StringBuilder sb = new StringBuilder(":root {\n");
+            for (Map<String, Object> v : vars) {
+                String name = (String) v.get("name");
+                String defaultValue = (String) v.get("default");
+                if (name != null && defaultValue != null && isValidCssVarName(name)) {
+                    sb.append("    ").append(name).append(": ")
+                            .append(sanitizeCssValue(defaultValue)).append(";\n");
+                }
+            }
+            sb.append("}");
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private String getBaseCss() {
+        if (baseCssCache != null) return baseCssCache;
+        synchronized (this) {
+            if (baseCssCache != null) return baseCssCache;
+            try (var in = getClass().getClassLoader().getResourceAsStream("templates/base.css")) {
+                if (in == null) return "";
+                baseCssCache = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                return baseCssCache;
+            } catch (IOException e) {
+                return "";
+            }
+        }
     }
 
     private String escapeHtml(String text) {
