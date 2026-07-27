@@ -3,11 +3,10 @@ package com.resume.controller;
 import com.resume.dto.ThemeDTO;
 import com.resume.dto.VariableDeclaration;
 import com.resume.entity.Theme;
+import com.resume.config.CurrentUserId;
 import com.resume.service.ThemeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,8 +22,7 @@ public class ThemeController {
     }
 
     @GetMapping
-    public List<Theme> list() {
-        Long userId = getCurrentUserId();
+    public List<Theme> list(@CurrentUserId Long userId) {
         return themeService.findAll(userId);
     }
 
@@ -52,8 +50,7 @@ public class ThemeController {
     }
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody ThemeDTO dto) {
-        Long userId = getCurrentUserId();
+    public ResponseEntity<?> create(@RequestBody ThemeDTO dto, @CurrentUserId Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -66,8 +63,8 @@ public class ThemeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable String id, @RequestBody ThemeDTO dto) {
-        Long userId = getCurrentUserId();
+    public ResponseEntity<?> update(@PathVariable String id, @RequestBody ThemeDTO dto,
+                                      @CurrentUserId Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -84,8 +81,7 @@ public class ThemeController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable String id) {
-        Long userId = getCurrentUserId();
+    public ResponseEntity<?> delete(@PathVariable String id, @CurrentUserId Long userId) {
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -99,23 +95,5 @@ public class ThemeController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-    }
-
-    private Long getCurrentUserId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()
-                || "anonymousUser".equals(authentication.getPrincipal())) {
-            return null;
-        }
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof String) {
-            String p = (String) principal;
-            try {
-                return Long.parseLong(p.split(":", 2)[0]);
-            } catch (Exception e) {
-                return null;
-            }
-        }
-        return null;
     }
 }

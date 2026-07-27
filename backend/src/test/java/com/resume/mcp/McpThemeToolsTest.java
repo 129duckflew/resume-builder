@@ -60,14 +60,14 @@ class McpThemeToolsTest {
     }
 
     @Test
-    void updateTheme_shouldDelegateToUpdateDirect() {
+    void updateTheme_shouldDelegateToUpdateCustom() {
         Theme expected = new Theme();
         expected.setId("classic");
-        when(themeService.updateDirect(eq("classic"), any(ThemeDTO.class))).thenReturn(expected);
+        when(themeService.updateCustom(eq("classic"), any(ThemeDTO.class), eq(1L))).thenReturn(expected);
 
-        Theme result = tools.updateTheme("classic", "New Classic", null, "body {}", null, null);
+        Theme result = tools.updateTheme("classic", 1L, "New Classic", null, "body {}", null, null);
 
         assertThat(result.getId()).isEqualTo("classic");
-        verify(themeService).updateDirect(eq("classic"), any(ThemeDTO.class));
+        verify(themeService).updateCustom(eq("classic"), any(ThemeDTO.class), eq(1L));
     }
 }

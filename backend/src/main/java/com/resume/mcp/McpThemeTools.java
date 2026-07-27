@@ -33,6 +33,7 @@ public class McpThemeTools {
     @Tool(name = "update_theme", description = "Update a theme (including built-in themes). Only provided fields are changed.")
     public Theme updateTheme(
             @ToolParam(description = "Theme ID") String id,
+            @ToolParam(description = "User ID of the theme owner") Long userId,
             @ToolParam(description = "New theme name", required = false) String name,
             @ToolParam(description = "New description", required = false) String description,
             @ToolParam(description = "CSS content", required = false) String cssContent,
@@ -44,6 +45,6 @@ public class McpThemeTools {
         dto.setCssContent(cssContent);
         dto.setLayout(layout);
         dto.setVariablesSchema(variablesSchema);
-        return themeService.updateDirect(id, dto);
+        return themeService.updateCustom(id, dto, userId);
     }
 }

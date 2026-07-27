@@ -56,6 +56,7 @@ public class McpResumeTools {
     @Tool(name = "update_resume", description = "Update a resume partially. Only provided fields are changed.")
     public Resume updateResume(
             @ToolParam(description = "Resume ID") String id,
+            @ToolParam(description = "User ID of the resume owner") Long userId,
             @ToolParam(description = "New title", required = false) String title,
             @ToolParam(description = "New markdown content", required = false) String content,
             @ToolParam(description = "New theme ID", required = false) String themeId,
@@ -69,13 +70,14 @@ public class McpResumeTools {
         dto.setFontSize(fontSize);
         dto.setLineHeight(lineHeight);
         dto.setSectionSpacing(sectionSpacing);
-        return resumeService.updateDirect(id, dto);
+        return resumeService.update(id, dto, userId);
     }
 
     @Tool(name = "delete_resume", description = "Delete a resume permanently")
     public void deleteResume(
-            @ToolParam(description = "Resume ID") String id) {
-        resumeService.deleteDirect(id);
+            @ToolParam(description = "Resume ID") String id,
+            @ToolParam(description = "User ID of the resume owner") Long userId) {
+        resumeService.delete(id, userId);
     }
 
     @Tool(name = "list_versions", description = "List all version snapshots for a resume")
@@ -94,9 +96,10 @@ public class McpResumeTools {
     @Tool(name = "restore_version", description = "Restore a previous version as the current resume content")
     public Resume restoreVersion(
             @ToolParam(description = "Resume ID") String resumeId,
-            @ToolParam(description = "Version number to restore") int version) {
+            @ToolParam(description = "Version number to restore") int version,
+            @ToolParam(description = "User ID of the resume owner") Long userId) {
         Resume restored = versionService.restoreVersion(resumeId, version);
-        return resumeService.restoreFromVersionDirect(restored);
+        return resumeService.restoreFromVersion(restored, userId);
     }
 
     @Tool(name = "diff_versions", description = "Compare two versions and return a structured diff")

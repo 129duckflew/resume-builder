@@ -2,7 +2,7 @@ package com.resume.controller;
 
 import com.resume.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.resume.config.CurrentUserId;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -18,20 +18,15 @@ public class UserSettingsController {
     }
 
     @GetMapping("/api-key")
-    public ResponseEntity<Map<String, String>> getApiKey() {
-        String key = userService.getApiKey(currentUserId());
+    public ResponseEntity<Map<String, String>> getApiKey(@CurrentUserId Long userId) {
+        String key = userService.getApiKey(userId);
         return ResponseEntity.ok(Map.of("apiKey", key != null ? key : ""));
     }
 
     @PutMapping("/api-key")
-    public ResponseEntity<Void> updateApiKey(@RequestBody Map<String, String> body) {
-        userService.updateApiKey(currentUserId(), body.getOrDefault("apiKey", ""));
+    public ResponseEntity<Void> updateApiKey(@RequestBody Map<String, String> body,
+                                               @CurrentUserId Long userId) {
+        userService.updateApiKey(userId, body.getOrDefault("apiKey", ""));
         return ResponseEntity.ok().build();
-    }
-
-    private Long currentUserId() {
-        String principal = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        return Long.parseLong(principal.split(":", 2)[0]);
     }
 }

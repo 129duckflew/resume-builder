@@ -6,7 +6,7 @@ import com.resume.entity.ResumeVersion;
 import com.resume.service.ResumeService;
 import com.resume.service.ResumeVersionService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.resume.config.CurrentUserId;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,15 +25,16 @@ public class ResumeVersionController {
     }
 
     @GetMapping
-    public List<ResumeVersion> list(@PathVariable String resumeId) {
-        resumeService.findByIdAndUserId(resumeId, currentUserId())
+    public List<ResumeVersion> list(@PathVariable String resumeId, @CurrentUserId Long userId) {
+        resumeService.findByIdAndUserId(resumeId, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         return versionService.getVersions(resumeId);
     }
 
     @GetMapping("/{version}")
-    public ResumeVersion get(@PathVariable String resumeId, @PathVariable int version) {
-        resumeService.findByIdAndUserId(resumeId, currentUserId())
+    public ResumeVersion get(@PathVariable String resumeId, @PathVariable int version,
+                                @CurrentUserId Long userId) {
+        resumeService.findByIdAndUserId(resumeId, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         return versionService.getVersion(resumeId, version);
     }
@@ -41,11 +42,12 @@ public class ResumeVersionController {
     @GetMapping("/diff")
     public ResponseEntity<?> diff(@PathVariable String resumeId,
                                    @RequestParam int a,
-                                   @RequestParam int b) {
+                                   @RequestParam int b,
+                                   @CurrentUserId Long userId) {
         if (a < 1 || b < 1) {
             return ResponseEntity.badRequest().body(Map.of("error", "Version numbers must be >= 1"));
         }
-        if (resumeService.findByIdAndUserId(resumeId, currentUserId()).isEmpty()) {
+        if (resumeService.findByIdAndUserId(resumeId, userId).isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         if (a == b) {
@@ -56,17 +58,11 @@ public class ResumeVersionController {
     }
 
     @PostMapping("/{version}/restore")
-    public Resume restore(@PathVariable String resumeId, @PathVariable int version) {
-        Long userId = currentUserId();
+    public Resume restore(@PathVariable String resumeId, @PathVariable int version,
+                            @CurrentUserId Long userId) {
         resumeService.findByIdAndUserId(resumeId, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         Resume restored = versionService.restoreVersion(resumeId, version);
         return resumeService.restoreFromVersion(restored, userId);
-    }
-
-    private Long currentUserId() {
-        String principal = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        return Long.parseLong(principal.split(":", 2)[0]);
     }
 }
