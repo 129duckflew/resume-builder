@@ -53,3 +53,17 @@ rtk pip list            rtk pnpm install        rtk npm run <script>
 - For debugging, use raw command without rtk prefix
 - `rtk proxy <cmd>` runs command without filtering but tracks usage
 <!-- /headroom:rtk-instructions -->
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues (repo: `129duckflew/resume-builder`, uses `gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Uses the five canonical defaults: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.
