@@ -105,7 +105,7 @@ export default function EditorPage() {
         const html = await resumeApi.preview(id, smartOnePage, desensitize, currentResume.content)
         if (previewSeqRef.current === seq) setPreviewHtml(html)
       } catch {
-        // fallback to clientPreview
+        // preview will show loading state until server responds
       }
     }, 500)
     return () => clearTimeout(timer)
