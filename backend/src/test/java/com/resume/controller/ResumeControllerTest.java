@@ -7,7 +7,7 @@ import com.resume.entity.Resume;
 import com.resume.entity.ResumeStyle;
 import com.resume.service.ExportService;
 import com.resume.config.JwtUtil;
-import com.resume.service.PdfGenerationService;
+import com.resume.service.PdfServiceClient;
 import com.resume.service.ResumeService;
 import com.resume.service.JsonResumeConverter;
 import com.resume.service.ResumeStyleService;
@@ -51,7 +51,7 @@ class ResumeControllerTest {
     private SmartOnePageService smartOnePageService;
 
     @MockitoBean
-    private PdfGenerationService pdfGenerationService;
+    private PdfServiceClient pdfServiceClient;
 
     @MockitoBean
     private JwtUtil jwtUtil;
@@ -288,7 +288,7 @@ class ResumeControllerTest {
         adjustment.fitsOnOnePage = true;
         when(smartOnePageService.calculateOptimalSettings(any(), anyString()))
                 .thenReturn(adjustment);
-        when(pdfGenerationService.isAvailable()).thenReturn(false);
+        when(pdfServiceClient.isAvailable()).thenReturn(false);
 
         mockMvc.perform(post("/api/resumes/1/export/pdf"))
                 .andExpect(status().isServiceUnavailable());
@@ -307,8 +307,8 @@ class ResumeControllerTest {
         adjustment.fitsOnOnePage = true;
         when(smartOnePageService.calculateOptimalSettings(any(), anyString()))
                 .thenReturn(adjustment);
-        when(pdfGenerationService.isAvailable()).thenReturn(true);
-        when(pdfGenerationService.generatePdf(anyString()))
+        when(pdfServiceClient.isAvailable()).thenReturn(true);
+        when(pdfServiceClient.generatePdf(anyString()))
                 .thenReturn("PDF DATA".getBytes());
 
         mockMvc.perform(post("/api/resumes/1/export/pdf"))
@@ -326,8 +326,8 @@ class ResumeControllerTest {
 
         when(resumeService.findByIdAndUserId("1", userId)).thenReturn(Optional.of(resume));
         when(exportService.generateHtml(resume, false, userId)).thenReturn("<h1>Hello</h1>");
-        when(pdfGenerationService.isAvailable()).thenReturn(true);
-        when(pdfGenerationService.generatePdf(anyString()))
+        when(pdfServiceClient.isAvailable()).thenReturn(true);
+        when(pdfServiceClient.generatePdf(anyString()))
                 .thenReturn("PDF DATA".getBytes());
 
         mockMvc.perform(post("/api/resumes/1/export/pdf?smartOnePage=false"))

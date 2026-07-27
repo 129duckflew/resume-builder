@@ -8,7 +8,7 @@ import com.resume.entity.Resume;
 import com.resume.entity.ResumeStyle;
 import com.resume.service.ExportService;
 import com.resume.service.JsonResumeConverter;
-import com.resume.service.PdfGenerationService;
+import com.resume.service.PdfServiceClient;
 import com.resume.service.ResumeService;
 import com.resume.service.ResumeStyleService;
 import com.resume.service.SmartOnePageService;
@@ -32,19 +32,19 @@ public class ResumeController {
     private final ResumeService resumeService;
     private final ExportService exportService;
     private final SmartOnePageService smartOnePageService;
-    private final PdfGenerationService pdfGenerationService;
+    private final PdfServiceClient pdfServiceClient;
     private final JsonResumeConverter jsonResumeConverter;
     private final ResumeStyleService resumeStyleService;
 
     public ResumeController(ResumeService resumeService, ExportService exportService,
                             SmartOnePageService smartOnePageService,
-                            PdfGenerationService pdfGenerationService,
+                            PdfServiceClient pdfServiceClient,
                             JsonResumeConverter jsonResumeConverter,
                             ResumeStyleService resumeStyleService) {
         this.resumeService = resumeService;
         this.exportService = exportService;
         this.smartOnePageService = smartOnePageService;
-        this.pdfGenerationService = pdfGenerationService;
+        this.pdfServiceClient = pdfServiceClient;
         this.jsonResumeConverter = jsonResumeConverter;
         this.resumeStyleService = resumeStyleService;
     }
@@ -148,14 +148,14 @@ public class ResumeController {
             html = SmartOnePageService.injectCssVariables(html, adjustment);
         }
 
-        if (!pdfGenerationService.isAvailable()) {
+        if (!pdfServiceClient.isAvailable()) {
             return ResponseEntity.status(503)
                     .body(java.util.Map.of("error",
                             "PDF service is unavailable. Please try again later."));
         }
 
         try {
-            byte[] pdfBytes = pdfGenerationService.generatePdf(html);
+            byte[] pdfBytes = pdfServiceClient.generatePdf(html);
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION,
                             "attachment; filename=\"resume.pdf\"")
