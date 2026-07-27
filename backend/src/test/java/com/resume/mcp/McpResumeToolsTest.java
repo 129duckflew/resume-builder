@@ -89,22 +89,22 @@ class McpResumeToolsTest {
     }
 
     @Test
-    void updateResume_shouldDelegateToUpdateDirect() {
+    void updateResume_shouldDelegateToUpdate() {
         Resume expected = new Resume();
         expected.setId("abc");
-        when(resumeService.updateDirect(eq("abc"), any(ResumeDTO.class))).thenReturn(expected);
+        when(resumeService.update(eq("abc"), any(ResumeDTO.class), eq(1L))).thenReturn(expected);
 
-        Resume result = tools.updateResume("abc", "New Title", null, null, null, null, null);
+        Resume result = tools.updateResume("abc", 1L, "New Title", null, null, null, null, null);
 
         assertThat(result.getId()).isEqualTo("abc");
-        verify(resumeService).updateDirect(eq("abc"), any(ResumeDTO.class));
+        verify(resumeService).update(eq("abc"), any(ResumeDTO.class), eq(1L));
     }
 
     @Test
-    void deleteResume_shouldDelegateToDeleteDirect() {
-        tools.deleteResume("abc");
+    void deleteResume_shouldDelegateToDelete() {
+        tools.deleteResume("abc", 1L);
 
-        verify(resumeService).deleteDirect("abc");
+        verify(resumeService).delete("abc", 1L);
     }
 
     @Test
@@ -128,15 +128,16 @@ class McpResumeToolsTest {
     }
 
     @Test
-    void restoreVersion_shouldCallRestoreFromVersionDirect() {
+    void restoreVersion_shouldCallRestoreFromVersion() {
         Resume restored = new Resume();
         restored.setId("r1");
         when(versionService.restoreVersion("r1", 2)).thenReturn(restored);
-        when(resumeService.restoreFromVersionDirect(restored)).thenReturn(restored);
+        when(resumeService.restoreFromVersion(restored, 1L)).thenReturn(restored);
 
-        Resume result = tools.restoreVersion("r1", 2);
+        Resume result = tools.restoreVersion("r1", 2, 1L);
 
         assertThat(result.getId()).isEqualTo("r1");
+        verify(resumeService).restoreFromVersion(restored, 1L);
     }
 
     @Test

@@ -8,7 +8,6 @@ import com.resume.dto.VariableDeclaration;
 import com.resume.entity.Theme;
 import com.resume.repository.ThemeRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -102,27 +101,6 @@ public class ThemeService {
         if (dto.getDescription() != null) {
             theme.setDescription(dto.getDescription());
         }
-        if (dto.getLayout() != null) {
-            if (!VALID_LAYOUTS.contains(dto.getLayout())) {
-                throw new IllegalArgumentException("Invalid layout: " + dto.getLayout());
-            }
-            theme.setLayout(dto.getLayout());
-        }
-        if (dto.getCssContent() != null) {
-            theme.setCssContent(CssSanitizer.sanitize(dto.getCssContent()));
-        }
-        if (dto.getVariablesSchema() != null) {
-            theme.setVariablesSchema(dto.getVariablesSchema());
-        }
-        return themeRepository.save(theme);
-    }
-
-    @Transactional
-    public Theme updateDirect(String id, ThemeDTO dto) {
-        Theme theme = themeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Theme not found: " + id));
-        if (dto.getName() != null) theme.setName(dto.getName().trim());
-        if (dto.getDescription() != null) theme.setDescription(dto.getDescription());
         if (dto.getLayout() != null) {
             if (!VALID_LAYOUTS.contains(dto.getLayout())) {
                 throw new IllegalArgumentException("Invalid layout: " + dto.getLayout());

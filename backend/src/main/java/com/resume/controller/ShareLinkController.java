@@ -6,7 +6,7 @@ import com.resume.service.ExportService;
 import com.resume.service.ResumeService;
 import com.resume.service.ShareLinkService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.resume.config.CurrentUserId;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,16 +29,17 @@ public class ShareLinkController {
 
     // Authenticated: manage share links for own resume
     @GetMapping("/api/resumes/{resumeId}/shares")
-    public List<ShareLink> list(@PathVariable String resumeId) {
-        resumeService.findByIdAndUserId(resumeId, currentUserId())
+    public List<ShareLink> list(@PathVariable String resumeId, @CurrentUserId Long userId) {
+        resumeService.findByIdAndUserId(resumeId, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         return shareLinkService.getLinks(resumeId);
     }
 
     @PostMapping("/api/resumes/{resumeId}/shares")
     public ShareLink create(@PathVariable String resumeId,
-                            @RequestBody(required = false) Map<String, Boolean> body) {
-        resumeService.findByIdAndUserId(resumeId, currentUserId())
+                            @RequestBody(required = false) Map<String, Boolean> body,
+                            @CurrentUserId Long userId) {
+        resumeService.findByIdAndUserId(resumeId, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         boolean desensitize = body != null && Boolean.TRUE.equals(body.get("desensitize"));
         return shareLinkService.createLink(resumeId, desensitize);
@@ -50,7 +51,6 @@ public class ShareLinkController {
         return ResponseEntity.noContent().build();
     }
 
-    // Public: view shared resume
     @GetMapping("/s/{token}")
     public ResponseEntity<String> viewPublic(@PathVariable String token) {
         ShareLink link = shareLinkService.getPublicLink(token);
@@ -62,11 +62,5 @@ public class ShareLinkController {
         return ResponseEntity.ok()
                 .header("Content-Type", "text/html; charset=utf-8")
                 .body(html);
-    }
-
-    private Long currentUserId() {
-        String principal = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        return Long.parseLong(principal.split(":", 2)[0]);
     }
 }

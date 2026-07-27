@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.resume.config.CurrentUserId;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,30 +50,30 @@ public class ResumeController {
     }
 
     @GetMapping
-    public List<Resume> list() {
-        return resumeService.findByUserId(currentUserId());
+    public List<Resume> list(@CurrentUserId Long userId) {
+        return resumeService.findByUserId(userId);
     }
 
     @PostMapping
-    public Resume create(@Valid @RequestBody ResumeDTO dto) {
-        return resumeService.create(dto, currentUserId());
+    public Resume create(@Valid @RequestBody ResumeDTO dto, @CurrentUserId Long userId) {
+        return resumeService.create(dto, userId);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Resume> get(@PathVariable String id) {
-        return resumeService.findByIdAndUserId(id, currentUserId())
+    public ResponseEntity<Resume> get(@PathVariable String id, @CurrentUserId Long userId) {
+        return resumeService.findByIdAndUserId(id, userId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
-    public Resume update(@PathVariable String id, @RequestBody ResumeDTO dto) {
-        return resumeService.update(id, dto, currentUserId());
+    public Resume update(@PathVariable String id, @RequestBody ResumeDTO dto, @CurrentUserId Long userId) {
+        return resumeService.update(id, dto, userId);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        resumeService.delete(id, currentUserId());
+    public ResponseEntity<Void> delete(@PathVariable String id, @CurrentUserId Long userId) {
+        resumeService.delete(id, userId);
         return ResponseEntity.noContent().build();
     }
 
@@ -81,8 +81,8 @@ public class ResumeController {
     public ResponseEntity<?> preview(@PathVariable String id,
                                      @RequestParam(defaultValue = "false") boolean smartOnePage,
                                      @RequestParam(defaultValue = "false") boolean desensitize,
-                                     @RequestBody(required = false) PreviewRequest body) {
-        Long userId = currentUserId();
+                                     @RequestBody(required = false) PreviewRequest body,
+                                     @CurrentUserId Long userId) {
         Resume resume = resumeService.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         if (body != null && body.getContent() != null) {
@@ -106,8 +106,8 @@ public class ResumeController {
     @PostMapping("/{id}/export/html")
     public ResponseEntity<?> exportHtml(@PathVariable String id,
                                         @RequestParam(defaultValue = "false") boolean smartOnePage,
-                                        @RequestParam(defaultValue = "false") boolean desensitize) {
-        Long userId = currentUserId();
+                                        @RequestParam(defaultValue = "false") boolean desensitize,
+                                        @CurrentUserId Long userId) {
         Resume resume = resumeService.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         String html = exportService.generateHtml(resume, desensitize, userId);
@@ -132,8 +132,8 @@ public class ResumeController {
     @PostMapping("/{id}/export/pdf")
     public ResponseEntity<?> exportPdf(@PathVariable String id,
                                        @RequestParam(defaultValue = "true") boolean smartOnePage,
-                                       @RequestParam(defaultValue = "false") boolean desensitize) {
-        Long userId = currentUserId();
+                                       @RequestParam(defaultValue = "false") boolean desensitize,
+                                       @CurrentUserId Long userId) {
         Resume resume = resumeService.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         String html = exportService.generateHtml(resume, desensitize, userId);
@@ -169,26 +169,27 @@ public class ResumeController {
     }
 
     @PostMapping("/import/json")
-    public Resume importJson(@RequestBody JsonResumeDTO jsonResume) {
+    public Resume importJson(@RequestBody JsonResumeDTO jsonResume, @CurrentUserId Long userId) {
         String markdown = jsonResumeConverter.toMarkdown(jsonResume);
         ResumeDTO dto = new ResumeDTO();
         dto.setTitle(jsonResume.getBasics() != null && jsonResume.getBasics().getName() != null
                 ? jsonResume.getBasics().getName() : "Imported Resume");
         dto.setContent(markdown);
-        return resumeService.create(dto, currentUserId());
+        return resumeService.create(dto, userId);
     }
 
     @GetMapping("/{id}/export/json")
-    public ResponseEntity<JsonResumeDTO> exportJson(@PathVariable String id) {
-        Resume resume = resumeService.findByIdAndUserId(id, currentUserId())
+    public ResponseEntity<JsonResumeDTO> exportJson(@PathVariable String id, @CurrentUserId Long userId) {
+        Resume resume = resumeService.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         return ResponseEntity.ok(jsonResumeConverter.fromResume(resume));
     }
 
     @GetMapping("/{id}/styles")
     public ResponseEntity<ResumeStyle> getStyle(@PathVariable String id,
-                                                 @RequestParam String themeId) {
-        resumeService.findByIdAndUserId(id, currentUserId())
+                                                 @RequestParam String themeId,
+                                                 @CurrentUserId Long userId) {
+        resumeService.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         return resumeStyleService.getStyle(id, themeId)
                 .map(ResponseEntity::ok)
@@ -198,15 +199,10 @@ public class ResumeController {
     @PutMapping("/{id}/styles")
     public ResumeStyle saveStyle(@PathVariable String id,
                                  @RequestParam String themeId,
-                                 @RequestBody ResumeStyleDTO dto) {
-        resumeService.findByIdAndUserId(id, currentUserId())
+                                 @RequestBody ResumeStyleDTO dto,
+                                 @CurrentUserId Long userId) {
+        resumeService.findByIdAndUserId(id, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         return resumeStyleService.saveStyle(id, themeId, dto);
-    }
-
-    private Long currentUserId() {
-        String principal = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        return Long.parseLong(principal.split(":", 2)[0]);
     }
 }

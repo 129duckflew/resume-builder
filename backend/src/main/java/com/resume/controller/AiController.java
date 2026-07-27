@@ -4,7 +4,7 @@ import com.resume.entity.Resume;
 import com.resume.service.AiService;
 import com.resume.service.ResumeService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.resume.config.CurrentUserId;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -24,8 +24,8 @@ public class AiController {
     @PostMapping("/rewrite")
     public ResponseEntity<Map<String, String>> rewrite(
             @PathVariable String resumeId,
-            @RequestBody Map<String, String> body) {
-        Long userId = currentUserId();
+            @RequestBody Map<String, String> body,
+            @CurrentUserId Long userId) {
         Resume resume = resumeService.findByIdAndUserId(resumeId, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         String instruction = body.getOrDefault("instruction", "Improve the writing");
@@ -36,18 +36,12 @@ public class AiController {
     @PostMapping("/suggest")
     public ResponseEntity<Map<String, String>> suggest(
             @PathVariable String resumeId,
-            @RequestBody Map<String, String> body) {
-        Long userId = currentUserId();
+            @RequestBody Map<String, String> body,
+            @CurrentUserId Long userId) {
         Resume resume = resumeService.findByIdAndUserId(resumeId, userId)
                 .orElseThrow(() -> new RuntimeException("Resume not found"));
         String jobDescription = body.getOrDefault("jobDescription", "");
         String result = aiService.suggest(resume, userId, jobDescription);
         return ResponseEntity.ok(Map.of("content", result));
-    }
-
-    private Long currentUserId() {
-        String principal = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        return Long.parseLong(principal.split(":", 2)[0]);
     }
 }

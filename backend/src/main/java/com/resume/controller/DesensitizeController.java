@@ -3,7 +3,7 @@ package com.resume.controller;
 import com.resume.dto.DesensitizeRuleDTO;
 import com.resume.service.DesensitizeService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import com.resume.config.CurrentUserId;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,19 +19,14 @@ public class DesensitizeController {
     }
 
     @GetMapping("/desensitize-rules")
-    public List<DesensitizeRuleDTO> getRules() {
-        return desensitizeService.getEffectiveRules(currentUserId());
+    public List<DesensitizeRuleDTO> getRules(@CurrentUserId Long userId) {
+        return desensitizeService.getEffectiveRules(userId);
     }
 
     @PutMapping("/desensitize-rules")
-    public ResponseEntity<Void> saveRules(@RequestBody List<DesensitizeRuleDTO> rules) {
-        desensitizeService.saveUserRules(currentUserId(), rules);
+    public ResponseEntity<Void> saveRules(@RequestBody List<DesensitizeRuleDTO> rules,
+                                           @CurrentUserId Long userId) {
+        desensitizeService.saveUserRules(userId, rules);
         return ResponseEntity.ok().build();
-    }
-
-    private Long currentUserId() {
-        String principal = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
-        return Long.parseLong(principal.split(":", 2)[0]);
     }
 }
