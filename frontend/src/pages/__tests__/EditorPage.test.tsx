@@ -76,9 +76,33 @@ const { mockPreview } = vi.hoisted(() => ({
 vi.mock('@/lib/api', () => {
   return {
     resumeApi: { preview: mockPreview },
-    themeApi: { getCss: vi.fn().mockResolvedValue('body { color: black; }') },
+    themeApi: { getCss: vi.fn().mockResolvedValue('body { color: black; }'), list: vi.fn().mockResolvedValue([]) },
   }
 })
+
+vi.mock('@/stores/themeStore', () => ({
+  useThemeStore: vi.fn((selector?: any) => {
+    const state = {
+      themes: [
+        { id: 'classic', name: 'Classic', description: '', builtIn: true },
+        { id: 'modern', name: 'Modern', description: '', builtIn: true },
+      ],
+      currentThemeCss: 'body { color: black; }',
+      currentThemeVariables: [],
+      customVariables: {},
+      fetchThemes: vi.fn(),
+      setTheme: vi.fn(),
+      applyStyle: vi.fn(),
+      fetchThemeVariables: vi.fn(),
+      updateCustomVariable: vi.fn(),
+      resetCustomVariables: vi.fn(),
+      createTheme: vi.fn(),
+      updateTheme: vi.fn(),
+      deleteTheme: vi.fn(),
+    }
+    return selector ? selector(state) : state
+  }),
+}))
 
 vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toasts: [], toast: vi.fn(), dismiss: vi.fn() }),
