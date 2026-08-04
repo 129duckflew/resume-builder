@@ -72,4 +72,33 @@ class MarkdownServiceTest {
         assertTrue(html.contains("<p>line1</p>"));
         assertTrue(html.contains("<p>line2</p>"));
     }
+
+    @Test
+    void toHtml_withBasicInfoSection_buildsAlignedRows() {
+        // Trailing double space on line 3 = commonmark hard break (<br />)
+        String html = service.toHtml("# 个人简历\n" +
+                "## 基本信息\n" +
+                " **姓名**: 张三            **性别**: 男  \n" +
+                " **电话**: 13800138000    **邮箱**: zhangsan@example.com ");
+        assertTrue(html.contains("<h2>基本信息</h2>"));
+        assertTrue(html.contains("<div class=\"resume-basic\">"));
+        assertTrue(html.contains("<div class=\"resume-basic-row\"><span><strong>姓名</strong>: 张三</span><span><strong>性别</strong>: 男</span></div>"));
+        assertTrue(html.contains("<div class=\"resume-basic-row\"><span><strong>电话</strong>: 13800138000</span><span><strong>邮箱</strong>: zhangsan@example.com</span></div>"));
+        // The <p> wrapper must be dropped and tags kept balanced: no leftover <p> or stray </div>
+        assertFalse(html.contains("<p><div"));
+        String section = html.substring(html.indexOf("<h2>基本信息</h2>"));
+        assertEquals(1, countOccurrences(section, "<div class=\"resume-basic\">"));
+        assertEquals(3, countOccurrences(section, "</div>"));
+        assertEquals(0, countOccurrences(section, "<p>"));
+    }
+
+    private int countOccurrences(String text, String needle) {
+        int count = 0;
+        int index = 0;
+        while ((index = text.indexOf(needle, index)) >= 0) {
+            count++;
+            index += needle.length();
+        }
+        return count;
+    }
 }

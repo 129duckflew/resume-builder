@@ -18,7 +18,8 @@
 }
 
 body {
-    font-family: var(--font-family, 'Times New Roman', Times, serif);
+    font-family: var(--font-family, 'Helvetica Neue', 'Liberation Sans', Arial,
+        'PingFang SC', 'WenQuanYi Zen Hei', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif);
     color: var(--text-color, #000000);
     font-size: var(--font-size, 11pt);
     line-height: var(--line-height, 1.4);
@@ -105,6 +106,20 @@ h1 {
     margin-bottom: 3px;
 }
 
+/* ----- Basic info rows (## 基本信息) ----- */
+.resume-basic {
+    margin-bottom: 6px;
+    break-inside: avoid;
+}
+
+.resume-basic-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 2px;
+}
+
 .resume-contact a,
 a {
     color: var(--link-color, var(--primary-color, #0077cc));
@@ -142,13 +157,16 @@ h2 {
     text-transform: uppercase;
     border-bottom: 1px solid var(--primary-color, #000000);
     padding-bottom: 3px;
+    margin-top: 14px;
     margin-bottom: 8px;
+    break-after: avoid;
 }
 
 h3 {
     font-size: var(--font-size, 11pt);
     font-weight: 600;
     color: var(--heading-color, #000000);
+    margin-top: 8px;
     margin-bottom: 4px;
 }
 
@@ -193,11 +211,11 @@ em {
 ul {
     list-style-type: disc;
     margin-left: 18px;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 li {
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     color: var(--text-color, #000000);
 }
 

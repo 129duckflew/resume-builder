@@ -10,12 +10,13 @@ public class MarkdownService {
 
     private final Parser parser = Parser.builder().build();
     private final HtmlRenderer renderer = HtmlRenderer.builder().build();
+    private final BasicInfoRenderer basicInfoRenderer = new BasicInfoRenderer();
 
     public String toHtml(String markdown) {
         if (markdown == null || markdown.isBlank()) {
             return "";
         }
         Node document = parser.parse(markdown);
-        return renderer.render(document);
+        return basicInfoRenderer.render(renderer.render(document));
     }
 }

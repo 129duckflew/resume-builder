@@ -17,6 +17,12 @@ public class PdfGenerationService {
     static final int A4_WIDTH_PX = 794;
     static final int A4_HEIGHT_PX = 1123;
 
+    static final String FOOTER_TEMPLATE = """
+            <div style="font-size:8px; width:100%; text-align:center; color:#666666;
+                        font-family:Helvetica, Arial, sans-serif;">
+            第 <span class="pageNumber"></span> 页 / 共 <span class="totalPages"></span> 页
+            </div>""";
+
     private final Browser browser;
 
     public PdfGenerationService(Optional<Browser> browser) {
@@ -38,7 +44,10 @@ public class PdfGenerationService {
             Page.PdfOptions pdfOptions = new Page.PdfOptions()
                     .setFormat("A4")
                     .setPrintBackground(true)
-                    .setPreferCSSPageSize(true);
+                    .setPreferCSSPageSize(true)
+                    .setDisplayHeaderFooter(true)
+                    .setHeaderTemplate("<div></div>")
+                    .setFooterTemplate(FOOTER_TEMPLATE);
 
             byte[] pdf = page.pdf(pdfOptions);
             log.info("PDF generated in {}ms ({} bytes)",
