@@ -67,3 +67,7 @@ Uses the five canonical defaults: `needs-triage`, `needs-info`, `ready-for-agent
 ### Domain docs
 
 Single-context: one `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.
+
+### Multimodal data
+
+When a task involves analyzing multimodal data — PDF, DOC/DOCX, images, or video files — dispatch the analysis to the `multimodal-analysis` subagent (`opencode-go/mimo-v2.5`) first, and only process the result afterwards. Do not attempt to parse these formats with the main agent; the subagent extracts text, OCR, and video frames, then returns a structured report to work from.
