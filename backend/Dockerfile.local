@@ -1,0 +1,9 @@
+# Local compose build: jar is built on the macOS host with local maven
+# (deps cached in ~/.m2), so image builds never re-download maven deps.
+# Build the jar first:  mvn package -DskipTests -B
+FROM eclipse-temurin:25-jre-noble
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends wget && rm -rf /var/lib/apt/lists/*
+COPY target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]

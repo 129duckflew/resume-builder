@@ -1,0 +1,8 @@
+# Local compose build: jar is built on the macOS host with local maven
+# (deps cached in ~/.m2), so image builds never re-download maven deps.
+# Build the jar first:  mvn package -DskipTests -B
+FROM mcr.microsoft.com/playwright/java:v1.61.0
+WORKDIR /app
+COPY target/*.jar app.jar
+EXPOSE 8090
+ENTRYPOINT ["java", "-jar", "app.jar"]
