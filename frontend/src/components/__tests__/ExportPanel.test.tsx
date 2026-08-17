@@ -3,10 +3,12 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ExportPanel from '@/components/editor/ExportPanel'
 
-const { mockExportPdf, mockExportHtml, mockToast } = vi.hoisted(() => ({
-  mockExportPdf: vi.fn().mockResolvedValue(undefined),
-  mockExportHtml: vi.fn().mockResolvedValue(undefined),
+const { mockExportPdf, mockExportHtml, mockToast, mockJsonExport, mockSaveBlob } = vi.hoisted(() => ({
+  mockExportPdf: vi.fn().mockResolvedValue(true),
+  mockExportHtml: vi.fn().mockResolvedValue(true),
   mockToast: vi.fn(),
+  mockJsonExport: vi.fn().mockResolvedValue({ basics: { name: 'Test' } }),
+  mockSaveBlob: vi.fn().mockResolvedValue(true),
 }))
 
 const mockResume = {
@@ -26,6 +28,10 @@ vi.mock('@/lib/api', () => ({
     exportPdf: mockExportPdf,
     exportHtml: mockExportHtml,
   },
+  jsonResumeApi: {
+    exportJson: mockJsonExport,
+  },
+  saveBlobToDisk: mockSaveBlob,
 }))
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -103,5 +109,21 @@ describe('ExportPanel', () => {
     const desensitizeCheckbox = screen.getByLabelText('Desensitize') as HTMLInputElement
     await userEvent.click(desensitizeCheckbox)
     expect(onDesensitizeChange).toHaveBeenCalledWith(true)
+  })
+
+  it('does not toast success when the save dialog is cancelled', async () => {
+    mockExportPdf.mockResolvedValueOnce(false)
+    render(<ExportPanel {...defaultProps} />)
+    await userEvent.click(screen.getByText('PDF'))
+    expect(mockExportPdf).toHaveBeenCalledWith('test-id', true, false)
+    expect(mockToast).not.toHaveBeenCalled()
+  })
+
+  it('exports JSON via save dialog', async () => {
+    render(<ExportPanel {...defaultProps} />)
+    await userEvent.click(screen.getByText('JSON'))
+    expect(mockJsonExport).toHaveBeenCalledWith('test-id')
+    expect(mockSaveBlob).toHaveBeenCalledWith(expect.any(Blob), 'resume.json', 'application/json')
+    expect(mockToast).toHaveBeenCalledWith({ title: 'JSON exported', variant: 'success' })
   })
 })

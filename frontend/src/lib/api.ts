@@ -32,13 +32,30 @@ http.interceptors.response.use(
   },
 )
 
-function blobDownload(data: Blob, filename: string) {
+export async function saveBlobToDisk(data: Blob, filename: string, mimeType: string): Promise<boolean> {
+  const picker = window.showSaveFilePicker
+  if (picker) {
+    try {
+      const ext = filename.includes('.') ? filename.split('.').pop()! : ''
+      const handle = await picker({
+        suggestedName: filename,
+        types: [{ description: filename, accept: { [mimeType]: [ext] } }],
+      })
+      const writable = await handle.createWritable()
+      await writable.write(data)
+      await writable.close()
+      return true
+    } catch (err: any) {
+      if (err?.name === 'AbortError') return false
+    }
+  }
   const url = URL.createObjectURL(new Blob([data], { type: data.type }))
   const a = document.createElement('a')
   a.href = url
   a.download = filename
   a.click()
   URL.revokeObjectURL(url)
+  return true
 }
 
 export const resumeApi = {
@@ -60,12 +77,12 @@ export const resumeApi = {
 
   exportHtml: (id: string, smartOnePage: boolean = false, desensitize: boolean = false) =>
     http.post(`/resumes/${id}/export/html?smartOnePage=${smartOnePage}&desensitize=${desensitize}`, null, { responseType: 'blob' })
-      .then(r => blobDownload(r.data, 'resume.html')),
+      .then(r => saveBlobToDisk(r.data, 'resume.html', 'text/html')),
 
   exportPdf: (id: string, smart: boolean = true, desensitize: boolean = false) =>
     http.post(`/resumes/${id}/export/pdf?smartOnePage=${smart}&desensitize=${desensitize}`, null,
       { responseType: 'blob' })
-      .then(r => blobDownload(r.data, 'resume.pdf')),
+      .then(r => saveBlobToDisk(r.data, 'resume.pdf', 'application/pdf')),
 }
 
 export const themeApi = {

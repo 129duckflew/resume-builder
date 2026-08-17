@@ -17,7 +17,7 @@ vi.mock('@/stores/authStore', () => ({
   },
 }))
 
-import { http } from '@/lib/api'
+import { http, saveBlobToDisk } from '@/lib/api'
 
 function getErrorHandler(): ((err: any) => Promise<any>) | undefined {
   const handlers = (http.interceptors.response as any).handlers
@@ -149,5 +149,75 @@ describe('API response interceptor — 401 handling', () => {
     expect(removeItemSpy).not.toHaveBeenCalled()
     expect(mockLogout).not.toHaveBeenCalled()
     expect(window.location.href).not.toBe('/login')
+  })
+})
+
+describe('saveBlobToDisk', () => {
+  let anchorClick: any
+
+  beforeEach(() => {
+    anchorClick = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  function setPicker(fn: unknown) {
+    Object.defineProperty(window, 'showSaveFilePicker', {
+      configurable: true,
+      writable: true,
+      value: fn,
+    })
+  }
+
+  it('uses showSaveFilePicker and writes the blob to the chosen location', async () => {
+    const write = vi.fn().mockResolvedValue(undefined)
+    const close = vi.fn().mockResolvedValue(undefined)
+    const picker = vi.fn().mockResolvedValue({
+      createWritable: vi.fn().mockResolvedValue({ write, close }),
+    })
+    setPicker(picker)
+
+    const blob = new Blob(['pdf'], { type: 'application/pdf' })
+    const saved = await saveBlobToDisk(blob, 'resume.pdf', 'application/pdf')
+
+    expect(saved).toBe(true)
+    expect(picker).toHaveBeenCalledWith({
+      suggestedName: 'resume.pdf',
+      types: [{ description: 'resume.pdf', accept: { 'application/pdf': ['pdf'] } }],
+    })
+    expect(write).toHaveBeenCalledWith(blob)
+    expect(close).toHaveBeenCalled()
+    expect(anchorClick).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when the user cancels the save dialog', async () => {
+    setPicker(vi.fn().mockRejectedValue(Object.assign(new Error('aborted'), { name: 'AbortError' })))
+
+    const saved = await saveBlobToDisk(new Blob(['x']), 'resume.pdf', 'application/pdf')
+
+    expect(saved).toBe(false)
+    expect(anchorClick).not.toHaveBeenCalled()
+  })
+
+  it('falls back to a plain download when showSaveFilePicker is unavailable', async () => {
+    setPicker(undefined)
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      writable: true,
+      value: vi.fn().mockReturnValue('blob:mock'),
+    })
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      writable: true,
+      value: vi.fn(),
+    })
+
+    const saved = await saveBlobToDisk(new Blob(['x']), 'resume.html', 'text/html')
+
+    expect(saved).toBe(true)
+    expect(anchorClick).toHaveBeenCalledTimes(1)
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock')
   })
 })

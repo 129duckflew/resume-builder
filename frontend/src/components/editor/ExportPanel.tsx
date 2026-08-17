@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
-import { resumeApi, jsonResumeApi } from '@/lib/api'
+import { resumeApi, jsonResumeApi, saveBlobToDisk } from '@/lib/api'
 import { useResumeStore } from '@/stores/resumeStore'
 import DesensitizeSettings from './DesensitizeSettings'
 
@@ -31,9 +31,11 @@ export default function ExportPanel({ smartOnePage, onSmartOnePageChange, desens
     setError(null)
     try {
       if (type === 'pdf') {
-        await resumeApi.exportPdf(currentResume.id, smartOnePage, desensitize)
+        const saved = await resumeApi.exportPdf(currentResume.id, smartOnePage, desensitize)
+        if (!saved) return
       } else {
-        await resumeApi.exportHtml(currentResume.id, smartOnePage, desensitize)
+        const saved = await resumeApi.exportHtml(currentResume.id, smartOnePage, desensitize)
+        if (!saved) return
       }
       toast({
         title: 'Export successful',
@@ -117,13 +119,10 @@ export default function ExportPanel({ smartOnePage, onSmartOnePageChange, desens
             jsonResumeApi.exportJson(currentResume.id)
               .then(json => {
                 const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = 'resume.json'
-                a.click()
-                URL.revokeObjectURL(url)
-                toast({ title: 'JSON exported', variant: 'success' })
+                return saveBlobToDisk(blob, 'resume.json', 'application/json')
+              })
+              .then(saved => {
+                if (saved) toast({ title: 'JSON exported', variant: 'success' })
               })
               .catch(() => toast({ title: 'Export failed', variant: 'destructive' }))
           }}
