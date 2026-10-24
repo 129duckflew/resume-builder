@@ -12,7 +12,7 @@ A modern, privacy-first resume builder that separates content from design. Write
 | **Smart One-Page PDF** | Automatically adjusts font size, line height, and spacing to fit your resume on one page during PDF export. Toggle on/off. |
 | **Section Drag & Drop** | Reorder sections (Experience, Education, etc.) by dragging in the sidebar. Click a section to jump the editor to it. |
 | **Keyboard Shortcuts** | `Cmd+S` to save, `Cmd+Z` / `Cmd+Shift+Z` for undo/redo. Auto-save drafts to localStorage. |
-| **PDF & HTML Export** | Server-side PDF generation via Playwright (headless Chromium) for pixel-perfect output. Standalone HTML export also supported. |
+| **PDF & HTML Export** | Server-side PDF generation via a Go service driving pinned headless Chromium over CDP. Standalone HTML export also supported. |
 | **Docker Deploy** | One-command deployment with Docker Compose: PostgreSQL + Spring Boot + Nginx. |
 | **Version History** | Server-side snapshots on every save. Browse, restore previous versions (up to 50 retained). |
 | **Shareable Links** | Generate public read-only links with optional desensitization (hide name/phone/email/company). |
@@ -33,7 +33,7 @@ A modern, privacy-first resume builder that separates content from design. Write
 | **ORM** | Spring Data JPA + Hibernate |
 | **Database** | PostgreSQL 16 |
 | **Markdown** | commonmark (org.commonmark) |
-| **PDF Engine** | Playwright for Java (headless Chromium) |
+| **PDF Engine** | Go + chromedp + pinned Chromium 149 (CDP) |
 | **Frontend** | React 18 / TypeScript / Vite |
 | **Components** | shadcn/ui + Tailwind CSS |
 | **Editor** | @uiw/react-md-editor (CodeMirror 6) |
@@ -49,7 +49,7 @@ resume-builder/
 │   ├── Dockerfile               # JVM image (compose/e2e)
 │   ├── Dockerfile.native        # GraalVM native image (k8s cold start < 1s)
 │   └── src/main/java/com/resume/
-│       ├── config/              # Security (JWT), CORS, Playwright
+│       ├── config/              # Security (JWT), CORS, service clients
 │       ├── controller/          # REST API: auth, resume, theme, AI, share, etc.
 │       ├── entity/              # JPA entities (8 domain classes)
 │       ├── repository/          # Spring Data JPA repositories
@@ -65,9 +65,10 @@ resume-builder/
 │       ├── stores/              # Zustand: auth, resume, history
 │       ├── hooks/               # Keyboard shortcuts, draft backup, toast
 │       └── lib/                 # API client, markdown parser, utils
-├── pdf-service/                 # PDF render (Java + Playwright/Chromium)
-│   ├── Dockerfile               # GraalVM native image
-│   └── src/                     # Playwright config, HTML→PDF service
+├── pdf-service/                 # PDF render (Go + Chromium/CDP)
+│   ├── cmd/pdf-service/         # HTTP service entry point
+│   ├── internal/                # Config, HTTP contract, bounded render workers
+│   └── Dockerfile               # Pinned Chromium + static Go binary
 ├── k8s/app/                     # Kubernetes manifests (ArgoCD-managed)
 │   ├── backend/                 # Deployment + Service + Vault annotations
 │   ├── frontend/                # Deployment + Service
@@ -80,7 +81,7 @@ resume-builder/
 │   └── argocd/                  # ArgoCD app-of-apps + per-component Applications
 ├── scripts/                     # Automation: start, init, smoke-test, apply, delete
 ├── docs/                        # Design specs and implementation plans
-├── docker-compose.yml           # Local dev (PostgreSQL + Backend + Frontend)
+├── docker-compose.yml           # Local dev (Backend + PDF Service + Frontend)
 ├── .env.example
 └── AGENTS.md / ROADMAP.md / progress.md
 ```
@@ -102,10 +103,9 @@ cd frontend && npm install && npm run dev
 # Open http://localhost:3000
 ```
 
-> **Playwright / PDF export (optional):** For PDF export to work locally, Chromium must be installed:
-> ```bash
-> cd frontend && npx playwright install chromium
-> ```
+> **PDF export:** PDF rendering runs inside the `pdf-service` container. For a
+> host-run Go service, set `CHROMIUM_PATH` to a Chromium 149 headless-shell
+> binary. The container is the supported local and deployment path.
 
 ## Docker Deployment
 
@@ -123,7 +123,43 @@ Services:
 | Container | Image | Port |
 |---|---|---|
 | `resume-backend` | resume-builder-backend | 8081 → 8080 |
+| `resume-pdf-service` | resume-builder-pdf-service | 8090 → 8090 |
 | `resume-frontend` | resume-builder-frontend | 3000 → 80 |
+
+## PDF Service
+
+The internal PDF service is a static Go binary that drives a pinned Chromium
+149 headless shell directly over CDP. One Chromium process and reusable tabs
+serve a bounded queue; the default is one render worker and eight queued jobs.
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /health` | `200` only when Chromium and a render tab are ready |
+| `GET /actuator/health/liveness` | Process liveness |
+| `GET /actuator/health/readiness` | Chromium/render readiness |
+| `POST /measure` | `text/html` → `{"height": number}` |
+| `POST /pdf` | `text/html` → A4 `application/pdf` |
+
+Runtime settings use environment variables: `PORT`, `MAX_CONCURRENCY`,
+`QUEUE_CAPACITY`, `REQUEST_TIMEOUT`, `BROWSER_STARTUP_TIMEOUT`,
+`SHUTDOWN_TIMEOUT`, `MAX_BODY_BYTES`, `BROWSER_RECYCLE_AFTER`,
+`BLOCK_EXTERNAL_RESOURCES`, `CHROMIUM_PATH`, and `LOG_LEVEL`.
+
+```bash
+cd pdf-service
+go test ./... && go test -race ./... && go vet ./...
+
+# Primary deployment target is linux/arm64.
+docker build --platform linux/arm64 -t resume-builder-pdf-service .
+docker run --rm --read-only --tmpfs /tmp:rw,exec,nosuid,nodev,size=256m \
+  --cap-drop ALL --security-opt no-new-privileges \
+  -p 8090:8090 resume-builder-pdf-service
+```
+
+The Docker build downloads Playwright Chromium build `1228` directly from the
+Playwright CDN and verifies the artifact SHA-256 before extraction. The
+current image is ARM64-only, runs as UID/GID `10001`, supports a read-only root
+filesystem, and is about 730 MB.
 
 ## Kubernetes Deployment (Colima k3s — GitOps)
 
@@ -206,7 +242,7 @@ k8s/app/                # ArgoCD-managed K8s manifests
 ├── config/             # ConfigMap + Secret (placeholder)
 ├── ingress/            # Traefik IngressRoute + lb-port-forwarder DaemonSet
 ├── scaling/            # KEDA HTTPScaledObjects
-└── pdf-service/        # PDF render service (Chromium/Playwright)
+└── pdf-service/        # PDF render service (Go + Chromium/CDP)
 ```
 
 ### Scripts
@@ -273,6 +309,9 @@ argocd app sync resume-backend
 ```bash
 # Backend (117 tests)
 cd backend && mvn test
+
+# PDF service (contract, queue, lifecycle, race tests)
+cd pdf-service && go test ./... && go test -race ./...
 
 # Frontend (72 tests)
 cd frontend && npm test

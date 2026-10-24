@@ -6,7 +6,7 @@ services:
     container_name: resume-backend
     depends_on:
       pdf-service:
-        condition: service_started
+        condition: service_healthy
     environment:
       DB_HOST: host.docker.internal
       DB_PORT: 5432
@@ -30,16 +30,29 @@ services:
   pdf-service:
     build:
       context: ./pdf-service
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
     container_name: resume-pdf-service
+    stop_grace_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp:rw,exec,nosuid,nodev,size=256m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      MAX_CONCURRENCY: "1"
+      QUEUE_CAPACITY: "8"
+      REQUEST_TIMEOUT: 30s
+      BLOCK_EXTERNAL_RESOURCES: "true"
     ports:
       - "8090:8090"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/health"]
       interval: 5s
       timeout: 3s
-      retries: 20
-      start_period: 30s
+      retries: 12
+      start_period: 10s
 
   frontend:
     build:

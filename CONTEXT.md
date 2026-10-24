@@ -34,7 +34,7 @@ Domain glossary for the resume-builder project. Defines the ubiquitous language 
 
 **JSON Resume** — Bidirectional conversion between the internal Markdown format and the [JSON Resume Schema](https://jsonresume.org/). Handled by JsonResumeConverter which uses regex-based section parsing for the markdown→JSON direction and structured build-up for JSON→markdown.
 
-**PDF Service** — A separate Spring Boot microservice (port 8090) that wraps Playwright's headless Chromium. Exposes three endpoints: `/health`, `/pdf` (HTML → PDF bytes), `/measure` (HTML → scrollHeight). The backend communicates with it via PdfServiceClient over HTTP.
+**PDF Service** — A separate Go microservice (port 8090) that drives a pinned Chromium headless shell directly over CDP. It uses a bounded worker queue and reusable tabs to expose `/health`, `/pdf` (HTML → PDF bytes), and `/measure` (HTML → scrollHeight). The backend communicates with it via PdfServiceClient over HTTP; Spring liveness/readiness aliases remain available under `/actuator/health/*`.
 
 ---
 

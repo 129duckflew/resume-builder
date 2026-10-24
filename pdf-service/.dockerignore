@@ -1,0 +1,10 @@
+.git
+.gitignore
+.idea
+bin
+coverage.out
+*.log
+*.test
+target
+testdata/golden
+testdata/baseline

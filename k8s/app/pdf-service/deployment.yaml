@@ -18,36 +18,71 @@ spec:
     spec:
       imagePullSecrets:
         - name: ghcr-pull-secret
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
       containers:
         - name: pdf-service
           image: ghcr.io/129duckflew/resume-builder/pdf-service:0cec4902bea862fe24701eb69f656a5642a3107e
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8090
+          env:
+            - name: MAX_CONCURRENCY
+              value: "1"
+            - name: QUEUE_CAPACITY
+              value: "8"
+            - name: REQUEST_TIMEOUT
+              value: 30s
+            - name: BLOCK_EXTERNAL_RESOURCES
+              value: "true"
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
           resources:
             requests:
-              cpu: 500m
-              memory: 512Mi
+              cpu: 100m
+              memory: 192Mi
             limits:
               cpu: 1000m
-              memory: 1536Mi
-          # JVM + Chromium 启动约 10-30s。
+              memory: 512Mi
+          # Go + Chromium 的正常启动时间约 2-4s。
           startupProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8090
-            periodSeconds: 5
-            failureThreshold: 24 # 最长容忍 120s 启动时间
-            timeoutSeconds: 5
+            periodSeconds: 2
+            failureThreshold: 15 # 最长容忍 30s 启动时间
+            timeoutSeconds: 2
           # liveness 只看进程活；browser 断开由 readiness 摘流。
           livenessProbe:
             httpGet:
               path: /actuator/health/liveness
               port: 8090
-            periodSeconds: 15
-          # readiness 包含 browser 连接状态（BrowserHealthIndicator）。
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          # readiness 包含 Chromium/CDP 探针状态。
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness
               port: 8090
-            periodSeconds: 5
+            periodSeconds: 3
+            timeoutSeconds: 2
+            failureThreshold: 2
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
