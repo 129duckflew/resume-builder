@@ -9,7 +9,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { toast } from '@/hooks/use-toast'
-import { resumeApi, jsonResumeApi, saveBlobToDisk } from '@/lib/api'
+import { resumeApi, jsonResumeApi, saveExportToDisk } from '@/lib/api'
 import { useResumeStore } from '@/stores/resumeStore'
 import DesensitizeSettings from './DesensitizeSettings'
 
@@ -116,11 +116,10 @@ export default function ExportPanel({ smartOnePage, onSmartOnePageChange, desens
           size="sm"
           onClick={() => {
             if (!currentResume) return
-            jsonResumeApi.exportJson(currentResume.id)
-              .then(json => {
-                const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
-                return saveBlobToDisk(blob, 'resume.json', 'application/json')
-              })
+            saveExportToDisk('resume.json', 'application/json', async () => {
+              const json = await jsonResumeApi.exportJson(currentResume.id)
+              return new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' })
+            })
               .then(saved => {
                 if (saved) toast({ title: 'JSON exported', variant: 'success' })
               })

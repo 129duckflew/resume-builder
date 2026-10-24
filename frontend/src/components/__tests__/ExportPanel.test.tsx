@@ -3,12 +3,12 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import ExportPanel from '@/components/editor/ExportPanel'
 
-const { mockExportPdf, mockExportHtml, mockToast, mockJsonExport, mockSaveBlob } = vi.hoisted(() => ({
+const { mockExportPdf, mockExportHtml, mockToast, mockJsonExport, mockSaveToDisk } = vi.hoisted(() => ({
   mockExportPdf: vi.fn().mockResolvedValue(true),
   mockExportHtml: vi.fn().mockResolvedValue(true),
   mockToast: vi.fn(),
   mockJsonExport: vi.fn().mockResolvedValue({ basics: { name: 'Test' } }),
-  mockSaveBlob: vi.fn().mockResolvedValue(true),
+  mockSaveToDisk: vi.fn().mockImplementation((_: string, _m: string, produce: () => Promise<Blob>) => produce()),
 }))
 
 const mockResume = {
@@ -31,7 +31,7 @@ vi.mock('@/lib/api', () => ({
   jsonResumeApi: {
     exportJson: mockJsonExport,
   },
-  saveBlobToDisk: mockSaveBlob,
+  saveExportToDisk: mockSaveToDisk,
 }))
 
 vi.mock('@/hooks/use-toast', () => ({
@@ -122,8 +122,8 @@ describe('ExportPanel', () => {
   it('exports JSON via save dialog', async () => {
     render(<ExportPanel {...defaultProps} />)
     await userEvent.click(screen.getByText('JSON'))
+    expect(mockSaveToDisk).toHaveBeenCalledWith('resume.json', 'application/json', expect.any(Function))
     expect(mockJsonExport).toHaveBeenCalledWith('test-id')
-    expect(mockSaveBlob).toHaveBeenCalledWith(expect.any(Blob), 'resume.json', 'application/json')
     expect(mockToast).toHaveBeenCalledWith({ title: 'JSON exported', variant: 'success' })
   })
 })

@@ -32,29 +32,37 @@ http.interceptors.response.use(
   },
 )
 
-export async function saveBlobToDisk(data: Blob, filename: string, mimeType: string): Promise<boolean> {
+export async function saveExportToDisk(
+  filename: string,
+  mimeType: string,
+  produceBlob: () => Promise<Blob>,
+): Promise<boolean> {
   const picker = window.showSaveFilePicker
+  let handle: FileSystemFileHandle | null = null
   if (picker) {
     try {
       const ext = filename.includes('.') ? filename.split('.').pop()! : ''
-      const handle = await picker({
+      handle = await picker({
         suggestedName: filename,
         types: [{ description: filename, accept: { [mimeType]: [ext] } }],
       })
-      const writable = await handle.createWritable()
-      await writable.write(data)
-      await writable.close()
-      return true
     } catch (err: any) {
       if (err?.name === 'AbortError') return false
     }
   }
-  const url = URL.createObjectURL(new Blob([data], { type: data.type }))
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+  const data = await produceBlob()
+  if (handle) {
+    const writable = await handle.createWritable()
+    await writable.write(data)
+    await writable.close()
+  } else {
+    const url = URL.createObjectURL(new Blob([data], { type: data.type }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+  }
   return true
 }
 
@@ -76,13 +84,15 @@ export const resumeApi = {
       content !== undefined ? { content } : undefined).then(r => r.data),
 
   exportHtml: (id: string, smartOnePage: boolean = false, desensitize: boolean = false) =>
-    http.post(`/resumes/${id}/export/html?smartOnePage=${smartOnePage}&desensitize=${desensitize}`, null, { responseType: 'blob' })
-      .then(r => saveBlobToDisk(r.data, 'resume.html', 'text/html')),
+    saveExportToDisk('resume.html', 'text/html', () =>
+      http.post(`/resumes/${id}/export/html?smartOnePage=${smartOnePage}&desensitize=${desensitize}`, null, { responseType: 'blob' })
+        .then(r => r.data)),
 
   exportPdf: (id: string, smart: boolean = true, desensitize: boolean = false) =>
-    http.post(`/resumes/${id}/export/pdf?smartOnePage=${smart}&desensitize=${desensitize}`, null,
-      { responseType: 'blob' })
-      .then(r => saveBlobToDisk(r.data, 'resume.pdf', 'application/pdf')),
+    saveExportToDisk('resume.pdf', 'application/pdf', () =>
+      http.post(`/resumes/${id}/export/pdf?smartOnePage=${smart}&desensitize=${desensitize}`, null,
+        { responseType: 'blob' })
+        .then(r => r.data)),
 }
 
 export const themeApi = {

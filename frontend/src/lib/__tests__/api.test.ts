@@ -17,7 +17,7 @@ vi.mock('@/stores/authStore', () => ({
   },
 }))
 
-import { http, saveBlobToDisk } from '@/lib/api'
+import { http, saveExportToDisk } from '@/lib/api'
 
 function getErrorHandler(): ((err: any) => Promise<any>) | undefined {
   const handlers = (http.interceptors.response as any).handlers
@@ -152,7 +152,7 @@ describe('API response interceptor — 401 handling', () => {
   })
 })
 
-describe('saveBlobToDisk', () => {
+describe('saveExportToDisk', () => {
   let anchorClick: any
 
   beforeEach(() => {
@@ -171,7 +171,7 @@ describe('saveBlobToDisk', () => {
     })
   }
 
-  it('uses showSaveFilePicker and writes the blob to the chosen location', async () => {
+  it('opens the save picker before producing the blob and writes to the chosen file', async () => {
     const write = vi.fn().mockResolvedValue(undefined)
     const close = vi.fn().mockResolvedValue(undefined)
     const picker = vi.fn().mockResolvedValue({
@@ -180,9 +180,11 @@ describe('saveBlobToDisk', () => {
     setPicker(picker)
 
     const blob = new Blob(['pdf'], { type: 'application/pdf' })
-    const saved = await saveBlobToDisk(blob, 'resume.pdf', 'application/pdf')
+    const produce = vi.fn().mockResolvedValue(blob)
+    const saved = await saveExportToDisk('resume.pdf', 'application/pdf', produce)
 
     expect(saved).toBe(true)
+    expect(picker.mock.invocationCallOrder[0]).toBeLessThan(produce.mock.invocationCallOrder[0])
     expect(picker).toHaveBeenCalledWith({
       suggestedName: 'resume.pdf',
       types: [{ description: 'resume.pdf', accept: { 'application/pdf': ['pdf'] } }],
@@ -192,12 +194,14 @@ describe('saveBlobToDisk', () => {
     expect(anchorClick).not.toHaveBeenCalled()
   })
 
-  it('does nothing when the user cancels the save dialog', async () => {
+  it('does not fetch or download when the user cancels the save dialog', async () => {
     setPicker(vi.fn().mockRejectedValue(Object.assign(new Error('aborted'), { name: 'AbortError' })))
+    const produce = vi.fn().mockResolvedValue(new Blob(['x']))
 
-    const saved = await saveBlobToDisk(new Blob(['x']), 'resume.pdf', 'application/pdf')
+    const saved = await saveExportToDisk('resume.pdf', 'application/pdf', produce)
 
     expect(saved).toBe(false)
+    expect(produce).not.toHaveBeenCalled()
     expect(anchorClick).not.toHaveBeenCalled()
   })
 
@@ -213,11 +217,21 @@ describe('saveBlobToDisk', () => {
       writable: true,
       value: vi.fn(),
     })
+    const produce = vi.fn().mockResolvedValue(new Blob(['x']))
 
-    const saved = await saveBlobToDisk(new Blob(['x']), 'resume.html', 'text/html')
+    const saved = await saveExportToDisk('resume.html', 'text/html', produce)
 
     expect(saved).toBe(true)
+    expect(produce).toHaveBeenCalledTimes(1)
     expect(anchorClick).toHaveBeenCalledTimes(1)
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:mock')
+  })
+
+  it('propagates blob production errors instead of falling back to a download', async () => {
+    setPicker(vi.fn().mockResolvedValue({ createWritable: vi.fn() }))
+    const produce = vi.fn().mockRejectedValue(new Error('fetch failed'))
+
+    await expect(saveExportToDisk('resume.pdf', 'application/pdf', produce)).rejects.toThrow('fetch failed')
+    expect(anchorClick).not.toHaveBeenCalled()
   })
 })
