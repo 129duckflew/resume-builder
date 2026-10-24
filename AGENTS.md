@@ -1,17 +1,3 @@
-<!-- CODEGRAPH_START -->
-## CodeGraph
-
-When you want to use grep or glob to explore code repo symbol ,use codegraph first (must)
-In repositories indexed by CodeGraph (a `.codegraph/` directory exists at the repo root), reach for it BEFORE grep/find or reading files when you need to understand or locate code:
-
-- **MCP tool** (when available): `codegraph_explore` answers most code questions in one call — the relevant symbols' verbatim source plus the call paths between them, including dynamic-dispatch hops grep can't follow. Name a file or symbol in the query to read its current line-numbered source. If it's listed but deferred, load it by name via tool search.
-- **Shell** (always works): `codegraph explore "<symbol names or question>"` prints the same output.
-
-If there is no `.codegraph/` directory, skip CodeGraph entirely — indexing is the user's decision.
-<!-- CODEGRAPH_END -->
-
-
-<!-- headroom:rtk-instructions -->
 # RTK (Rust Token Killer) - Token-Optimized Commands
 
 When running shell commands, **always prefix with `rtk`**. This reduces context
@@ -67,7 +53,3 @@ Uses the five canonical defaults: `needs-triage`, `needs-info`, `ready-for-agent
 ### Domain docs
 
 Single-context: one `CONTEXT.md` + `docs/adr/` at repo root. See `docs/agents/domain.md`.
-
-### Multimodal data
-
-When a task involves analyzing multimodal data — PDF, DOC/DOCX, images, or video files — dispatch the analysis to the `multimodal-analysis` subagent (`opencode-go/mimo-v2.5`) first, and only process the result afterwards. Do not attempt to parse these formats with the main agent; the subagent extracts text, OCR, and video frames, then returns a structured report to work from.
